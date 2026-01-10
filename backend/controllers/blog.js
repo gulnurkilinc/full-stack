@@ -1,30 +1,36 @@
-const Blog = require("../models/blog.js");
+const Blog = require("../models/Blog.js");
+const BlogFilter = require("../utils/blogFilter.js");
 
-// Tüm blog yazılarını getir (filtreleme ve sayfalama ile)
+// Tüm blog yazılarını getir (filtreleme, arama, sayfalama ile)
 const allBlogs = async (req, res) => {
     try {
-        const { category, tag, status, page = 1, limit = 10 } = req.query;
+        const resultPerPage = 10;
         
-        const filter = {};
+        // Toplam blog sayısı
+        const blogsCount = await Blog.countDocuments();
         
-        if (category) filter.category = category;
-        if (tag) filter.tags = tag;
-        if (status) filter.status = status;
+        // BlogFilter ile arama, filtreleme ve sayfalama
+        const blogFilter = new BlogFilter(Blog.find(), req.query)
+            .search()
+            .filter()
+            .sort();
         
-        const blogs = await Blog.find(filter)
-            .populate('author', 'name email')
-            .sort({ createdAt: -1 })
-            .limit(limit * 1)
-            .skip((page - 1) * limit);
+        // Filtrelenmiş sonuç sayısı
+        let blogs = await blogFilter.query;
+        let filteredBlogsCount = blogs.length;
         
-        const count = await Blog.countDocuments(filter);
+        // Sayfalama uygula
+        blogFilter.pagination(resultPerPage);
+        blogs = await blogFilter.query.clone()
+            .populate('author', 'name email');
         
         res.status(200).json({
             success: true,
             blogs,
-            totalPages: Math.ceil(count / limit),
-            currentPage: page,
-            total: count
+            blogsCount,
+            filteredBlogsCount,
+            resultPerPage,
+            currentPage: Number(req.query.page) || 1
         });
     } catch (error) {
         res.status(500).json({
@@ -74,6 +80,7 @@ const featuredBlogs = async (req, res) => {
         
         res.status(200).json({
             success: true,
+            count: blogs.length,
             blogs
         });
     } catch (error) {
@@ -94,6 +101,69 @@ const popularBlogs = async (req, res) => {
         
         res.status(200).json({
             success: true,
+            count: blogs.length,
+            blogs
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Kategoriye göre blogları getir
+const getBlogsByCategory = async (req, res) => {
+    try {
+        const { category } = req.params;
+        const resultPerPage = 10;
+        
+        const blogFilter = new BlogFilter(
+            Blog.find({ category, status: 'published' }), 
+            req.query
+        )
+            .search()
+            .sort()
+            .pagination(resultPerPage);
+        
+        const blogs = await blogFilter.query.populate('author', 'name email');
+        const count = await Blog.countDocuments({ category, status: 'published' });
+        
+        res.status(200).json({
+            success: true,
+            category,
+            count,
+            blogs
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Etikete göre blogları getir
+const getBlogsByTag = async (req, res) => {
+    try {
+        const { tag } = req.params;
+        const resultPerPage = 10;
+        
+        const blogFilter = new BlogFilter(
+            Blog.find({ tags: tag, status: 'published' }), 
+            req.query
+        )
+            .search()
+            .sort()
+            .pagination(resultPerPage);
+        
+        const blogs = await blogFilter.query.populate('author', 'name email');
+        const count = await Blog.countDocuments({ tags: tag, status: 'published' });
+        
+        res.status(200).json({
+            success: true,
+            tag,
+            count,
             blogs
         });
     } catch (error) {
@@ -118,7 +188,7 @@ const addComment = async (req, res) => {
         }
         
         blog.comments.push({
-            user: req.user._id, // Kullanıcı giriş yaptıysa
+            user: req.user?._id, // Kullanıcı giriş yaptıysa
             name,
             email,
             comment
@@ -170,7 +240,7 @@ const likeBlog = async (req, res) => {
 // Blog yazısı oluştur
 const createBlog = async (req, res) => {
     try {
-        req.body.author = req.user._id; // Giriş yapmış kullanıcı
+        req.body.author = req.user?._id; // Giriş yapmış kullanıcı
         
         const blog = await Blog.create(req.body);
         
@@ -339,6 +409,8 @@ module.exports = {
     detailBlog,
     featuredBlogs,
     popularBlogs,
+    getBlogsByCategory,
+    getBlogsByTag,
     addComment,
     likeBlog,
     
