@@ -4,6 +4,8 @@ const {
     detailBlog,
     featuredBlogs,
     popularBlogs,
+    getBlogsByCategory,
+    getBlogsByTag,
     addComment,
     likeBlog,
     createBlog,
@@ -16,15 +18,17 @@ const {
 
 const router = express.Router();
 
-// Genel kullanıcı routes (herkes erişebilir)
+// Genel kullanıcı routes
 router.get("/blogs", allBlogs);
 router.get("/blogs/featured", featuredBlogs);
 router.get("/blogs/popular", popularBlogs);
+router.get("/blogs/category/:category", getBlogsByCategory);
+router.get("/blogs/tag/:tag", getBlogsByTag);
 router.get("/blogs/:slug", detailBlog);
 router.post("/blogs/:id/comment", addComment);
 router.put("/blogs/:id/like", likeBlog);
 
-// Admin routes (authentication middleware eklenecek)
+// Admin routes
 router.post("/admin/blogs/new", createBlog);
 router.put("/admin/blogs/:id", updateBlog);
 router.delete("/admin/blogs/:id", deleteBlog);
