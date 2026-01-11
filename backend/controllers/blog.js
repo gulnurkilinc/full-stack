@@ -6,20 +6,16 @@ const allBlogs = async (req, res) => {
     try {
         const resultPerPage = 10;
         
-        // Toplam blog sayısı
         const blogsCount = await Blog.countDocuments();
         
-        // BlogFilter ile arama, filtreleme ve sayfalama
         const blogFilter = new BlogFilter(Blog.find(), req.query)
             .search()
             .filter()
             .sort();
         
-        // Filtrelenmiş sonuç sayısı
         let blogs = await blogFilter.query;
         let filteredBlogsCount = blogs.length;
         
-        // Sayfalama uygula
         blogFilter.pagination(resultPerPage);
         blogs = await blogFilter.query.clone()
             .populate('author', 'name email');
@@ -54,7 +50,6 @@ const detailBlog = async (req, res) => {
             });
         }
         
-        // Görüntülenme sayısını artır
         blog.views += 1;
         await blog.save();
         
@@ -97,6 +92,27 @@ const popularBlogs = async (req, res) => {
         const blogs = await Blog.find({ status: 'published' })
             .populate('author', 'name email')
             .sort({ views: -1 })
+            .limit(10);
+        
+        res.status(200).json({
+            success: true,
+            count: blogs.length,
+            blogs
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// En yüksek puanlı bloglar
+const topRatedBlogs = async (req, res) => {
+    try {
+        const blogs = await Blog.find({ status: 'published' })
+            .populate('author', 'name email')
+            .sort({ rating: -1 })
             .limit(10);
         
         res.status(200).json({
@@ -174,31 +190,63 @@ const getBlogsByTag = async (req, res) => {
     }
 };
 
-// Blog yazısına yorum yap
-const addComment = async (req, res) => {
+// Blog yazısına yorum ve puan ekle (YENI)
+const createReview = async (req, res) => {
     try {
-        const { name, email, comment } = req.body;
-        const blog = await Blog.findById(req.params.id);
-        
+        const { blogId, comment, rating } = req.body;
+
+        // Yorum objesi oluştur
+        const review = {
+            user: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            comment,
+            rating: Number(rating)
+        };
+
+        // Blog'u bul
+        const blog = await Blog.findById(blogId);
+
         if (!blog) {
             return res.status(404).json({
                 success: false,
                 message: "Blog yazısı bulunamadı"
             });
         }
-        
-        blog.comments.push({
-            user: req.user?._id, // Kullanıcı giriş yaptıysa
-            name,
-            email,
-            comment
+
+        // Kullanıcı daha önce yorum yaptı mı kontrol et
+        const isReviewed = blog.comments.find(
+            rev => rev.user.toString() === req.user._id.toString()
+        );
+
+        if (isReviewed) {
+            // Varolan yorumu güncelle
+            blog.comments.forEach(rev => {
+                if (rev.user.toString() === req.user._id.toString()) {
+                    rev.comment = comment;
+                    rev.rating = rating;
+                }
+            });
+        } else {
+            // Yeni yorum ekle
+            blog.comments.push(review);
+            blog.numOfReviews = blog.comments.length;
+        }
+
+        // Ortalama puanı hesapla
+        let avg = 0;
+        blog.comments.forEach(rev => {
+            avg += rev.rating;
         });
-        
-        await blog.save();
-        
-        res.status(201).json({
+
+        blog.rating = avg / blog.comments.length;
+
+        // Kaydet
+        await blog.save({ validateBeforeSave: false });
+
+        res.status(200).json({
             success: true,
-            message: "Yorum başarıyla eklendi. Onay bekliyor."
+            message: "Yorumunuz başarıyla eklendi"
         });
     } catch (error) {
         res.status(500).json({
@@ -240,7 +288,7 @@ const likeBlog = async (req, res) => {
 // Blog yazısı oluştur
 const createBlog = async (req, res) => {
     try {
-        req.body.author = req.user?._id; // Giriş yapmış kullanıcı
+        req.body.author = req.user?._id;
         
         const blog = await Blog.create(req.body);
         
@@ -388,7 +436,24 @@ const deleteComment = async (req, res) => {
             });
         }
         
-        blog.comments.pull(req.params.commentId);
+        const comments = blog.comments.filter(
+            comment => comment._id.toString() !== req.params.commentId.toString()
+        );
+
+        // Yorumları güncelle
+        blog.comments = comments;
+        
+        // Yorum sayısını güncelle
+        blog.numOfReviews = comments.length;
+
+        // Ortalama puanı yeniden hesapla
+        let avg = 0;
+        comments.forEach(rev => {
+            avg += rev.rating;
+        });
+
+        blog.rating = comments.length > 0 ? avg / comments.length : 0;
+
         await blog.save();
         
         res.status(200).json({
@@ -409,9 +474,10 @@ module.exports = {
     detailBlog,
     featuredBlogs,
     popularBlogs,
+    topRatedBlogs,
     getBlogsByCategory,
     getBlogsByTag,
-    addComment,
+    createReview,
     likeBlog,
     
     // Admin

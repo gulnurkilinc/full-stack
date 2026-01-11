@@ -4,9 +4,10 @@ const {
     detailBlog,
     featuredBlogs,
     popularBlogs,
+    topRatedBlogs,
     getBlogsByCategory,
     getBlogsByTag,
-    addComment,
+    createReview,
     likeBlog,
     createBlog,
     updateBlog,
@@ -22,10 +23,11 @@ const router = express.Router();
 router.get("/blogs", allBlogs);
 router.get("/blogs/featured", featuredBlogs);
 router.get("/blogs/popular", popularBlogs);
+router.get("/blogs/top-rated", topRatedBlogs);
 router.get("/blogs/category/:category", getBlogsByCategory);
 router.get("/blogs/tag/:tag", getBlogsByTag);
 router.get("/blogs/:slug", detailBlog);
-router.post("/blogs/:id/comment", addComment);
+router.post("/blogs/review", createReview); // YORUM EKLEME
 router.put("/blogs/:id/like", likeBlog);
 
 // Admin routes

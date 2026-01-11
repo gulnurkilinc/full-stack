@@ -74,6 +74,14 @@ const blogSchema = new mongoose.Schema({
       type: Boolean,
       default: false
    },
+   rating: {
+      type: Number,
+      default: 0
+   },
+   numOfReviews: {
+      type: Number,
+      default: 0
+   },
    publishedAt: {
       type: Date
    },
@@ -95,6 +103,12 @@ const blogSchema = new mongoose.Schema({
          comment: {
             type: String,
             required: true
+         },
+         rating: {
+            type: Number,
+            required: true,
+            min: 1,
+            max: 5
          },
          approved: {
             type: Boolean,
