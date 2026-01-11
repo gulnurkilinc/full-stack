@@ -7,27 +7,34 @@ const {
     updateProfile,
     changePassword,
     applyForAuthor,
+    forgotPassword,     
+    resetPassword,
     getAllUsers,
     getUserDetail,
     updateUserRole,
     deleteUser
 } = require("../controllers/user.js");
+const { authenticateUser, authorizeAdmin } = require("../middleware/auth.js");
 
 const router = express.Router();
 
-// Genel kullanıcı routes
+// Genel kullanıcı routes (giriş gerektirmeyen)
 router.post("/register", register);
 router.post("/login", login);
-router.get("/logout", logout);
-router.get("/profile", getProfile); // Auth middleware eklenecek
-router.put("/profile/update", updateProfile); // Auth middleware eklenecek
-router.put("/password/change", changePassword); // Auth middleware eklenecek
-router.post("/apply-author", applyForAuthor); // Auth middleware eklenecek
+router.post("/password/forgot", forgotPassword);        // YENİ
+router.put("/password/reset/:token", resetPassword);
 
-// Admin routes
-router.get("/admin/users", getAllUsers); // Admin middleware eklenecek
-router.get("/admin/users/:id", getUserDetail); // Admin middleware eklenecek
-router.put("/admin/users/:id/role", updateUserRole); // Admin middleware eklenecek
-router.delete("/admin/users/:id", deleteUser); // Admin middleware eklenecek
+// Giriş gerektiren routes
+router.get("/logout", authenticateUser, logout);
+router.get("/profile", authenticateUser, getProfile);
+router.put("/profile/update", authenticateUser, updateProfile);
+router.put("/password/change", authenticateUser, changePassword);
+router.post("/apply-author", authenticateUser, applyForAuthor);
+
+// Admin routes (admin yetkisi gerekli)
+router.get("/admin/users", authenticateUser, authorizeAdmin, getAllUsers);
+router.get("/admin/users/:id", authenticateUser, authorizeAdmin, getUserDetail);
+router.put("/admin/users/:id/role", authenticateUser, authorizeAdmin, updateUserRole);
+router.delete("/admin/users/:id", authenticateUser, authorizeAdmin, deleteUser);
 
 module.exports = router;

@@ -1,4 +1,6 @@
 const User = require("../models/user.js");
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail.js");
 
 // Kullanıcı kaydı
 const register = async (req, res) => {
@@ -48,12 +50,11 @@ const register = async (req, res) => {
     }
 };
 
-// Kullanıcı girişi
+// Kullanıcı girişi (güncellenmiş)
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Email ve şifre kontrolü
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
@@ -61,7 +62,6 @@ const login = async (req, res) => {
             });
         }
 
-        // Kullanıcıyı bul (şifre ile birlikte)
         const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
@@ -71,7 +71,6 @@ const login = async (req, res) => {
             });
         }
 
-        // Şifre kontrolü
         const isPasswordMatched = await user.comparePassword(password);
 
         if (!isPasswordMatched) {
@@ -81,8 +80,14 @@ const login = async (req, res) => {
             });
         }
 
-        // Token oluştur
         const token = user.generateToken();
+
+        // Cookie'ye token ekle
+        res.cookie('token', token, {
+            httpOnly: true,
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 gün
+            secure: process.env.NODE_ENV === 'production'
+        });
 
         res.status(200).json({
             success: true,
@@ -207,6 +212,167 @@ const changePassword = async (req, res) => {
         });
     }
 };
+
+
+
+
+
+// Şifre sıfırlama isteği (email gönder)
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "Bu email adresi ile kayıtlı kullanıcı bulunamadı"
+            });
+        }
+
+        // Reset token oluştur
+        const resetToken = user.getResetPasswordToken();
+
+        await user.save({ validateBeforeSave: false });
+
+        // Reset URL oluştur
+        const resetUrl = `${req.protocol}://${req.get('host')}/api/password/reset/${resetToken}`;
+        
+        // Frontend kullanıyorsanız:
+        // const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+        const message = `
+            Merhaba ${user.name},
+            
+            Şifre sıfırlama talebiniz alındı. Şifrenizi sıfırlamak için aşağıdaki linke tıklayın:
+            
+            ${resetUrl}
+            
+            Bu linki talep etmediyseniz, bu e-postayı görmezden gelebilirsiniz.
+            
+            Bu link 15 dakika geçerlidir.
+            
+            İyi günler,
+            Blog Ekibi
+        `;
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Şifre Sıfırlama Talebi',
+                message
+            });
+
+            res.status(200).json({
+                success: true,
+                message: `Şifre sıfırlama linki ${user.email} adresine gönderildi`
+            });
+        } catch (error) {
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+
+            await user.save({ validateBeforeSave: false });
+
+            return res.status(500).json({
+                success: false,
+                message: "Email gönderilemedi. Lütfen daha sonra tekrar deneyin"
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Şifreyi sıfırla
+const resetPassword = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { password, confirmPassword } = req.body;
+
+        // Şifreleri kontrol et
+        if (!password || !confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Lütfen tüm alanları doldurun"
+            });
+        }
+
+        if (password !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Şifreler eşleşmiyor"
+            });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "Şifre en az 6 karakter olmalıdır"
+            });
+        }
+
+        // Token'ı hashle
+        const resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex');
+
+        // Kullanıcıyı bul
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Geçersiz veya süresi dolmuş token"
+            });
+        }
+
+        // Yeni şifreyi kaydet
+        user.password = password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+
+        await user.save();
+
+        // Token oluştur ve giriş yap
+        const authToken = user.generateToken();
+
+        res.cookie('token', authToken, {
+            httpOnly: true,
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            secure: process.env.NODE_ENV === 'production'
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Şifreniz başarıyla değiştirildi",
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            },
+            token: authToken
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+
+
+
 
 // Yazar olma başvurusu
 const applyForAuthor = async (req, res) => {
@@ -347,6 +513,8 @@ module.exports = {
     updateProfile,
     changePassword,
     applyForAuthor,
+    forgotPassword,      
+    resetPassword, 
     
     // Admin
     getAllUsers,

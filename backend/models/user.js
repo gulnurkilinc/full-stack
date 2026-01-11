@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -67,6 +68,23 @@ userSchema.methods.generateToken = function() {
 // Şifre kontrolü
 userSchema.methods.comparePassword = async function(enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Şifre sıfırlama token'ı oluştur
+userSchema.methods.getResetPasswordToken = function() {
+    // Token oluştur
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // Token'ı hashle ve kaydet
+    this.resetPasswordToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+
+    // Token geçerlilik süresi (15 dakika)
+    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+    return resetToken;
 };
 
 module.exports = mongoose.model("User", userSchema);
