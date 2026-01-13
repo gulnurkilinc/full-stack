@@ -115,3 +115,18 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Navbar link hover */
+.navbar a {
+  transition: color 0.3s;
+}
+
+.navbar a:hover {
+  color: #007bff;
+}
+
+/* Dropdown hover */
+.navbar div[style*="position: absolute"] a:hover {
+  background-color: #f8f9fa;
+}
