@@ -1,9 +1,33 @@
-import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 const Header = () => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const timeoutRef = useRef(null);
+  const location = useLocation();
+
+  // Scroll event listener
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Ana sayfa mı kontrol et
+  const isHomePage = location.pathname === '/';
+
+  // Header'ın arka plan rengi
+  const headerBgColor = isHomePage && !isScrolled 
+    ? 'transparent' 
+    : 'rgba(208, 39, 39, 0.9)';
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
@@ -15,34 +39,47 @@ const Header = () => {
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setShowDropdown(false);
-    }, 500); // 300ms bekle
+    }, 300);
   };
 
   return (
-    <header className="navbar">
+    <header style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: headerBgColor,
+      backdropFilter: isHomePage && !isScrolled ? 'none' : 'blur(10px)',
+      padding: '1rem 0',
+      zIndex: 1000,
+      transition: 'all 0.3s ease',
+      boxShadow: isHomePage && !isScrolled ? 'none' : '0 2px 10px rgba(0,0,0,0.1)'
+    }}>
       <div className="container">
         <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link to="/" style={{ fontSize: '24px', fontWeight: 'bold', color: '#007bff' }}>
+          <Link to="/" style={{ 
+            fontSize: '24px', 
+            fontWeight: 'bold', 
+            color: 'white'
+          }}>
             Blog Sitesi
           </Link>
           
           <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
-            <Link to="/">Ana Sayfa</Link>
-            <Link to="/blogs">Bloglar</Link>
+            <Link to="/" style={{ color: 'white' }}>Ana Sayfa</Link>
+            <Link to="/blogs" style={{ color: 'white' }}>Bloglar</Link>
             
-            {/* Bölümler Dropdown */}
             <div 
               style={{ position: 'relative' }}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
-              <span 
-                style={{ 
-                  cursor: 'pointer',
-                  padding: '10px 0',
-                  display: 'block'
-                }}
-              >
+              <span style={{ 
+                cursor: 'pointer',
+                padding: '10px 0',
+                display: 'block',
+                color: 'white'
+              }}>
                 Bölümler
               </span>
               
@@ -127,9 +164,23 @@ const Header = () => {
               )}
             </div>
 
-            <Link to="/contact">İletişim</Link>
+            <Link to="/contact" style={{ color: 'white' }}>İletişim</Link>
             <Link to="/login">
-              <button className="btn btn-primary">Giriş Yap</button>
+              <button style={{
+                backgroundColor: '#007bff',
+                color: 'white',
+                padding: '10px 20px',
+                borderRadius: '5px',
+                fontSize: '16px',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#0056b3'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#007bff'}
+              >
+                Giriş Yap
+              </button>
             </Link>
           </div>
         </nav>
