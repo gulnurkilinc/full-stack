@@ -1,11 +1,31 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { login, clearError } from '../../redux/authSlice';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
+
+  // Eğer kullanıcı zaten giriş yaptıysa ana sayfaya yönlendir
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Component unmount olduğunda error'ı temizle
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
 
   const handleChange = (e) => {
     setFormData({
@@ -14,16 +34,14 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Login işlemi buraya gelecek (Backend'e istek)
-    console.log('Login:', formData);
-    alert('Giriş yapılıyor...');
+    dispatch(login(formData));
   };
 
   const handleSocialLogin = (provider) => {
-    // Sosyal medya login işlemi
-    alert(`${provider} ile giriş yapılıyor...`);
+    // Sosyal medya login - şu an için alert
+    alert(`${provider} ile giriş özelliği yakında eklenecek!`);
   };
 
   return (
@@ -48,11 +66,27 @@ const Login = () => {
             </p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              backgroundColor: '#ff4444',
+              color: 'white',
+              padding: '12px',
+              borderRadius: '5px',
+              marginBottom: '20px',
+              textAlign: 'center',
+              fontSize: '14px'
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
+
           {/* Social Login Buttons */}
           <div style={{ marginBottom: '30px' }}>
             {/* Google */}
             <button
               onClick={() => handleSocialLogin('Google')}
+              type="button"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -85,6 +119,7 @@ const Login = () => {
             {/* Facebook */}
             <button
               onClick={() => handleSocialLogin('Facebook')}
+              type="button"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -112,6 +147,7 @@ const Login = () => {
             {/* Twitter/X */}
             <button
               onClick={() => handleSocialLogin('Twitter')}
+              type="button"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -139,6 +175,7 @@ const Login = () => {
             {/* TikTok */}
             <button
               onClick={() => handleSocialLogin('TikTok')}
+              type="button"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -166,6 +203,7 @@ const Login = () => {
             {/* Instagram */}
             <button
               onClick={() => handleSocialLogin('Instagram')}
+              type="button"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -215,6 +253,7 @@ const Login = () => {
                 onChange={handleChange}
                 required
                 placeholder="ornek@email.com"
+                disabled={loading}
               />
             </div>
 
@@ -228,6 +267,8 @@ const Login = () => {
                 onChange={handleChange}
                 required
                 placeholder="••••••••"
+                disabled={loading}
+                minLength="6"
               />
             </div>
 
@@ -255,10 +296,19 @@ const Login = () => {
                 width: '100%', 
                 padding: '15px',
                 fontSize: '16px',
-                fontWeight: '500'
+                fontWeight: '500',
+                opacity: loading ? 0.7 : 1,
+                cursor: loading ? 'not-allowed' : 'pointer'
               }}
+              disabled={loading}
             >
-              Giriş Yap
+              {loading ? (
+                <span>
+                  ⏳ Giriş Yapılıyor...
+                </span>
+              ) : (
+                'Giriş Yap'
+              )}
             </button>
           </form>
 

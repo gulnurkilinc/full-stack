@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { register, clearError } from '../../redux/authSlice';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +10,24 @@ const Register = () => {
     password: '',
     confirmPassword: ''
   });
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
+
+  // Eğer kullanıcı kayıt olduysa ana sayfaya yönlendir
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Component unmount olduğunda error'ı temizle
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
 
   const handleChange = (e) => {
     setFormData({
@@ -24,12 +44,18 @@ const Register = () => {
       return;
     }
 
-    console.log('Register:', formData);
-    alert('Kayıt işlemi gerçekleştiriliyor...');
+    // Backend'e kayıt isteği gönder
+    const userData = {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password
+    };
+
+    dispatch(register(userData));
   };
 
   const handleSocialRegister = (provider) => {
-    alert(`${provider} ile kayıt olunuyor...`);
+    alert(`${provider} ile kayıt özelliği yakında eklenecek!`);
   };
 
   return (
@@ -53,10 +79,26 @@ const Register = () => {
             </p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              backgroundColor: '#ff4444',
+              color: 'white',
+              padding: '12px',
+              borderRadius: '5px',
+              marginBottom: '20px',
+              textAlign: 'center',
+              fontSize: '14px'
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
+
           {/* Social Register Buttons */}
           <div style={{ marginBottom: '30px' }}>
             <button
               onClick={() => handleSocialRegister('Google')}
+              type="button"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -88,6 +130,7 @@ const Register = () => {
 
             <button
               onClick={() => handleSocialRegister('Facebook')}
+              type="button"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -132,6 +175,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 placeholder="Adınız ve soyadınız"
+                disabled={loading}
               />
             </div>
 
@@ -145,6 +189,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 placeholder="ornek@email.com"
+                disabled={loading}
               />
             </div>
 
@@ -159,6 +204,7 @@ const Register = () => {
                 required
                 placeholder="En az 6 karakter"
                 minLength="6"
+                disabled={loading}
               />
             </div>
 
@@ -172,6 +218,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 placeholder="Şifrenizi tekrar girin"
+                disabled={loading}
               />
             </div>
 
@@ -182,10 +229,19 @@ const Register = () => {
                 width: '100%', 
                 padding: '15px',
                 fontSize: '16px',
-                fontWeight: '500'
+                fontWeight: '500',
+                opacity: loading ? 0.7 : 1,
+                cursor: loading ? 'not-allowed' : 'pointer'
               }}
+              disabled={loading}
             >
-              Kayıt Ol
+              {loading ? (
+                <span>
+                  ⏳ Kayıt Olunuyor...
+                </span>
+              ) : (
+                'Kayıt Ol'
+              )}
             </button>
           </form>
 
