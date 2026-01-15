@@ -7,6 +7,7 @@ import Blogs from './pages/Blogs/Blogs';
 import Contact from './pages/contact/contact';
 import Login from './pages/Login/Login';  // YENİ
 import Register from './pages/Register/Register';  // YENİ
+import BlogDetail from './pages/BlogDetail/BlogDetail';
 import './index.css';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />  {/* YENİ */}
             <Route path="/register" element={<Register />} />  {/* YENİ */}
+            <Route path="/blog/:slug" element={<BlogDetail />} />
           </Routes>
         </main>
         <Footer />

@@ -1,46 +1,22 @@
 const express = require("express");
-const {
-    allBlogs,
-    detailBlog,
-    featuredBlogs,
-    popularBlogs,
-    topRatedBlogs,
-    getBlogsByCategory,
-    getBlogsByTag,
-    createReview,
-    likeBlog,
-    createBlog,
-    updateBlog,
-    deleteBlog,
-    publishBlog,
-    approveComment,
-    deleteComment
-} = require("../controllers/blog.js");
-const { authenticateUser, authorizeAuthor, authorizeAdmin } = require("../middleware/auth.js");
-
 const router = express.Router();
+const {
+  getAllBlogs,
+  getBlogBySlug,
+  createBlog,
+  updateBlog,
+  deleteBlog,
+  getRelatedBlogs
+} = require("../controllers/blogController");
 
-// Genel kullanıcı routes (giriş gerektirmeyen)
-router.get("/blogs", allBlogs);
-router.get("/blogs/featured", featuredBlogs);
-router.get("/blogs/popular", popularBlogs);
-router.get("/blogs/top-rated", topRatedBlogs);
-router.get("/blogs/category/:category", getBlogsByCategory);
-router.get("/blogs/tag/:tag", getBlogsByTag);
-router.get("/blogs/:slug", detailBlog);
+// Public routes
+router.get("/blogs", getAllBlogs);
+router.get("/blogs/:identifier", getBlogBySlug); // Slug veya ID ile
+router.get("/blogs/:identifier/related", getRelatedBlogs);
 
-// Giriş gerektiren routes
-router.post("/blogs/review", authenticateUser, createReview);
-router.put("/blogs/:id/like", authenticateUser, likeBlog);
-
-// Yazar/Admin routes (blog oluşturma, güncelleme)
-router.post("/admin/blogs/new", authenticateUser, authorizeAuthor, createBlog);
-router.put("/admin/blogs/:id", authenticateUser, authorizeAuthor, updateBlog);
-router.delete("/admin/blogs/:id", authenticateUser, authorizeAuthor, deleteBlog);
-
-// Sadece Admin routes
-router.put("/admin/blogs/:id/publish", authenticateUser, authorizeAdmin, publishBlog);
-router.put("/admin/blogs/:blogId/comments/:commentId/approve", authenticateUser, authorizeAdmin, approveComment);
-router.delete("/admin/blogs/:blogId/comments/:commentId", authenticateUser, authorizeAdmin, deleteComment);
+// Protected routes (Auth middleware eklenecek)
+router.post("/blogs", createBlog); // Auth middleware ekle: authMiddleware,
+router.put("/blogs/:id", updateBlog); // Auth middleware ekle
+router.delete("/blogs/:id", deleteBlog); // Auth middleware ekle
 
 module.exports = router;

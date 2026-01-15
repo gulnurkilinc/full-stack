@@ -1,140 +1,78 @@
 const mongoose = require("mongoose");
 
-const blogSchema = new mongoose.Schema({
-   title: {
+const blogSchema = new mongoose.Schema(
+  {
+    title: {
       type: String,
-      required: true,
-      trim: true
-   },
-   slug: {
+      required: [true, "Blog başlığı gereklidir"],
+      trim: true,
+      maxlength: [200, "Başlık en fazla 200 karakter olabilir"]
+    },
+    slug: {
       type: String,
-      required: true,
       unique: true,
-      lowercase: true
-   },
-   content: {
+      lowercase: true,
+      index: true
+    },
+    content: {
       type: String,
-      required: true
-   },
-   excerpt: {
+      required: [true, "Blog içeriği gereklidir"]
+    },
+    excerpt: {
       type: String,
-      required: true,
-      maxlength: 200
-   },
-   category: {
+      maxlength: [500, "Özet en fazla 500 karakter olabilir"]
+    },
+    coverImage: {
+      public_id: String,
+      url: String
+    },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+    category: {
       type: String,
-      required: true,
-      enum: ['Teknoloji', 'Sağlık', 'Eğitim', 'Spor', 'Ekonomi', 'Kültür', 'Dünya', 'Diğer']
-   },
-   tags: [
-      {
-         type: String,
-         trim: true
-      }
-   ],
-   coverImage: {
-      public_id: {
-         type: String,
-         required: true
-      },
-      url: {
-         type: String,
-         required: true
-      }
-   },
-   images: [
-      {
-         public_id: {
-            type: String
-         },
-         url: {
-            type: String
-         }
-      }
-   ],
-   author: {
-      type: mongoose.Schema.ObjectId,
-      ref: "User",
-      required: true
-   },
-   status: {
+      required: [true, "Kategori gereklidir"],
+      enum: ["Teknoloji", "Sağlık", "Dünya", "Bilim", "Ekonomi", "Eğitim", "Spor", "Kültür", "Sanat"]
+    },
+    tags: [{
       type: String,
-      enum: ['draft', 'published', 'archived'],
-      default: 'draft'
-   },
-   views: {
-      type: Number,
-      default: 0
-   },
-   likes: {
-      type: Number,
-      default: 0
-   },
-   featured: {
+      lowercase: true,
+      trim: true
+    }],
+    status: {
+      type: String,
+      enum: ["draft", "published", "archived"],
+      default: "draft"
+    },
+    featured: {
       type: Boolean,
       default: false
-   },
-   rating: {
+    },
+    viewCount: {
       type: Number,
       default: 0
-   },
-   numOfReviews: {
-      type: Number,
-      default: 0
-   },
-   publishedAt: {
-      type: Date
-   },
-   comments: [
-      {
-         user: {
-            type: mongoose.Schema.ObjectId,
-            ref: "User",
-            required: true
-         },
-         name: {
-            type: String,
-            required: true
-         },
-         email: {
-            type: String,
-            required: true
-         },
-         comment: {
-            type: String,
-            required: true
-         },
-         rating: {
-            type: Number,
-            required: true,
-            min: 1,
-            max: 5
-         },
-         approved: {
-            type: Boolean,
-            default: false
-         },
-         createdAt: {
-            type: Date,
-            default: Date.now
-         }
-      }
-   ]
-}, { 
-   timestamps: true 
-});
+    },
+    publishedAt: {
+      type: Date,
+      default: null
+    }
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+);
 
-// Slug'dan önce URL-friendly hale getir
-blogSchema.pre('save', function(next) {
-   if (this.isModified('title')) {
-      this.slug = this.title
-         .toLowerCase()
-         .replace(/[^a-z0-9ğüşıöçĞÜŞİÖÇ\s-]/g, '')
-         .replace(/\s+/g, '-')
-         .replace(/-+/g, '-')
-         .trim();
-   }
-   next();
-});
+// ÖNEMLİ: Slug middleware'ini kaldırdık
+// Çünkü seed-blogs route'unda zaten slug veriyoruz
+// Eğer otomatik slug istersen, slugify paketini yükle ve aşağıdaki kodu kullan
+
+// Index'ler
+blogSchema.index({ slug: 1 });
+blogSchema.index({ status: 1, publishedAt: -1 });
+blogSchema.index({ category: 1 });
+blogSchema.index({ tags: 1 });
 
 module.exports = mongoose.model("Blog", blogSchema);
