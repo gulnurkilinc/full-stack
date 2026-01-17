@@ -56,6 +56,14 @@ const blogSchema = new mongoose.Schema(
     publishedAt: {
       type: Date,
       default: null
+    },
+    metaTitle: {
+      type: String,
+      maxlength: [70, "Meta title en fazla 70 karakter olabilir"]
+    },
+    metaDescription: {
+      type: String,
+      maxlength: [160, "Meta description en fazla 160 karakter olabilir"]
     }
   },
   {
@@ -65,14 +73,32 @@ const blogSchema = new mongoose.Schema(
   }
 );
 
-// ÖNEMLİ: Slug middleware'ini kaldırdık
-// Çünkü seed-blogs route'unda zaten slug veriyoruz
-// Eğer otomatik slug istersen, slugify paketini yükle ve aşağıdaki kodu kullan
-
-// Index'ler
+// Index'ler (performans için)
 blogSchema.index({ slug: 1 });
 blogSchema.index({ status: 1, publishedAt: -1 });
 blogSchema.index({ category: 1 });
 blogSchema.index({ tags: 1 });
+blogSchema.index({ author: 1 });
 
-module.exports = mongoose.model("Blog", blogSchema);
+// Virtuals
+blogSchema.virtual('readingTime').get(function() {
+  if (!this.content) return 0;
+  const words = this.content.trim().split(/\s+/).length;
+  return Math.ceil(words / 200); // 200 kelime/dakika
+});
+
+// Static methods
+blogSchema.statics.findPublished = function() {
+  return this.find({ status: 'published' }).sort({ publishedAt: -1 });
+};
+
+blogSchema.statics.findFeatured = function() {
+  return this.find({ status: 'published', featured: true }).sort({ publishedAt: -1 });
+};
+
+blogSchema.statics.findByCategory = function(category) {
+  return this.find({ status: 'published', category }).sort({ publishedAt: -1 });
+};
+
+// ÖNEMLİ: Model cache kontrolü
+module.exports = mongoose.models.Blog || mongoose.model("Blog", blogSchema);

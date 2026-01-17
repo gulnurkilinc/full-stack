@@ -1,40 +1,127 @@
 const express = require("express");
-const {
-    register,
-    login,
-    logout,
-    getProfile,
-    updateProfile,
-    changePassword,
-    applyForAuthor,
-    forgotPassword,     
-    resetPassword,
-    getAllUsers,
-    getUserDetail,
-    updateUserRole,
-    deleteUser
-} = require("../controllers/user.js");
-const { authenticateUser, authorizeAdmin } = require("../middleware/auth.js");
-
 const router = express.Router();
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-// Genel kullanıcı routes (giriş gerektirmeyen)
-router.post("/register", register);
-router.post("/login", login);
-router.post("/password/forgot", forgotPassword);        // YENİ
-router.put("/password/reset/:token", resetPassword);
+// Login
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-// Giriş gerektiren routes
-router.get("/logout", authenticateUser, logout);
-router.get("/profile", authenticateUser, getProfile);
-router.put("/profile/update", authenticateUser, updateProfile);
-router.put("/password/change", authenticateUser, changePassword);
-router.post("/apply-author", authenticateUser, applyForAuthor);
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email ve şifre gereklidir"
+      });
+    }
 
-// Admin routes (admin yetkisi gerekli)
-router.get("/admin/users", authenticateUser, authorizeAdmin, getAllUsers);
-router.get("/admin/users/:id", authenticateUser, authorizeAdmin, getUserDetail);
-router.put("/admin/users/:id/role", authenticateUser, authorizeAdmin, updateUserRole);
-router.delete("/admin/users/:id", authenticateUser, authorizeAdmin, deleteUser);
+    // Kullanıcıyı bul (şifreyi de getir)
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Geçersiz email veya şifre"
+      });
+    }
+
+    // Şifreyi kontrol et
+    const isPasswordMatch = await user.comparePassword(password);
+
+    if (!isPasswordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Geçersiz email veya şifre"
+      });
+    }
+
+    // JWT token oluştur
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRE || "7d" }
+    );
+
+    // Başarılı response
+    res.status(200).json({
+      success: true,
+      message: "Giriş başarılı",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar
+      }
+    });
+
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Giriş yapılırken hata oluştu"
+    });
+  }
+});
+
+// Register
+router.post("/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Tüm alanlar gereklidir"
+      });
+    }
+
+    // Email zaten var mı kontrol et
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Bu email adresi zaten kullanılıyor"
+      });
+    }
+
+    // Kullanıcı oluştur
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: "user" // Varsayılan role
+    });
+
+    // JWT token oluştur
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRE || "7d" }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Kayıt başarılı",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+
+  } catch (error) {
+    console.error("Register error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Kayıt olurken hata oluştu"
+    });
+  }
+});
 
 module.exports = router;

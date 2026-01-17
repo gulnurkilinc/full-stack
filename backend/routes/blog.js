@@ -9,14 +9,34 @@ const {
   getRelatedBlogs
 } = require("../controllers/blogController");
 
-// Public routes
+// Middleware'leri import et
+const { authMiddleware } = require("../middleware/authMiddleware");
+const { adminMiddleware } = require("../middleware/adminMiddleware");
+
+// ============================================
+// PUBLIC ROUTES - Herkes erişebilir
+// ============================================
+
+// Tüm blogları getir (filtreleme, pagination destekli)
 router.get("/blogs", getAllBlogs);
-router.get("/blogs/:identifier", getBlogBySlug); // Slug veya ID ile
+
+// Tek blog getir (slug veya ID ile)
+router.get("/blogs/:identifier", getBlogBySlug);
+
+// İlgili blogları getir
 router.get("/blogs/:identifier/related", getRelatedBlogs);
 
-// Protected routes (Auth middleware eklenecek)
-router.post("/blogs", createBlog); // Auth middleware ekle: authMiddleware,
-router.put("/blogs/:id", updateBlog); // Auth middleware ekle
-router.delete("/blogs/:id", deleteBlog); // Auth middleware ekle
+// ============================================
+// PROTECTED ROUTES - Sadece Admin
+// ============================================
+
+// Yeni blog oluştur (Sadece admin)
+router.post("/blogs", authMiddleware, adminMiddleware, createBlog);
+
+// Blog güncelle (Sadece admin)
+router.put("/blogs/:id", authMiddleware, adminMiddleware, updateBlog);
+
+// Blog sil (Sadece admin)
+router.delete("/blogs/:id", authMiddleware, adminMiddleware, deleteBlog);
 
 module.exports = router;

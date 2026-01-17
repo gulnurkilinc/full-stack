@@ -26,9 +26,67 @@ const userRoutes = require("./routes/user.js");
 app.use("/api", blogRoutes);
 app.use("/api", userRoutes);
 
-// TEST ROUTE - Blog eklemek için (GEÇİCİ)
+// ============================================
+// TEST ROUTES - Geliştirme için
+// ============================================
+
+// TEST ROUTE - Admin kullanıcı oluştur
+app.get("/api/create-admin", async (req, res) => {
+    const User = require("./models/User.js");
+    
+    try {
+        // Önce kontrol et
+        const existingAdmin = await User.findOne({ email: "admin@blog.com" });
+        
+        if (existingAdmin) {
+            return res.status(200).json({
+                success: true,
+                message: "✅ Admin kullanıcı zaten mevcut",
+                credentials: {
+                    email: "admin@blog.com",
+                    password: "admin123"
+                },
+                note: "Bu bilgilerle /login sayfasından giriş yapabilirsiniz"
+            });
+        }
+
+        // Admin oluştur
+        const admin = await User.create({
+            name: "Admin User",
+            email: "admin@blog.com",
+            password: "admin123",
+            role: "admin",
+            isVerified: true,
+            isActive: true
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "✅ Admin kullanıcı başarıyla oluşturuldu!",
+            credentials: {
+                email: "admin@blog.com",
+                password: "admin123"
+            },
+            user: {
+                id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                role: admin.role
+            },
+            note: "Bu bilgilerle /login sayfasından giriş yapabilirsiniz"
+        });
+    } catch (error) {
+        console.error("❌ Create admin error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// TEST ROUTE - Blog eklemek için
 app.get("/api/seed-blogs", async (req, res) => {
-    const Blog = require("./models/Blog.js");
+    const Blog = require("./models/blog.js");
     
     try {
         // Önce tüm blogları sil
@@ -104,10 +162,11 @@ app.get("/api/seed-blogs", async (req, res) => {
         
         res.status(200).json({
             success: true,
-            message: `${blogs.length} blog başarıyla eklendi!`,
+            message: `✅ ${blogs.length} blog başarıyla eklendi!`,
             blogs
         });
     } catch (error) {
+        console.error("❌ Seed blogs error:", error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -115,21 +174,74 @@ app.get("/api/seed-blogs", async (req, res) => {
     }
 });
 
+// ============================================
+// ANA SAYFA - API Dokümantasyonu
+// ============================================
+
 app.get("/", (req, res) => {
     res.status(200).json({ 
-        message: "Blog API çalışıyor!",
+        message: "✅ Blog API çalışıyor!",
+        version: "1.0.0",
         endpoints: {
+            "Ana sayfa": "GET /",
+            "Test - Admin oluştur": "GET /api/create-admin",
+            "Test - Blog verileri ekle": "GET /api/seed-blogs",
             "Tüm bloglar": "GET /api/blogs",
             "Tek blog": "GET /api/blogs/:slug",
             "İlgili bloglar": "GET /api/blogs/:slug/related",
-            "Blog oluştur": "POST /api/blogs",
-            "Test verileri ekle": "GET /api/seed-blogs"
-        }
+            "Login": "POST /api/login",
+            "Register": "POST /api/register",
+            "Blog oluştur (Admin)": "POST /api/blogs"
+        },
+        status: "running",
+        environment: process.env.NODE_ENV || "development"
     });
 });
 
+// ============================================
+// 404 HANDLER
+// ============================================
+
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Route bulunamadı",
+        path: req.path,
+        method: req.method
+    });
+});
+
+// ============================================
+// ERROR HANDLER
+// ============================================
+
+app.use((err, req, res, next) => {
+    console.error("❌ Server error:", err);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Sunucu hatası",
+        error: process.env.NODE_ENV === "development" ? err.stack : undefined
+    });
+});
+
+// ============================================
+// SERVER BAŞLAT
+// ============================================
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-    console.log(`✅ Server is running on port ${PORT}`);
-    console.log(`📍 http://localhost:${PORT}`);
+    console.log(`
+╔════════════════════════════════════════════╗
+║   🚀 Blog API Server                      ║
+║   ✅ Server is running on port ${PORT}       ║
+║   📍 http://localhost:${PORT}                ║
+║   🌍 Environment: ${process.env.NODE_ENV || 'development'}              ║
+╚════════════════════════════════════════════╝
+    `);
+    console.log("📋 Available endpoints:");
+    console.log("   - GET  /api/create-admin");
+    console.log("   - GET  /api/seed-blogs");
+    console.log("   - GET  /api/blogs");
+    console.log("   - POST /api/login");
+    console.log("   - POST /api/blogs (Protected)");
 });
