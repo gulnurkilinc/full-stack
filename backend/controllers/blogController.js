@@ -1,4 +1,4 @@
-const Blog = require("../models/Blog");
+const Blog = require("../models/blog");
 const mongoose = require("mongoose");
 
 // Tüm blogları getir (filtreleme, pagination, sorting)
@@ -7,20 +7,31 @@ exports.getAllBlogs = async (req, res) => {
     const {
       page = 1,
       limit = 10,
-      category,
+      category, // Kategori filtresi
       tags,
       status = "published",
       featured,
-      search
+      search,
+      sort = "-publishedAt" // Varsayılan sıralama
     } = req.query;
 
-    // Filtreleme
-    const filter = {};
+    // Filtreleme objesi
+    const filter = { status };
+
+    // Kategori filtresi (önemli: 'all' değilse ekle)
+    if (category && category !== 'all') {
+      filter.category = category;
+    }
+
+    // Diğer filtreler
+    if (featured !== undefined) {
+      filter.featured = featured === "true";
+    }
     
-    if (status) filter.status = status;
-    if (category) filter.category = category;
-    if (featured !== undefined) filter.featured = featured === "true";
-    if (tags) filter.tags = { $in: tags.split(",") };
+    if (tags) {
+      filter.tags = { $in: tags.split(",") };
+    }
+    
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: "i" } },
@@ -33,10 +44,11 @@ exports.getAllBlogs = async (req, res) => {
 
     // Veri çekme
     const blogs = await Blog.find(filter)
-      .populate("author", "name email profileImage")
-      .sort({ publishedAt: -1, createdAt: -1 })
+      .populate("author", "name email avatar")
+      .sort(sort)
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean(); // Performans optimizasyonu
 
     const total = await Blog.countDocuments(filter);
 
@@ -47,7 +59,13 @@ exports.getAllBlogs = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / parseInt(limit))
+        pages: Math.ceil(total / parseInt(limit)),
+        hasNextPage: skip + blogs.length < total,
+        hasPrevPage: parseInt(page) > 1
+      },
+      filter: {
+        category: category || 'all',
+        status
       }
     });
   } catch (error) {
@@ -55,6 +73,57 @@ exports.getAllBlogs = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Bloglar getirilirken hata oluştu",
+      error: error.message
+    });
+  }
+};
+
+// Kategorileri ve blog sayılarını getir (YENİ)
+exports.getCategories = async (req, res) => {
+  try {
+    // Tüm kategorileri ve blog sayılarını al
+    const categoryCounts = await Blog.aggregate([
+      { $match: { status: 'published' } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    // Enum'dan tüm kategorileri al
+    const allCategories = Blog.schema.path('category').enumValues || [
+      "Teknoloji", "Sağlık", "Dünya", "Bilim", 
+      "Ekonomi", "Eğitim", "Spor", "Kültür", "Sanat"
+    ];
+
+    // Her kategori için count ekle
+    const categories = allCategories.map(category => {
+      const found = categoryCounts.find(c => c._id === category);
+      return {
+        name: category,
+        count: found ? found.count : 0,
+        slug: category.toLowerCase()
+          .replace(/ı/g, 'i')
+          .replace(/ğ/g, 'g')
+          .replace(/ü/g, 'u')
+          .replace(/ş/g, 's')
+          .replace(/ö/g, 'o')
+          .replace(/ç/g, 'c')
+          .replace(/\s+/g, '-')
+      };
+    });
+
+    // Toplam blog sayısı
+    const totalBlogs = await Blog.countDocuments({ status: 'published' });
+
+    res.status(200).json({
+      success: true,
+      categories,
+      total: totalBlogs
+    });
+  } catch (error) {
+    console.error("Get categories error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Kategoriler getirilirken hata oluştu",
       error: error.message
     });
   }
@@ -69,10 +138,12 @@ exports.getBlogBySlug = async (req, res) => {
 
     // ObjectId formatında mı kontrol et
     if (mongoose.Types.ObjectId.isValid(identifier) && identifier.length === 24) {
-      blog = await Blog.findById(identifier).populate("author", "name email profileImage");
+      blog = await Blog.findById(identifier)
+        .populate("author", "name email avatar");
     } else {
       // Slug ile ara
-      blog = await Blog.findOne({ slug: identifier }).populate("author", "name email profileImage");
+      blog = await Blog.findOne({ slug: identifier })
+        .populate("author", "name email avatar");
     }
 
     if (!blog) {
@@ -193,7 +264,7 @@ exports.getRelatedBlogs = async (req, res) => {
 
     // Önce ana blogu bul
     let mainBlog;
-    if (mongoose.Types.ObjectId.isValid(identifier)) {
+    if (mongoose.Types.ObjectId.isValid(identifier) && identifier.length === 24) {
       mainBlog = await Blog.findById(identifier);
     } else {
       mainBlog = await Blog.findOne({ slug: identifier });
@@ -212,9 +283,10 @@ exports.getRelatedBlogs = async (req, res) => {
       category: mainBlog.category,
       status: "published"
     })
-      .populate("author", "name profileImage")
+      .populate("author", "name avatar")
       .sort({ publishedAt: -1 })
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     res.status(200).json({
       success: true,
@@ -225,6 +297,36 @@ exports.getRelatedBlogs = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "İlgili bloglar getirilirken hata oluştu",
+      error: error.message
+    });
+  }
+};
+
+// Kategori bazlı istatistikler (YENİ - Bonus)
+exports.getCategoryStats = async (req, res) => {
+  try {
+    const stats = await Blog.aggregate([
+      { $match: { status: 'published' } },
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 },
+          totalViews: { $sum: '$viewCount' },
+          avgViews: { $avg: '$viewCount' }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    console.error("Get category stats error:", error);
+    res.status(500).json({
+      success: false,
+      message: "İstatistikler getirilirken hata oluştu",
       error: error.message
     });
   }

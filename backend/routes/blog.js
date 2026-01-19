@@ -6,7 +6,9 @@ const {
   createBlog,
   updateBlog,
   deleteBlog,
-  getRelatedBlogs
+  getRelatedBlogs,
+  getCategories, 
+  getCategoryStats 
 } = require("../controllers/blogController");
 
 // Middleware'leri import et
@@ -25,6 +27,10 @@ router.get("/blogs/:identifier", getBlogBySlug);
 
 // İlgili blogları getir
 router.get("/blogs/:identifier/related", getRelatedBlogs);
+
+router.get("/categories", getCategories);
+
+router.get("/categories/stats", getCategoryStats);
 
 // ============================================
 // PROTECTED ROUTES - Sadece Admin

@@ -12,7 +12,7 @@ const blogSchema = new mongoose.Schema(
       type: String,
       unique: true,
       lowercase: true,
-      index: true
+      index: true // ÖNEMLİ: Performans için index
     },
     content: {
       type: String,
@@ -33,7 +33,23 @@ const blogSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, "Kategori gereklidir"],
-      enum: ["Teknoloji", "Sağlık", "Dünya", "Bilim", "Ekonomi", "Eğitim", "Spor", "Kültür", "Sanat"]
+      enum: {
+        values: [
+          "Teknoloji", 
+          "Sağlık", 
+          "Dünya", 
+          "Bilim", 
+          "Ekonomi", 
+          "Eğitim", 
+          "Spor", 
+          "Kültür", 
+          "Sanat",
+          "Seyahat",
+          "Yemek"
+        ],
+        message: '{VALUE} geçerli bir kategori değil'
+      },
+      index: true // ÖNEMLİ: Kategori sorguları için index
     },
     tags: [{
       type: String,
@@ -43,7 +59,8 @@ const blogSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["draft", "published", "archived"],
-      default: "draft"
+      default: "draft",
+      index: true
     },
     featured: {
       type: Boolean,
@@ -73,32 +90,23 @@ const blogSchema = new mongoose.Schema(
   }
 );
 
-// Index'ler (performans için)
-blogSchema.index({ slug: 1 });
-blogSchema.index({ status: 1, publishedAt: -1 });
-blogSchema.index({ category: 1 });
-blogSchema.index({ tags: 1 });
-blogSchema.index({ author: 1 });
+// Compound Index - Status + Category + PublishedAt (performans için)
+blogSchema.index({ status: 1, category: 1, publishedAt: -1 });
 
-// Virtuals
+// Virtual: Okunma süresi
 blogSchema.virtual('readingTime').get(function() {
   if (!this.content) return 0;
   const words = this.content.trim().split(/\s+/).length;
-  return Math.ceil(words / 200); // 200 kelime/dakika
+  return Math.ceil(words / 200);
 });
 
-// Static methods
-blogSchema.statics.findPublished = function() {
-  return this.find({ status: 'published' }).sort({ publishedAt: -1 });
+// Static method: Kategoriye göre blog sayısı
+blogSchema.statics.countByCategory = async function() {
+  return await this.aggregate([
+    { $match: { status: 'published' } },
+    { $group: { _id: '$category', count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+  ]);
 };
 
-blogSchema.statics.findFeatured = function() {
-  return this.find({ status: 'published', featured: true }).sort({ publishedAt: -1 });
-};
-
-blogSchema.statics.findByCategory = function(category) {
-  return this.find({ status: 'published', category }).sort({ publishedAt: -1 });
-};
-
-// ÖNEMLİ: Model cache kontrolü
 module.exports = mongoose.models.Blog || mongoose.model("Blog", blogSchema);
