@@ -11,6 +11,8 @@ import BlogDetail from './pages/BlogDetail/BlogDetail';
 import AdminRoute from './components/Admin/AdminRoute';
 import Dashboard from './pages/Admin/Dashboard';
 import BlogCreate from './pages/Admin/BlogCreate';
+import BlogManagement from './pages/Admin/BlogManagement';
+import BlogEdit from './pages/Admin/BlogEdit';
 import './index.css';
 
 function App() {
@@ -18,9 +20,12 @@ function App() {
     <Router>
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         
-        {/* Public Routes - Header ve Footer ile */}
         <Routes>
-          {/* Ana Sayfa ve Blog Sayfaları */}
+          {/* ============================================ */}
+          {/* PUBLIC ROUTES - Header ve Footer ile */}
+          {/* ============================================ */}
+          
+          {/* Ana Sayfa */}
           <Route path="/" element={
             <>
               <Header />
@@ -31,6 +36,7 @@ function App() {
             </>
           } />
           
+          {/* Blog Listesi */}
           <Route path="/blogs" element={
             <>
               <Header />
@@ -41,6 +47,7 @@ function App() {
             </>
           } />
           
+          {/* Blog Detay */}
           <Route path="/blog/:slug" element={
             <>
               <Header />
@@ -51,6 +58,7 @@ function App() {
             </>
           } />
           
+          {/* İletişim */}
           <Route path="/contact" element={
             <>
               <Header />
@@ -61,11 +69,21 @@ function App() {
             </>
           } />
           
-          {/* Auth Sayfaları - Header/Footer YOK */}
+          {/* ============================================ */}
+          {/* AUTH ROUTES - Header/Footer YOK */}
+          {/* ============================================ */}
+          
+          {/* Login */}
           <Route path="/login" element={<Login />} />
+          
+          {/* Register */}
           <Route path="/register" element={<Register />} />
           
-          {/* Admin Dashboard Routes - Protected, Header/Footer YOK */}
+          {/* ============================================ */}
+          {/* ADMIN ROUTES - Protected, Header/Footer YOK */}
+          {/* ============================================ */}
+          
+          {/* Dashboard Ana Sayfa */}
           <Route 
             path="/dashboard" 
             element={
@@ -75,15 +93,17 @@ function App() {
             } 
           />
           
+          {/* Blog Yönetimi (Liste) - YENİ */}
           <Route 
             path="/dashboard/blogs" 
             element={
               <AdminRoute>
-                <Dashboard />
+                <BlogManagement />
               </AdminRoute>
             } 
           />
           
+          {/* Blog Oluştur */}
           <Route 
             path="/dashboard/blogs/create" 
             element={
@@ -93,6 +113,17 @@ function App() {
             } 
           />
           
+          {/* Blog Düzenle - YENİ */}
+          <Route 
+            path="/dashboard/blogs/edit/:id" 
+            element={
+              <AdminRoute>
+                <BlogEdit />
+              </AdminRoute>
+            } 
+          />
+          
+          {/* Kullanıcı Yönetimi */}
           <Route 
             path="/dashboard/users" 
             element={
@@ -102,6 +133,7 @@ function App() {
             } 
           />
           
+          {/* Ayarlar */}
           <Route 
             path="/dashboard/settings" 
             element={
@@ -111,7 +143,10 @@ function App() {
             } 
           />
           
+          {/* ============================================ */}
           {/* 404 - Sayfa Bulunamadı */}
+          {/* ============================================ */}
+          
           <Route path="*" element={
             <>
               <Header />
@@ -121,14 +156,15 @@ function App() {
                 alignItems: 'center', 
                 justifyContent: 'center',
                 padding: '40px 20px',
-                textAlign: 'center'
+                textAlign: 'center',
+                minHeight: '60vh'
               }}>
                 <div>
-                  <h1 style={{ fontSize: '72px', margin: '0' }}>404</h1>
-                  <h2 style={{ marginTop: '20px', marginBottom: '10px' }}>
+                  <h1 style={{ fontSize: '72px', margin: '0', color: '#007bff' }}>404</h1>
+                  <h2 style={{ marginTop: '20px', marginBottom: '10px', fontSize: '32px' }}>
                     Sayfa Bulunamadı
                   </h2>
-                  <p style={{ color: '#666', marginBottom: '30px' }}>
+                  <p style={{ color: '#666', marginBottom: '30px', fontSize: '16px' }}>
                     Aradığınız sayfa mevcut değil veya taşınmış olabilir.
                   </p>
                   <button
@@ -140,8 +176,12 @@ function App() {
                       border: 'none',
                       borderRadius: '5px',
                       cursor: 'pointer',
-                      fontSize: '16px'
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      transition: 'background-color 0.3s'
                     }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#0056b3'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#007bff'}
                   >
                     Ana Sayfaya Dön
                   </button>
