@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { blogService } from '../../services/blogService';
+import axios from 'axios';
 import CategoryFilter from '../../components/Blog/CategoryFilter';
+import Pagination from '../../components/Pagination';
 
 const Blogs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -15,40 +16,58 @@ const Blogs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Blogları yükle
-  useEffect(() => {
-    const loadBlogs = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const loadBlogs = async (category = 'all', page = 1) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        console.log('📥 Fetching blogs with category:', selectedCategory);
+      console.log('📥 Fetching blogs - Category:', category, 'Page:', page);
 
-        const data = await blogService.getBlogs({
-          category: selectedCategory,
-          page: 1,
-          limit: 12
-        });
+      const params = {
+        page,
+        limit: 15, // 15 blog per page
+        status: 'published'
+      };
 
-        console.log('✅ Blogs loaded:', data.blogs.length);
-
-        setBlogs(data.blogs || []);
-        setPagination(data.pagination || {});
-      } catch (err) {
-        console.error('❌ Load blogs error:', err);
-        setError('Bloglar yüklenirken hata oluştu');
-      } finally {
-        setLoading(false);
+      if (category !== 'all') {
+        params.category = category;
       }
-    };
 
-    loadBlogs();
-  }, [selectedCategory]);
+      const response = await axios.get('http://localhost:4000/api/blogs', { params });
+
+      console.log('✅ Response:', response.data);
+
+      // Response kontrolü
+      if (response.data && response.data.success) {
+        setBlogs(response.data.data || []);
+        setPagination(response.data.pagination || {});
+      } else {
+        console.error('❌ Unexpected response structure:', response.data);
+        setBlogs([]);
+        setError('Beklenmeyen veri formatı');
+      }
+
+    } catch (err) {
+      console.error('❌ Load blogs error:', err);
+      setError('Bloglar yüklenirken hata oluştu');
+      setBlogs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // İlk yükleme ve kategori/sayfa değişikliklerinde
+  useEffect(() => {
+    loadBlogs(selectedCategory, currentPage);
+  }, [selectedCategory, currentPage]);
 
   // Kategori değiştiğinde
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
+    setCurrentPage(1); // Kategori değişince sayfa 1'e dön
     
     // URL'i güncelle (SEO + Back button için)
     if (category === 'all') {
@@ -58,6 +77,12 @@ const Blogs = () => {
     }
 
     // Sayfayı yukarı kaydır
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Sayfa değişimi
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -104,7 +129,7 @@ const Blogs = () => {
             <div style={styles.errorIcon}>⚠️</div>
             <p style={styles.errorText}>{error}</p>
             <button 
-              onClick={() => window.location.reload()}
+              onClick={() => loadBlogs(selectedCategory, currentPage)}
               style={styles.retryButton}
             >
               Tekrar Dene
@@ -141,7 +166,7 @@ const Blogs = () => {
                 {/* Results Info */}
                 <div style={styles.resultsInfo}>
                   <p style={styles.resultsText}>
-                    {pagination.total} blog bulundu
+                    {pagination.totalBlogs || blogs.length} blog bulundu
                     {selectedCategory !== 'all' && ` · ${selectedCategory}`}
                   </p>
                 </div>
@@ -199,7 +224,7 @@ const Blogs = () => {
                             )}
                             {/* Date */}
                             <span style={styles.date}>
-                              📅 {new Date(blog.publishedAt).toLocaleDateString('tr-TR', {
+                              📅 {new Date(blog.createdAt).toLocaleDateString('tr-TR', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric'
@@ -213,18 +238,15 @@ const Blogs = () => {
                   ))}
                 </div>
 
-                {/* Pagination Info */}
-                {pagination.total > blogs.length && (
-                  <div style={styles.paginationInfo}>
-                    <p style={styles.paginationText}>
-                      {blogs.length} / {pagination.total} blog gösteriliyor
-                    </p>
-                    {pagination.hasNextPage && (
-                      <button style={styles.loadMoreButton}>
-                        Daha Fazla Yükle
-                      </button>
-                    )}
-                  </div>
+                {/* Pagination */}
+                {pagination.totalPages > 1 && (
+                  <Pagination
+                    currentPage={pagination.currentPage || currentPage}
+                    totalPages={pagination.totalPages || 1}
+                    totalItems={pagination.totalBlogs || 0}
+                    itemsPerPage={15}
+                    onPageChange={handlePageChange}
+                  />
                 )}
               </>
             )}
@@ -250,7 +272,6 @@ const styles = {
     paddingTop: '80px'
   },
   heroSection: {
-    backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
     padding: '80px 0',
     textAlign: 'center',
@@ -466,29 +487,6 @@ const styles = {
     color: '#007bff',
     fontWeight: '600',
     alignSelf: 'flex-end'
-  },
-  paginationInfo: {
-    textAlign: 'center',
-    padding: '30px 20px',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-  },
-  paginationText: {
-    fontSize: '14px',
-    color: '#666',
-    marginBottom: '15px'
-  },
-  loadMoreButton: {
-    padding: '12px 30px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '15px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s'
   }
 };
 

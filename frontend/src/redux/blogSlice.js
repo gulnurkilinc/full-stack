@@ -8,7 +8,7 @@ export const fetchBlogs = createAsyncThunk(
   'blogs/fetchBlogs',
   async (params = {}, { rejectWithValue }) => {
     try {
-      const { page = 1, limit = 10, category, status = 'published' } = params;
+      const { page = 1, limit = 15, category, status = 'published' } = params;
       
       const response = await axios.get(`${API_URL}/blogs`, {
         params: { page, limit, category, status }
@@ -16,7 +16,6 @@ export const fetchBlogs = createAsyncThunk(
 
       console.log('✅ Fetch blogs response:', response.data);
 
-      // Backend'den { success: true, blogs: [...], pagination: {...} } geliyor
       return response.data;
     } catch (error) {
       console.error('❌ Fetch blogs error:', error);
@@ -57,7 +56,6 @@ export const fetchBlogBySlug = createAsyncThunk(
       
       console.log('✅ Fetch blog by slug response:', response.data);
 
-      // Backend'den { success: true, blog: {...} } geliyor
       return response.data.blog;
     } catch (error) {
       console.error('❌ Fetch blog by slug error:', error);
@@ -72,10 +70,10 @@ const initialState = {
   featuredBlogs: [],
   currentBlog: null,
   pagination: {
-    page: 1,
-    limit: 10,
-    total: 0,
-    pages: 0
+    currentPage: 1,
+    totalPages: 1,
+    totalBlogs: 0,
+    limit: 15
   },
   loading: false,
   error: null
@@ -102,7 +100,7 @@ const blogSlice = createSlice({
       })
       .addCase(fetchBlogs.fulfilled, (state, action) => {
         state.loading = false;
-        state.blogs = action.payload.blogs || [];
+        state.blogs = action.payload.data || [];
         state.pagination = action.payload.pagination || initialState.pagination;
       })
       .addCase(fetchBlogs.rejected, (state, action) => {
@@ -117,7 +115,7 @@ const blogSlice = createSlice({
       })
       .addCase(fetchFeaturedBlogs.fulfilled, (state, action) => {
         state.loading = false;
-        state.featuredBlogs = action.payload.blogs || [];
+        state.featuredBlogs = action.payload.data || [];
       })
       .addCase(fetchFeaturedBlogs.rejected, (state, action) => {
         state.loading = false;

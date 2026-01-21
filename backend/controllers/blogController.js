@@ -6,19 +6,19 @@ exports.getAllBlogs = async (req, res) => {
   try {
     const {
       page = 1,
-      limit = 10,
-      category, // Kategori filtresi
+      limit = 15, // Frontend ile uyumlu (15 blog)
+      category,
       tags,
       status = "published",
       featured,
       search,
-      sort = "-publishedAt" // Varsayılan sıralama
+      sort = "-createdAt" // Varsayılan sıralama (en yeni)
     } = req.query;
 
     // Filtreleme objesi
     const filter = { status };
 
-    // Kategori filtresi (önemli: 'all' değilse ekle)
+    // Kategori filtresi
     if (category && category !== 'all') {
       filter.category = category;
     }
@@ -35,41 +35,50 @@ exports.getAllBlogs = async (req, res) => {
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: "i" } },
-        { content: { $regex: search, $options: "i" } }
+        { content: { $regex: search, $options: "i" } },
+        { excerpt: { $regex: search, $options: "i" } }
       ];
     }
 
-    // Pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    // Pagination hesaplamaları
+    const currentPage = parseInt(page);
+    const itemsPerPage = parseInt(limit);
+    const skip = (currentPage - 1) * itemsPerPage;
 
     // Veri çekme
     const blogs = await Blog.find(filter)
       .populate("author", "name email avatar")
       .sort(sort)
       .skip(skip)
-      .limit(parseInt(limit))
-      .lean(); // Performans optimizasyonu
+      .limit(itemsPerPage)
+      .lean();
 
-    const total = await Blog.countDocuments(filter);
+    const totalBlogs = await Blog.countDocuments(filter);
+    const totalPages = Math.ceil(totalBlogs / itemsPerPage);
 
+    // Frontend ile uyumlu response formatı
     res.status(200).json({
       success: true,
-      blogs,
+      count: blogs.length,
+      data: blogs, // Frontend 'data' bekliyor
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / parseInt(limit)),
-        hasNextPage: skip + blogs.length < total,
-        hasPrevPage: parseInt(page) > 1
+        currentPage,
+        totalPages,
+        totalBlogs,
+        limit: itemsPerPage,
+        hasNextPage: currentPage < totalPages,
+        hasPrevPage: currentPage > 1,
+        nextPage: currentPage < totalPages ? currentPage + 1 : null,
+        prevPage: currentPage > 1 ? currentPage - 1 : null
       },
       filter: {
         category: category || 'all',
-        status
+        status,
+        search: search || null
       }
     });
   } catch (error) {
-    console.error("Get all blogs error:", error);
+    console.error("❌ Get all blogs error:", error);
     res.status(500).json({
       success: false,
       message: "Bloglar getirilirken hata oluştu",
@@ -78,7 +87,7 @@ exports.getAllBlogs = async (req, res) => {
   }
 };
 
-// Kategorileri ve blog sayılarını getir (YENİ)
+// Kategorileri ve blog sayılarını getir
 exports.getCategories = async (req, res) => {
   try {
     // Tüm kategorileri ve blog sayılarını al
@@ -120,7 +129,7 @@ exports.getCategories = async (req, res) => {
       total: totalBlogs
     });
   } catch (error) {
-    console.error("Get categories error:", error);
+    console.error("❌ Get categories error:", error);
     res.status(500).json({
       success: false,
       message: "Kategoriler getirilirken hata oluştu",
@@ -162,7 +171,7 @@ exports.getBlogBySlug = async (req, res) => {
       blog
     });
   } catch (error) {
-    console.error("Get blog error:", error);
+    console.error("❌ Get blog error:", error);
     res.status(500).json({
       success: false,
       message: "Blog getirilirken hata oluştu",
@@ -176,7 +185,7 @@ exports.createBlog = async (req, res) => {
   try {
     const blogData = {
       ...req.body,
-      author: req.user?._id || "65a1234567890abcdef12345" // Auth middleware'den gelecek
+      author: req.user?._id || "65a1234567890abcdef12345"
     };
 
     const blog = await Blog.create(blogData);
@@ -187,7 +196,7 @@ exports.createBlog = async (req, res) => {
       blog
     });
   } catch (error) {
-    console.error("Create blog error:", error);
+    console.error("❌ Create blog error:", error);
     res.status(400).json({
       success: false,
       message: "Blog oluşturulurken hata oluştu",
@@ -219,7 +228,7 @@ exports.updateBlog = async (req, res) => {
       blog
     });
   } catch (error) {
-    console.error("Update blog error:", error);
+    console.error("❌ Update blog error:", error);
     res.status(400).json({
       success: false,
       message: "Blog güncellenirken hata oluştu",
@@ -247,7 +256,7 @@ exports.deleteBlog = async (req, res) => {
       message: "Blog başarıyla silindi"
     });
   } catch (error) {
-    console.error("Delete blog error:", error);
+    console.error("❌ Delete blog error:", error);
     res.status(500).json({
       success: false,
       message: "Blog silinirken hata oluştu",
@@ -293,7 +302,7 @@ exports.getRelatedBlogs = async (req, res) => {
       blogs: relatedBlogs
     });
   } catch (error) {
-    console.error("Get related blogs error:", error);
+    console.error("❌ Get related blogs error:", error);
     res.status(500).json({
       success: false,
       message: "İlgili bloglar getirilirken hata oluştu",
@@ -302,7 +311,7 @@ exports.getRelatedBlogs = async (req, res) => {
   }
 };
 
-// Kategori bazlı istatistikler (YENİ - Bonus)
+// Kategori bazlı istatistikler
 exports.getCategoryStats = async (req, res) => {
   try {
     const stats = await Blog.aggregate([
@@ -323,7 +332,7 @@ exports.getCategoryStats = async (req, res) => {
       stats
     });
   } catch (error) {
-    console.error("Get category stats error:", error);
+    console.error("❌ Get category stats error:", error);
     res.status(500).json({
       success: false,
       message: "İstatistikler getirilirken hata oluştu",

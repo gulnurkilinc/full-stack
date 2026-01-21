@@ -2,19 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchBlogs, fetchFeaturedBlogs } from '../../redux/blogSlice';
+import Pagination from '../../components/Pagination';
 
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const dispatch = useDispatch();
   
   // Redux'tan blogları al
-  const { blogs, featuredBlogs, loading } = useSelector((state) => state.blogs);
+  const { blogs, featuredBlogs, pagination, loading } = useSelector((state) => state.blogs);
 
-  // Component mount olduğunda blogları çek
+  // Component mount olduğunda öne çıkan blogları çek
   useEffect(() => {
-    dispatch(fetchBlogs());
     dispatch(fetchFeaturedBlogs());
   }, [dispatch]);
+
+  // Sayfa değiştiğinde blogları çek
+  useEffect(() => {
+    dispatch(fetchBlogs({ 
+      page: currentPage, 
+      limit: 15,
+      status: 'published'
+    }));
+  }, [dispatch, currentPage]);
 
   // Slider için öne çıkan blogları kullan
   const sliderNews = featuredBlogs.length > 0 ? featuredBlogs : [];
@@ -42,19 +52,11 @@ const Home = () => {
     setCurrentSlide(index);
   };
 
-  // Loading durumu
-  if (loading) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center' 
-      }}>
-        <h2>Yükleniyor...</h2>
-      </div>
-    );
-  }
+  // Sayfa değişimi
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div>
@@ -229,91 +231,132 @@ const Home = () => {
         <section>
           <h2 style={{ marginBottom: '30px', fontSize: '32px' }}>Son Yazılar</h2>
           
-          {blogs.length === 0 ? (
-            <p>Henüz blog yazısı yok.</p>
-          ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: '30px'
+          {/* Loading State */}
+          {loading && (
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '60px 20px' 
             }}>
-              {blogs.map(post => (
-                <div key={post._id} className="card" style={{ 
-                  overflow: 'hidden',
-                  transition: 'transform 0.3s, box-shadow 0.3s',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                }}
-                >
-                  <div style={{ 
-                    width: '100%', 
-                    height: '200px', 
-                    overflow: 'hidden',
-                    backgroundColor: '#f0f0f0'
-                  }}>
-                    <img 
-                      src={post.coverImage?.url || 'https://via.placeholder.com/400x250'} 
-                      alt={post.title}
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover',
-                        display: 'block'
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ padding: '20px' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      backgroundColor: '#007bff',
-                      color: 'white',
-                      padding: '4px 12px',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      marginBottom: '12px',
-                      fontWeight: '500'
-                    }}>
-                      {post.category}
-                    </span>
-
-                    <h3 style={{ 
-                      marginBottom: '12px',
-                      fontSize: '20px',
-                      lineHeight: '1.4',
-                      color: '#333'
-                    }}>
-                      {post.title}
-                    </h3>
-
-                    <p style={{ 
-                      color: '#666', 
-                      marginBottom: '15px',
-                      fontSize: '14px',
-                      lineHeight: '1.6'
-                    }}>
-                      {post.excerpt}
-                    </p>
-
-                    <Link to={`/blog/${post.slug}`}>
-                      <button className="btn btn-primary" style={{ width: '100%' }}>
-                        Devamını Oku
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-              ))}
+              <div style={{
+                width: '50px',
+                height: '50px',
+                border: '4px solid #f3f3f3',
+                borderTop: '4px solid #007bff',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 20px'
+              }}></div>
+              <p>Bloglar yükleniyor...</p>
             </div>
+          )}
+
+          {/* Blog Grid */}
+          {!loading && blogs.length === 0 ? (
+            <p>Henüz blog yazısı yok.</p>
+          ) : !loading && (
+            <>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '30px'
+              }}>
+                {blogs.map(post => (
+                  <div key={post._id} className="card" style={{ 
+                    overflow: 'hidden',
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-5px)';
+                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                  }}
+                  >
+                    <div style={{ 
+                      width: '100%', 
+                      height: '200px', 
+                      overflow: 'hidden',
+                      backgroundColor: '#f0f0f0'
+                    }}>
+                      <img 
+                        src={post.coverImage?.url || 'https://via.placeholder.com/400x250'} 
+                        alt={post.title}
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover',
+                          display: 'block'
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ padding: '20px' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        backgroundColor: '#007bff',
+                        color: 'white',
+                        padding: '4px 12px',
+                        borderRadius: '3px',
+                        fontSize: '12px',
+                        marginBottom: '12px',
+                        fontWeight: '500'
+                      }}>
+                        {post.category}
+                      </span>
+
+                      <h3 style={{ 
+                        marginBottom: '12px',
+                        fontSize: '20px',
+                        lineHeight: '1.4',
+                        color: '#333'
+                      }}>
+                        {post.title}
+                      </h3>
+
+                      <p style={{ 
+                        color: '#666', 
+                        marginBottom: '15px',
+                        fontSize: '14px',
+                        lineHeight: '1.6'
+                      }}>
+                        {post.excerpt}
+                      </p>
+
+                      <Link to={`/blog/${post.slug}`}>
+                        <button className="btn btn-primary" style={{ width: '100%' }}>
+                          Devamını Oku
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {pagination && pagination.totalPages > 1 && (
+                <Pagination
+                  currentPage={pagination.currentPage || currentPage}
+                  totalPages={pagination.totalPages || 1}
+                  totalItems={pagination.totalBlogs || 0}
+                  itemsPerPage={15}
+                  onPageChange={handlePageChange}
+                />
+              )}
+            </>
           )}
         </section>
       </div>
+
+      {/* CSS Animation */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
