@@ -8,7 +8,8 @@ const {
   deleteBlog,
   getRelatedBlogs,
   getCategories, 
-  getCategoryStats 
+  getCategoryStats,
+  searchBlogs
 } = require("../controllers/blogController");
 
 // Middleware'leri import et
@@ -21,6 +22,9 @@ const { adminMiddleware } = require("../middleware/adminMiddleware");
 
 // Tüm blogları getir (filtreleme, pagination destekli)
 router.get("/blogs", getAllBlogs);
+
+// Blog ara
+router.get("/blogs/search", searchBlogs);
 
 // Tek blog getir (slug veya ID ile)
 router.get("/blogs/:identifier", getBlogBySlug);

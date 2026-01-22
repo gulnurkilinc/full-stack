@@ -17,18 +17,45 @@ const Blogs = () => {
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Blogları yükle
-  const loadBlogs = async (category = 'all', page = 1) => {
-    try {
-      setLoading(true);
-      setError(null);
+// Blogları yükle
+const loadBlogs = async (category = 'all', page = 1, search = '') => {
+  try {
+    setLoading(true);
+    setError(null);
 
-      console.log('📥 Fetching blogs - Category:', category, 'Page:', page);
+    console.log('📥 Fetching blogs - Category:', category, 'Page:', page, 'Search:', search);
 
+    // Eğer arama varsa search endpoint'ini kullan
+    if (search && search.trim() !== '') {
+      setIsSearching(true);
+      
+      const response = await axios.get('http://localhost:4000/api/blogs/search', {
+        params: {
+          q: search.trim(),
+          page,
+          limit: 15
+        }
+      });
+
+      console.log('✅ Search Response:', response.data);
+
+      if (response.data && response.data.success) {
+        setBlogs(response.data.data || []);
+        setPagination(response.data.pagination || {});
+      } else {
+        setBlogs([]);
+        setError('Beklenmeyen veri formatı');
+      }
+    } else {
+      // Normal blog listesi
+      setIsSearching(false);
+      
       const params = {
         page,
-        limit: 15, // 15 blog per page
+        limit: 15,
         status: 'published'
       };
 
@@ -40,35 +67,35 @@ const Blogs = () => {
 
       console.log('✅ Response:', response.data);
 
-      // Response kontrolü
       if (response.data && response.data.success) {
         setBlogs(response.data.data || []);
         setPagination(response.data.pagination || {});
       } else {
-        console.error('❌ Unexpected response structure:', response.data);
         setBlogs([]);
         setError('Beklenmeyen veri formatı');
       }
-
-    } catch (err) {
-      console.error('❌ Load blogs error:', err);
-      setError('Bloglar yüklenirken hata oluştu');
-      setBlogs([]);
-    } finally {
-      setLoading(false);
     }
-  };
 
-  // İlk yükleme ve kategori/sayfa değişikliklerinde
-  useEffect(() => {
-    loadBlogs(selectedCategory, currentPage);
-  }, [selectedCategory, currentPage]);
+  } catch (err) {
+    console.error('❌ Load blogs error:', err);
+    setError('Bloglar yüklenirken hata oluştu');
+    setBlogs([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
+ // İlk yükleme ve kategori/sayfa/arama değişikliklerinde
+useEffect(() => {
+  loadBlogs(selectedCategory, currentPage, searchQuery);
+}, [selectedCategory, currentPage, searchQuery]);
+  
   // Kategori değiştiğinde
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
     setCurrentPage(1); // Kategori değişince sayfa 1'e dön
-    
+    setSearchQuery(''); // ← BUNU EKLE (arama sıfırlansın)
+
     // URL'i güncelle (SEO + Back button için)
     if (category === 'all') {
       setSearchParams({});
@@ -79,6 +106,32 @@ const Blogs = () => {
     // Sayfayı yukarı kaydır
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Arama fonksiyonu
+const handleSearch = (e) => {
+  e.preventDefault();
+  setCurrentPage(1); // Aramada sayfa 1'e dön
+  setSelectedCategory('all'); // Kategori filtresi kaldırılsın
+  // searchQuery zaten state'de var, useEffect tetiklenecek
+};
+
+// Arama input değişimi
+const handleSearchChange = (e) => {
+  const value = e.target.value;
+  setSearchQuery(value);
+  
+  // Eğer arama boşsa hemen normal listeye dön
+  if (value.trim() === '') {
+    setCurrentPage(1);
+  }
+};
+
+// Aramayı temizle
+const clearSearch = () => {
+  setSearchQuery('');
+  setCurrentPage(1);
+  setSelectedCategory('all');
+};
 
   // Sayfa değişimi
   const handlePageChange = (page) => {
@@ -114,6 +167,49 @@ const Blogs = () => {
           selectedCategory={selectedCategory}
           onCategoryChange={handleCategoryChange}
         />
+
+        {/* Kategori Filtresi */}
+
+{/* ARAMA BÖLÜMÜ */}
+<div style={styles.searchSection}>
+  <form onSubmit={handleSearch} style={styles.searchForm}>
+    <div style={styles.searchInputWrapper}>
+      <span style={styles.searchIcon}>🔍</span>
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={handleSearchChange}
+        placeholder="Blog ara... (başlık, içerik, etiketler)"
+        style={styles.searchInput}
+      />
+      {searchQuery && (
+        <button
+          type="button"
+          onClick={clearSearch}
+          style={styles.clearButton}
+          aria-label="Aramayı temizle"
+        >
+          ✕
+        </button>
+      )}
+    </div>
+    <button type="submit" style={styles.searchButton}>
+      Ara
+    </button>
+  </form>
+  
+  {/* Arama sonucu bilgisi */}
+  {isSearching && searchQuery && (
+    <div style={styles.searchInfo}>
+      <p style={styles.searchInfoText}>
+        "<strong>{searchQuery}</strong>" için {pagination.totalBlogs || 0} sonuç bulundu
+      </p>
+      <button onClick={clearSearch} style={styles.clearSearchButton}>
+        Aramayı Temizle
+      </button>
+    </div>
+  )}
+</div>
 
         {/* Loading State */}
         {loading && (
@@ -487,6 +583,90 @@ const styles = {
     color: '#007bff',
     fontWeight: '600',
     alignSelf: 'flex-end'
+  },
+ 
+  // ARAMA STİLLERİ - BUNLARI EKLE
+  searchSection: {
+    marginBottom: '30px'
+  },
+  searchForm: {
+    display: 'flex',
+    gap: '10px',
+    marginBottom: '15px'
+  },
+  searchInputWrapper: {
+    position: 'relative',
+    flex: 1,
+    maxWidth: '600px'
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: '15px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    fontSize: '18px',
+    pointerEvents: 'none'
+  },
+  searchInput: {
+    width: '100%',
+    padding: '12px 45px 12px 45px',
+    fontSize: '15px',
+    border: '2px solid #e0e0e0',
+    borderRadius: '8px',
+    outline: 'none',
+    transition: 'border-color 0.3s',
+    boxSizing: 'border-box'
+  },
+  clearButton: {
+    position: 'absolute',
+    right: '10px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    backgroundColor: 'transparent',
+    border: 'none',
+    fontSize: '18px',
+    color: '#999',
+    cursor: 'pointer',
+    padding: '5px 10px',
+    borderRadius: '50%',
+    transition: 'background-color 0.3s'
+  },
+  searchButton: {
+    padding: '12px 30px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '15px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s',
+    whiteSpace: 'nowrap'
+  },
+  searchInfo: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '15px 20px',
+    backgroundColor: '#e7f3ff',
+    borderRadius: '8px',
+    border: '1px solid #b3d9ff'
+  },
+  searchInfoText: {
+    margin: 0,
+    fontSize: '14px',
+    color: '#004085'
+  },
+  clearSearchButton: {
+    padding: '8px 20px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s'
   }
 };
 

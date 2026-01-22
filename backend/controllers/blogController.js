@@ -340,3 +340,75 @@ exports.getCategoryStats = async (req, res) => {
     });
   }
 };
+
+// Blog ara (Search)
+exports.searchBlogs = async (req, res) => {
+  try {
+    const { q, page = 1, limit = 15 } = req.query;
+
+    // Arama metni kontrolü
+    if (!q || q.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'Arama metni gereklidir'
+      });
+    }
+
+    const searchText = q.trim();
+
+    console.log('🔍 Searching blogs with query:', searchText);
+
+    // Arama filtresi - title, content, excerpt, tags
+    const searchFilter = {
+      status: 'published',
+      $or: [
+        { title: { $regex: searchText, $options: 'i' } },
+        { content: { $regex: searchText, $options: 'i' } },
+        { excerpt: { $regex: searchText, $options: 'i' } },
+        { tags: { $in: [new RegExp(searchText, 'i')] } }
+      ]
+    };
+
+    // Pagination
+    const currentPage = parseInt(page);
+    const itemsPerPage = parseInt(limit);
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    // Arama yap
+    const blogs = await Blog.find(searchFilter)
+      .populate('author', 'name email avatar')
+      .sort('-createdAt')
+      .skip(skip)
+      .limit(itemsPerPage)
+      .lean();
+
+    const totalBlogs = await Blog.countDocuments(searchFilter);
+    const totalPages = Math.ceil(totalBlogs / itemsPerPage);
+
+    console.log(`✅ Found ${totalBlogs} blogs matching "${searchText}"`);
+
+    res.status(200).json({
+      success: true,
+      count: blogs.length,
+      data: blogs,
+      pagination: {
+        currentPage,
+        totalPages,
+        totalBlogs,
+        limit: itemsPerPage,
+        hasNextPage: currentPage < totalPages,
+        hasPrevPage: currentPage > 1,
+        nextPage: currentPage < totalPages ? currentPage + 1 : null,
+        prevPage: currentPage > 1 ? currentPage - 1 : null
+      },
+      searchQuery: searchText
+    });
+  } catch (error) {
+    console.error('❌ Search blogs error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Arama yapılırken hata oluştu',
+      error: error.message
+    });
+  }
+};
