@@ -6,7 +6,10 @@ import { logout } from '../../redux/authSlice';
 const Header = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchBar, setShowSearchBar] = useState(false);
   const timeoutRef = useRef(null);
+  const searchInputRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -26,6 +29,13 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Arama çubuğu açıldığında input'a focus
+  useEffect(() => {
+    if (showSearchBar && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearchBar]);
 
   const isHomePage = location.pathname === '/';
 
@@ -50,6 +60,36 @@ const Header = () => {
     dispatch(logout());
     navigate('/');
   };
+
+  // Arama işlemleri
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/blogs?search=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSearchBar(false);
+      setSearchQuery('');
+    }
+  };
+
+  const toggleSearchBar = () => {
+    setShowSearchBar(!showSearchBar);
+    if (showSearchBar) {
+      setSearchQuery('');
+    }
+  };
+
+  // ESC tuşu ile arama çubuğunu kapat
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && showSearchBar) {
+        setShowSearchBar(false);
+        setSearchQuery('');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showSearchBar]);
 
   return (
     <header style={{
@@ -174,6 +214,72 @@ const Header = () => {
             </div>
 
             <Link to="/contact" style={{ color: 'white' }}>İletişim</Link>
+
+            {/* ARAMA BUTONU */}
+<button
+  onClick={toggleSearchBar}
+  style={{
+    backgroundColor: 'transparent',
+    color: 'white',
+    border: '2px solid white',
+    borderRadius: '50%',
+    width: '42px',
+    height: '42px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+    padding: 0
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = 'white';
+    e.currentTarget.style.transform = 'scale(1.1)';
+    const svg = e.currentTarget.querySelector('svg');
+    if (svg) svg.style.stroke = '#007bff';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'transparent';
+    e.currentTarget.style.transform = 'scale(1)';
+    const svg = e.currentTarget.querySelector('svg');
+    if (svg) svg.style.stroke = 'white';
+  }}
+  aria-label="Arama"
+>
+  {showSearchBar ? (
+    // Kapatma ikonu (X)
+    <svg 
+      width="20" 
+      height="20" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2.5" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+      style={{ transition: 'stroke 0.3s' }}
+    >
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  ) : (
+    // Modern arama ikonu
+    <svg 
+      width="20" 
+      height="20" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="white" 
+      strokeWidth="2.5" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+      style={{ transition: 'stroke 0.3s' }}
+    >
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="m21 21-4.35-4.35"></path>
+    </svg>
+  )}
+</button>
             
             {/* Giriş yapmış kullanıcı için */}
             {isAuthenticated ? (
@@ -221,7 +327,96 @@ const Header = () => {
             )}
           </div>
         </nav>
+
+        {/* ARAMA ÇUBUĞU */}
+        {showSearchBar && (
+          <div style={{
+            marginTop: '20px',
+            animation: 'slideDown 0.3s ease'
+          }}>
+            <form onSubmit={handleSearchSubmit} style={{
+              display: 'flex',
+              gap: '10px',
+              maxWidth: '600px',
+              margin: '0 auto'
+            }}>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Blog ara... (başlık, içerik, etiketler)"
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  fontSize: '15px',
+                  border: '2px solid white',
+                  borderRadius: '25px',
+                  outline: 'none',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  transition: 'all 0.3s'
+                }}
+                onFocus={(e) => {
+                  e.target.style.backgroundColor = 'white';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+              <button
+                type="submit"
+                style={{
+                  padding: '12px 30px',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '25px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#0056b3';
+                  e.target.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#007bff';
+                  e.target.style.transform = 'scale(1)';
+                }}
+              >
+                Ara
+              </button>
+            </form>
+            <p style={{
+              textAlign: 'center',
+              color: 'white',
+              fontSize: '12px',
+              marginTop: '10px',
+              opacity: 0.8
+            }}>
+              ESC tuşu ile kapatabilirsiniz
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* CSS Animasyon */}
+      <style>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </header>
   );
 };
