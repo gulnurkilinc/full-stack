@@ -48,7 +48,7 @@ if (process.env.NODE_ENV === 'development') {
 db();
 
 // ============================================
-// HEALTH CHECK (EN BAŞTA - Rate limiter YOK)
+// HEALTH CHECK
 // ============================================
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -60,54 +60,25 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================
-// TEST ROUTES (Rate limiter YOK!)
+// TEST ROUTES
 // ============================================
 
 // TEST ROUTE - Admin kullanıcı oluştur
 app.get('/api/create-admin', async (req, res) => {
   try {
     const User = require('./models/User.js');
-    
-    const existingAdmin = await User.findOne({ email: 'admin@blog.com' });
-    
-    if (existingAdmin) {
-      return res.status(200).json({
-        success: true,
-        message: '✅ Admin kullanıcı zaten mevcut',
-        credentials: {
-          email: 'admin@blog.com',
-          password: 'admin123'
-        },
-        note: 'Bu bilgilerle /login sayfasından giriş yapabilirsiniz'
-      });
-    }
-
-    // TEST ROUTE - Admin kullanıcı oluştur
-app.get('/api/create-admin', async (req, res) => {
-  try {
-    const User = require('./models/User.js');
     const bcrypt = require('bcryptjs');
     
-    // Admin var mı kontrol et
-    const existingAdmin = await User.findOne({ email: 'admin@blog.com' });
+    // ÖNCEKİ ADMINI SİL
+    await User.deleteMany({ email: 'admin@blog.com' });
+    console.log('🗑️ Eski admin silindi');
     
-    if (existingAdmin) {
-      return res.status(200).json({
-        success: true,
-        message: '✅ Admin kullanıcı zaten mevcut',
-        credentials: {
-          email: 'admin@blog.com',
-          password: 'admin123'
-        },
-        note: 'Bu bilgilerle /login sayfasından giriş yapabilirsiniz'
-      });
-    }
-
     // Şifreyi hashle
     const hashedPassword = await bcrypt.hash('admin123', 10);
+    console.log('🔐 Şifre hashlendi');
 
-    // Doğrudan MongoDB'ye yaz (middleware bypass)
-    await User.collection.insertOne({
+    // Doğrudan MongoDB'ye yaz
+    const result = await User.collection.insertOne({
       name: 'Admin User',
       email: 'admin@blog.com',
       password: hashedPassword,
@@ -125,19 +96,15 @@ app.get('/api/create-admin', async (req, res) => {
       updatedAt: new Date()
     });
 
+    console.log('✅ Admin oluşturuldu:', result.insertedId);
+
     res.status(200).json({
       success: true,
       message: '✅ Admin kullanıcı başarıyla oluşturuldu!',
       credentials: {
         email: 'admin@blog.com',
         password: 'admin123'
-      },
-      user: {
-        name: 'Admin User',
-        email: 'admin@blog.com',
-        role: 'admin'
-      },
-      note: 'Bu bilgilerle /login sayfasından giriş yapabilirsiniz'
+      }
     });
     
   } catch (error) {
@@ -145,31 +112,6 @@ app.get('/api/create-admin', async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message
-    });
-  }
-});
-
-
-    res.status(200).json({
-  success: true,
-  message: '✅ Admin kullanıcı başarıyla oluşturuldu!',
-  credentials: {
-    email: 'admin@blog.com',
-    password: 'admin123'
-  },
-  user: {
-    name: 'Admin User',
-    email: 'admin@blog.com',
-    role: 'admin'
-  },
-  note: 'Bu bilgilerle /login sayfasından giriş yapabilirsiniz'
-});
-  } catch (error) {
-    console.error('❌ Create admin error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
@@ -275,9 +217,8 @@ const { apiRateLimiter } = require('./middleware/rateLimiter');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // ============================================
-// RATE LIMITING (Sadece belirli route'lara)
+// RATE LIMITING
 // ============================================
-// NOT: Test route'ları YUKARIDA tanımlandı, rate limiter uygulanmadı
 app.use('/api/blogs', apiRateLimiter);
 app.use('/api/login', apiRateLimiter);
 app.use('/api/register', apiRateLimiter);
@@ -287,39 +228,22 @@ app.use('/api/register', apiRateLimiter);
 // ============================================
 app.use('/api', blogRoutes);
 app.use('/api', userRoutes);
-app.use('/api/contact', contactRoutes); // Kendi rate limiter'ı var
+app.use('/api/contact', contactRoutes);
 
 // ============================================
-// ANA SAYFA - API Dokümantasyonu
+// ANA SAYFA
 // ============================================
 app.get('/', (req, res) => {
   res.status(200).json({ 
     message: '✅ Blog API çalışıyor!',
     version: '1.0.0',
     endpoints: {
-      health: {
-        method: 'GET',
-        path: '/api/health',
-        description: 'Server durumu kontrolü'
-      },
-      test: {
-        'Admin oluştur': 'GET /api/create-admin',
-        'Blog verileri ekle': 'GET /api/seed-blogs'
-      },
-      blogs: {
-        'Tüm bloglar': 'GET /api/blogs',
-        'Blog ara': 'GET /api/blogs/search',
-        'Tek blog': 'GET /api/blogs/:slug',
-        'Blog oluştur (Admin)': 'POST /api/blogs'
-      },
-      auth: {
-        'Login': 'POST /api/login',
-        'Register': 'POST /api/register'
-      },
-      contact: {
-        'Mesaj gönder': 'POST /api/contact (Rate Limited: 3 istek/15dk)',
-        'Mesajları listele (Admin)': 'GET /api/contact'
-      }
+      health: 'GET /api/health',
+      'Admin oluştur': 'GET /api/create-admin',
+      'Blog ekle': 'GET /api/seed-blogs',
+      'Bloglar': 'GET /api/blogs',
+      'Login': 'POST /api/login',
+      'İletişim': 'POST /api/contact'
     },
     status: 'running',
     environment: process.env.NODE_ENV || 'development'
@@ -329,57 +253,37 @@ app.get('/', (req, res) => {
 // ============================================
 // ERROR HANDLERS
 // ============================================
-
-// 404 Handler
 app.use(notFound);
-
-// Merkezi Error Handler
 app.use(errorHandler);
 
 // ============================================
 // SERVER BAŞLAT
 // ============================================
-
 const PORT = process.env.PORT || 4000;
 const server = app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════════╗
 ║   🚀 Blog API Server                      ║
-║   ✅ Server is running on port ${PORT}       ║
+║   ✅ Server running on port ${PORT}          ║
 ║   📍 http://localhost:${PORT}                ║
 ║   🌍 Environment: ${process.env.NODE_ENV || 'development'}              ║
 ║   🔒 Security: Enabled                    ║
 ║   🔗 Frontend: ${process.env.FRONTEND_URL}  ║
 ╚════════════════════════════════════════════╝
   `);
-  console.log('📋 Available endpoints:');
-  console.log('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('   🧪 TEST ROUTES (No rate limit)');
+  console.log('📋 Endpoints:');
   console.log('   - GET  /api/create-admin');
   console.log('   - GET  /api/seed-blogs');
-  console.log('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('   📝 BLOG ROUTES');
   console.log('   - GET  /api/blogs');
-  console.log('   - POST /api/blogs (Protected)');
-  console.log('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('   🔐 AUTH ROUTES');
   console.log('   - POST /api/login');
-  console.log('   - POST /api/register');
-  console.log('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('   📧 CONTACT ROUTES');
-  console.log('   - POST /api/contact (⚡ Rate Limited: 3/15dk)');
-  console.log('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('   - POST /api/contact');
 });
 
-// Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('👋 SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    console.log('🔴 HTTP server closed');
-  });
+  console.log('👋 SIGTERM: closing server');
+  server.close(() => console.log('🔴 Server closed'));
 });
 
-// Unhandled Promise Rejections
 process.on('unhandledRejection', (err) => {
   console.error('❌ Unhandled Rejection:', err);
   server.close(() => process.exit(1));
