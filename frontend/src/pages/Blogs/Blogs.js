@@ -4,6 +4,9 @@ import axios from 'axios';
 import CategoryFilter from '../../components/Blog/CategoryFilter';
 import Pagination from '../../components/Pagination';
 
+// API Base URL - .env'den al veya default kullan
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
+
 const Blogs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -20,81 +23,90 @@ const Blogs = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [isSearching, setIsSearching] = useState(false);
 
-// Blogları yükle
-const loadBlogs = async (category = 'all', page = 1, search = '') => {
-  try {
-    setLoading(true);
-    setError(null);
+  // Blogları yükle
+  const loadBlogs = async (category = 'all', page = 1, search = '') => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    console.log('📥 Fetching blogs - Category:', category, 'Page:', page, 'Search:', search);
+      console.log('📥 Fetching blogs - Category:', category, 'Page:', page, 'Search:', search);
 
-    // Eğer arama varsa search endpoint'ini kullan
-    if (search && search.trim() !== '') {
-      setIsSearching(true);
-      
-      const response = await axios.get('http://localhost:4000/api/blogs/search', {
-        params: {
-          q: search.trim(),
-          page,
-          limit: 15
+      // Eğer arama varsa search endpoint'ini kullan
+      if (search && search.trim() !== '') {
+        setIsSearching(true);
+        
+        const response = await axios.get(`${API_BASE_URL}/api/blogs/search`, {
+          params: {
+            q: search.trim(),
+            page,
+            limit: 15
+          }
+        });
+
+        console.log('✅ Search Response:', response.data);
+
+        if (response.data && response.data.success) {
+          setBlogs(response.data.data || []);
+          setPagination(response.data.pagination || {});
+        } else {
+          setBlogs([]);
+          setError('Beklenmeyen veri formatı');
         }
-      });
-
-      console.log('✅ Search Response:', response.data);
-
-      if (response.data && response.data.success) {
-        setBlogs(response.data.data || []);
-        setPagination(response.data.pagination || {});
       } else {
-        setBlogs([]);
-        setError('Beklenmeyen veri formatı');
+        // Normal blog listesi
+        setIsSearching(false);
+        
+        const params = {
+          page,
+          limit: 15,
+          status: 'published'
+        };
+
+        if (category !== 'all') {
+          params.category = category;
+        }
+
+        const response = await axios.get(`${API_BASE_URL}/api/blogs`, { params });
+
+        console.log('✅ Response:', response.data);
+
+        if (response.data && response.data.success) {
+          setBlogs(response.data.data || []);
+          setPagination(response.data.pagination || {});
+        } else {
+          setBlogs([]);
+          setError('Beklenmeyen veri formatı');
+        }
       }
-    } else {
-      // Normal blog listesi
-      setIsSearching(false);
+
+    } catch (err) {
+      console.error('❌ Load blogs error:', err);
       
-      const params = {
-        page,
-        limit: 15,
-        status: 'published'
-      };
-
-      if (category !== 'all') {
-        params.category = category;
-      }
-
-      const response = await axios.get('http://localhost:4000/api/blogs', { params });
-
-      console.log('✅ Response:', response.data);
-
-      if (response.data && response.data.success) {
-        setBlogs(response.data.data || []);
-        setPagination(response.data.pagination || {});
+      // Daha detaylı hata mesajı
+      if (err.response) {
+        setError(`Sunucu hatası: ${err.response.status} - ${err.response.data?.message || 'Bilinmeyen hata'}`);
+      } else if (err.request) {
+        setError('Sunucuya bağlanılamıyor. Backend çalışıyor mu kontrol edin.');
       } else {
-        setBlogs([]);
-        setError('Beklenmeyen veri formatı');
+        setError('Bloglar yüklenirken hata oluştu');
       }
+      
+      setBlogs([]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-  } catch (err) {
-    console.error('❌ Load blogs error:', err);
-    setError('Bloglar yüklenirken hata oluştu');
-    setBlogs([]);
-  } finally {
-    setLoading(false);
-  }
-};
-
- // İlk yükleme ve kategori/sayfa/arama değişikliklerinde
-useEffect(() => {
-  loadBlogs(selectedCategory, currentPage, searchQuery);
-}, [selectedCategory, currentPage, searchQuery]);
+  // İlk yükleme ve kategori/sayfa/arama değişikliklerinde
+  useEffect(() => {
+    loadBlogs(selectedCategory, currentPage, searchQuery);
+  }, [selectedCategory, currentPage, searchQuery]);
   
   // Kategori değiştiğinde
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
     setCurrentPage(1); // Kategori değişince sayfa 1'e dön
-    setSearchQuery(''); // ← BUNU EKLE (arama sıfırlansın)
+    setSearchQuery(''); // Arama sıfırlansın
 
     // URL'i güncelle (SEO + Back button için)
     if (category === 'all') {
@@ -108,30 +120,30 @@ useEffect(() => {
   };
 
   // Arama fonksiyonu
-const handleSearch = (e) => {
-  e.preventDefault();
-  setCurrentPage(1); // Aramada sayfa 1'e dön
-  setSelectedCategory('all'); // Kategori filtresi kaldırılsın
-  // searchQuery zaten state'de var, useEffect tetiklenecek
-};
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setCurrentPage(1); // Aramada sayfa 1'e dön
+    setSelectedCategory('all'); // Kategori filtresi kaldırılsın
+    // searchQuery zaten state'de var, useEffect tetiklenecek
+  };
 
-// Arama input değişimi
-const handleSearchChange = (e) => {
-  const value = e.target.value;
-  setSearchQuery(value);
-  
-  // Eğer arama boşsa hemen normal listeye dön
-  if (value.trim() === '') {
+  // Arama input değişimi
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    // Eğer arama boşsa hemen normal listeye dön
+    if (value.trim() === '') {
+      setCurrentPage(1);
+    }
+  };
+
+  // Aramayı temizle
+  const clearSearch = () => {
+    setSearchQuery('');
     setCurrentPage(1);
-  }
-};
-
-// Aramayı temizle
-const clearSearch = () => {
-  setSearchQuery('');
-  setCurrentPage(1);
-  setSelectedCategory('all');
-};
+    setSelectedCategory('all');
+  };
 
   // Sayfa değişimi
   const handlePageChange = (page) => {
@@ -168,48 +180,46 @@ const clearSearch = () => {
           onCategoryChange={handleCategoryChange}
         />
 
-        {/* Kategori Filtresi */}
-
-{/* ARAMA BÖLÜMÜ */}
-<div style={styles.searchSection}>
-  <form onSubmit={handleSearch} style={styles.searchForm}>
-    <div style={styles.searchInputWrapper}>
-      <span style={styles.searchIcon}>🔍</span>
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={handleSearchChange}
-        placeholder="Blog ara... (başlık, içerik, etiketler)"
-        style={styles.searchInput}
-      />
-      {searchQuery && (
-        <button
-          type="button"
-          onClick={clearSearch}
-          style={styles.clearButton}
-          aria-label="Aramayı temizle"
-        >
-          ✕
-        </button>
-      )}
-    </div>
-    <button type="submit" style={styles.searchButton}>
-      Ara
-    </button>
-  </form>
-  
-  {/* Arama sonucu bilgisi */}
-  {isSearching && searchQuery && (
-    <div style={styles.searchInfo}>
-      <p style={styles.searchInfoText}>
-        "<strong>{searchQuery}</strong>" için {pagination.totalBlogs || 0} sonuç bulundu
-      </p>
-      <button onClick={clearSearch} style={styles.clearSearchButton}>
-        Aramayı Temizle
-      </button>
-    </div>
-  )}
-</div>
+        {/* ARAMA BÖLÜMÜ */}
+        <div style={styles.searchSection}>
+          <form onSubmit={handleSearch} style={styles.searchForm}>
+            <div style={styles.searchInputWrapper}>
+              <span style={styles.searchIcon}>🔍</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Blog ara... (başlık, içerik, etiketler)"
+                style={styles.searchInput}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  style={styles.clearButton}
+                  aria-label="Aramayı temizle"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <button type="submit" style={styles.searchButton}>
+              Ara
+            </button>
+          </form>
+          
+          {/* Arama sonucu bilgisi */}
+          {isSearching && searchQuery && (
+            <div style={styles.searchInfo}>
+              <p style={styles.searchInfoText}>
+                "<strong>{searchQuery}</strong>" için {pagination.totalBlogs || 0} sonuç bulundu
+              </p>
+              <button onClick={clearSearch} style={styles.clearSearchButton}>
+                Aramayı Temizle
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Loading State */}
         {loading && (
@@ -584,8 +594,6 @@ const styles = {
     fontWeight: '600',
     alignSelf: 'flex-end'
   },
- 
-  // ARAMA STİLLERİ - BUNLARI EKLE
   searchSection: {
     marginBottom: '30px'
   },

@@ -1,247 +1,386 @@
-const express = require("express"); 
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
-const dotenv = require("dotenv");
-const db = require("./config/db");
-
-dotenv.config();
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const xss = require('xss-clean');
+const db = require('./config/db');
 
 const app = express();
 
+// ============================================
+// SECURITY MIDDLEWARES
+// ============================================
+
+// Helmet - HTTP header güvenliği
+app.use(helmet());
+
+// CORS - Güncellenmiş ayarlar
 app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true
+  origin: process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(bodyParser.json({ limit: "30mb", extended: true }));
-app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
+// Body parser
+app.use(bodyParser.json({ limit: '30mb', extended: true }));
+app.use(bodyParser.urlencoded({ limit: '30mb', extended: true }));
 app.use(cookieParser());
 
-db();
-
-const blogRoutes = require("./routes/blog.js");
-const userRoutes = require("./routes/user.js");
-
-app.use("/api", blogRoutes);
-app.use("/api", userRoutes);
+// Data sanitization against XSS
+app.use(xss());
 
 // ============================================
-// TEST ROUTES - Geliştirme için
+// REQUEST LOGGING (Development)
+// ============================================
+if (process.env.NODE_ENV === 'development') {
+  app.use((req, res, next) => {
+    console.log(`📝 ${req.method} ${req.path}`);
+    next();
+  });
+}
+
+// ============================================
+// DATABASE CONNECTION
+// ============================================
+db();
+
+// ============================================
+// HEALTH CHECK (EN BAŞTA - Rate limiter YOK)
+// ============================================
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Server çalışıyor',
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ============================================
+// TEST ROUTES (Rate limiter YOK!)
 // ============================================
 
 // TEST ROUTE - Admin kullanıcı oluştur
-app.get("/api/create-admin", async (req, res) => {
-    const User = require("./models/User.js");
+app.get('/api/create-admin', async (req, res) => {
+  try {
+    const User = require('./models/User.js');
     
-    try {
-        // Önce kontrol et
-        const existingAdmin = await User.findOne({ email: "admin@blog.com" });
-        
-        if (existingAdmin) {
-            return res.status(200).json({
-                success: true,
-                message: "✅ Admin kullanıcı zaten mevcut",
-                credentials: {
-                    email: "admin@blog.com",
-                    password: "admin123"
-                },
-                note: "Bu bilgilerle /login sayfasından giriş yapabilirsiniz"
-            });
-        }
-
-        // Admin oluştur
-        const admin = await User.create({
-            name: "Admin User",
-            email: "admin@blog.com",
-            password: "admin123",
-            role: "admin",
-            isVerified: true,
-            isActive: true
-        });
-
-        res.status(200).json({
-            success: true,
-            message: "✅ Admin kullanıcı başarıyla oluşturuldu!",
-            credentials: {
-                email: "admin@blog.com",
-                password: "admin123"
-            },
-            user: {
-                id: admin._id,
-                name: admin.name,
-                email: admin.email,
-                role: admin.role
-            },
-            note: "Bu bilgilerle /login sayfasından giriş yapabilirsiniz"
-        });
-    } catch (error) {
-        console.error("❌ Create admin error:", error);
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+    const existingAdmin = await User.findOne({ email: 'admin@blog.com' });
+    
+    if (existingAdmin) {
+      return res.status(200).json({
+        success: true,
+        message: '✅ Admin kullanıcı zaten mevcut',
+        credentials: {
+          email: 'admin@blog.com',
+          password: 'admin123'
+        },
+        note: 'Bu bilgilerle /login sayfasından giriş yapabilirsiniz'
+      });
     }
+
+    // TEST ROUTE - Admin kullanıcı oluştur
+app.get('/api/create-admin', async (req, res) => {
+  try {
+    const User = require('./models/User.js');
+    const bcrypt = require('bcryptjs');
+    
+    // Admin var mı kontrol et
+    const existingAdmin = await User.findOne({ email: 'admin@blog.com' });
+    
+    if (existingAdmin) {
+      return res.status(200).json({
+        success: true,
+        message: '✅ Admin kullanıcı zaten mevcut',
+        credentials: {
+          email: 'admin@blog.com',
+          password: 'admin123'
+        },
+        note: 'Bu bilgilerle /login sayfasından giriş yapabilirsiniz'
+      });
+    }
+
+    // Şifreyi hashle
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+
+    // Doğrudan MongoDB'ye yaz (middleware bypass)
+    await User.collection.insertOne({
+      name: 'Admin User',
+      email: 'admin@blog.com',
+      password: hashedPassword,
+      role: 'admin',
+      isVerified: true,
+      isActive: true,
+      avatar: {
+        public_id: 'default_avatar',
+        url: 'https://ui-avatars.com/api/?name=Admin&background=007bff&color=fff&size=200'
+      },
+      bio: '',
+      socialLinks: { twitter: '', linkedin: '', github: '', website: '' },
+      lastLogin: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    res.status(200).json({
+      success: true,
+      message: '✅ Admin kullanıcı başarıyla oluşturuldu!',
+      credentials: {
+        email: 'admin@blog.com',
+        password: 'admin123'
+      },
+      user: {
+        name: 'Admin User',
+        email: 'admin@blog.com',
+        role: 'admin'
+      },
+      note: 'Bu bilgilerle /login sayfasından giriş yapabilirsiniz'
+    });
+    
+  } catch (error) {
+    console.error('❌ Create admin error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+
+    res.status(200).json({
+  success: true,
+  message: '✅ Admin kullanıcı başarıyla oluşturuldu!',
+  credentials: {
+    email: 'admin@blog.com',
+    password: 'admin123'
+  },
+  user: {
+    name: 'Admin User',
+    email: 'admin@blog.com',
+    role: 'admin'
+  },
+  note: 'Bu bilgilerle /login sayfasından giriş yapabilirsiniz'
+});
+  } catch (error) {
+    console.error('❌ Create admin error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
 });
 
 // TEST ROUTE - Blog eklemek için
-app.get("/api/seed-blogs", async (req, res) => {
-    const Blog = require("./models/blog.js");
+app.get('/api/seed-blogs', async (req, res) => {
+  try {
+    const Blog = require('./models/blog.js');
     
-    try {
-        // Önce tüm blogları sil
-        await Blog.deleteMany({});
-        
-        // Test blogları oluştur
-        const blogs = await Blog.insertMany([
-            {
-                title: "Yapay Zeka ve Gelecek",
-                slug: "yapay-zeka-ve-gelecek",
-                content: "<h2>Yapay Zeka Nedir?</h2><p>Yapay zeka teknolojisi son yıllarda inanılmaz bir hızla gelişiyor. ChatGPT, DALL-E ve diğer AI modelleri hayatımızı değiştiriyor...</p><h3>Gelecekte Neler Bizi Bekliyor?</h3><p>Uzmanlar 2030'a kadar yapay zekanın birçok sektörü tamamen değiştireceğini öngörüyor. Otonom araçlar, tıbbi teşhis sistemleri ve kişiselleştirilmiş eğitim platformları sadece başlangıç...</p>",
-                excerpt: "Yapay zeka teknolojisinin gelecekte nasıl bir rol oynayacağını keşfedin.",
-                category: "Teknoloji",
-                tags: ["yapay zeka", "teknoloji", "gelecek"],
-                coverImage: {
-                    public_id: "sample1",
-                    url: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800"
-                },
-                author: "65a1234567890abcdef12345",
-                status: "published",
-                featured: true,
-                publishedAt: new Date()
-            },
-            {
-                title: "Sağlıklı Yaşam İpuçları",
-                slug: "saglikli-yasam-ipuclari",
-                content: "<h2>Dengeli Beslenme</h2><p>Dengeli beslenme ve düzenli egzersiz sağlıklı bir yaşamın temel taşlarıdır. Her gün en az 30 dakika yürüyüş yapın...</p><h3>Egzersiz Önerileri</h3><p>Haftada en az 3 gün orta tempolu egzersiz yapmanız önerilir. Yüzme, koşu ve bisiklet gibi aktiviteler idealdir.</p>",
-                excerpt: "Dengeli beslenme ve düzenli egzersizle sağlıklı bir yaşam sürdürün.",
-                category: "Sağlık",
-                tags: ["sağlık", "beslenme", "spor"],
-                coverImage: {
-                    public_id: "sample2",
-                    url: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800"
-                },
-                author: "65a1234567890abcdef12345",
-                status: "published",
-                featured: false,
-                publishedAt: new Date()
-            },
-            {
-                title: "Küresel Isınma ve Etkileri",
-                slug: "kuresel-isinma-ve-etkileri",
-                content: "<h2>İklim Krizi</h2><p>İklim değişikliği dünyamızın en büyük tehdididir. Bilim insanları uyarıyor: Hemen harekete geçmeliyiz...</p>",
-                excerpt: "İklim değişikliği ve dünya üzerindeki etkileri hakkında bilmeniz gerekenler.",
-                category: "Dünya",
-                tags: ["iklim", "çevre", "doğa"],
-                coverImage: {
-                    public_id: "sample3",
-                    url: "https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=800"
-                },
-                author: "65a1234567890abcdef12345",
-                status: "published",
-                featured: true,
-                publishedAt: new Date()
-            },
-            {
-                title: "Uzayda Yeni Keşifler",
-                slug: "uzayda-yeni-kesifler",
-                content: "<h2>Mars Misyonu</h2><p>NASA ve SpaceX uzay keşfinde yeni bir çağ başlattı. Mars'a insanlı görev planları hızla ilerliyor...</p>",
-                excerpt: "NASA ve diğer uzay ajanslarının son keşiflerini öğrenin.",
-                category: "Bilim",
-                tags: ["uzay", "bilim", "keşif"],
-                coverImage: {
-                    public_id: "sample4",
-                    url: "https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800"
-                },
-                author: "65a1234567890abcdef12345",
-                status: "published",
-                featured: false,
-                publishedAt: new Date()
-            }
-        ]);
-        
-        res.status(200).json({
-            success: true,
-            message: `✅ ${blogs.length} blog başarıyla eklendi!`,
-            blogs
-        });
-    } catch (error) {
-        console.error("❌ Seed blogs error:", error);
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
+    await Blog.deleteMany({});
+    
+    const blogs = await Blog.insertMany([
+      {
+        title: 'Yapay Zeka ve Gelecek',
+        slug: 'yapay-zeka-ve-gelecek',
+        content: '<h2>Yapay Zeka Nedir?</h2><p>Yapay zeka teknolojisi son yıllarda inanılmaz bir hızla gelişiyor. ChatGPT, DALL-E ve diğer AI modelleri hayatımızı değiştiriyor...</p><h3>Gelecekte Neler Bizi Bekliyor?</h3><p>Uzmanlar 2030\'a kadar yapay zekanın birçok sektörü tamamen değiştireceğini öngörüyor. Otonom araçlar, tıbbi teşhis sistemleri ve kişiselleştirilmiş eğitim platformları sadece başlangıç...</p>',
+        excerpt: 'Yapay zeka teknolojisinin gelecekte nasıl bir rol oynayacağını keşfedin.',
+        category: 'Teknoloji',
+        tags: ['yapay zeka', 'teknoloji', 'gelecek'],
+        coverImage: {
+          public_id: 'sample1',
+          url: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800'
+        },
+        author: '65a1234567890abcdef12345',
+        status: 'published',
+        featured: true,
+        publishedAt: new Date()
+      },
+      {
+        title: 'Sağlıklı Yaşam İpuçları',
+        slug: 'saglikli-yasam-ipuclari',
+        content: '<h2>Dengeli Beslenme</h2><p>Dengeli beslenme ve düzenli egzersiz sağlıklı bir yaşamın temel taşlarıdır. Her gün en az 30 dakika yürüyüş yapın...</p><h3>Egzersiz Önerileri</h3><p>Haftada en az 3 gün orta tempolu egzersiz yapmanız önerilir. Yüzme, koşu ve bisiklet gibi aktiviteler idealdir.</p>',
+        excerpt: 'Dengeli beslenme ve düzenli egzersizle sağlıklı bir yaşam sürdürün.',
+        category: 'Sağlık',
+        tags: ['sağlık', 'beslenme', 'spor'],
+        coverImage: {
+          public_id: 'sample2',
+          url: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800'
+        },
+        author: '65a1234567890abcdef12345',
+        status: 'published',
+        featured: false,
+        publishedAt: new Date()
+      },
+      {
+        title: 'Küresel Isınma ve Etkileri',
+        slug: 'kuresel-isinma-ve-etkileri',
+        content: '<h2>İklim Krizi</h2><p>İklim değişikliği dünyamızın en büyük tehdididir. Bilim insanları uyarıyor: Hemen harekete geçmeliyiz...</p>',
+        excerpt: 'İklim değişikliği ve dünya üzerindeki etkileri hakkında bilmeniz gerekenler.',
+        category: 'Dünya',
+        tags: ['iklim', 'çevre', 'doğa'],
+        coverImage: {
+          public_id: 'sample3',
+          url: 'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=800'
+        },
+        author: '65a1234567890abcdef12345',
+        status: 'published',
+        featured: true,
+        publishedAt: new Date()
+      },
+      {
+        title: 'Uzayda Yeni Keşifler',
+        slug: 'uzayda-yeni-kesifler',
+        content: '<h2>Mars Misyonu</h2><p>NASA ve SpaceX uzay keşfinde yeni bir çağ başlattı. Mars\'a insanlı görev planları hızla ilerliyor...</p>',
+        excerpt: 'NASA ve diğer uzay ajanslarının son keşiflerini öğrenin.',
+        category: 'Bilim',
+        tags: ['uzay', 'bilim', 'keşif'],
+        coverImage: {
+          public_id: 'sample4',
+          url: 'https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=800'
+        },
+        author: '65a1234567890abcdef12345',
+        status: 'published',
+        featured: false,
+        publishedAt: new Date()
+      }
+    ]);
+    
+    res.status(200).json({
+      success: true,
+      message: `✅ ${blogs.length} blog başarıyla eklendi!`,
+      count: blogs.length,
+      blogs
+    });
+  } catch (error) {
+    console.error('❌ Seed blogs error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 });
+
+// ============================================
+// IMPORT ROUTES
+// ============================================
+const blogRoutes = require('./routes/blog.js');
+const userRoutes = require('./routes/user.js');
+const contactRoutes = require('./routes/contact.js');
+
+// Import middlewares
+const { apiRateLimiter } = require('./middleware/rateLimiter');
+const { errorHandler, notFound } = require('./middleware/errorHandler');
+
+// ============================================
+// RATE LIMITING (Sadece belirli route'lara)
+// ============================================
+// NOT: Test route'ları YUKARIDA tanımlandı, rate limiter uygulanmadı
+app.use('/api/blogs', apiRateLimiter);
+app.use('/api/login', apiRateLimiter);
+app.use('/api/register', apiRateLimiter);
+
+// ============================================
+// API ROUTES
+// ============================================
+app.use('/api', blogRoutes);
+app.use('/api', userRoutes);
+app.use('/api/contact', contactRoutes); // Kendi rate limiter'ı var
 
 // ============================================
 // ANA SAYFA - API Dokümantasyonu
 // ============================================
-
-app.get("/", (req, res) => {
-    res.status(200).json({ 
-        message: "✅ Blog API çalışıyor!",
-        version: "1.0.0",
-        endpoints: {
-            "Ana sayfa": "GET /",
-            "Test - Admin oluştur": "GET /api/create-admin",
-            "Test - Blog verileri ekle": "GET /api/seed-blogs",
-            "Tüm bloglar": "GET /api/blogs",
-            "Tek blog": "GET /api/blogs/:slug",
-            "İlgili bloglar": "GET /api/blogs/:slug/related",
-            "Login": "POST /api/login",
-            "Register": "POST /api/register",
-            "Blog oluştur (Admin)": "POST /api/blogs"
-        },
-        status: "running",
-        environment: process.env.NODE_ENV || "development"
-    });
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: '✅ Blog API çalışıyor!',
+    version: '1.0.0',
+    endpoints: {
+      health: {
+        method: 'GET',
+        path: '/api/health',
+        description: 'Server durumu kontrolü'
+      },
+      test: {
+        'Admin oluştur': 'GET /api/create-admin',
+        'Blog verileri ekle': 'GET /api/seed-blogs'
+      },
+      blogs: {
+        'Tüm bloglar': 'GET /api/blogs',
+        'Blog ara': 'GET /api/blogs/search',
+        'Tek blog': 'GET /api/blogs/:slug',
+        'Blog oluştur (Admin)': 'POST /api/blogs'
+      },
+      auth: {
+        'Login': 'POST /api/login',
+        'Register': 'POST /api/register'
+      },
+      contact: {
+        'Mesaj gönder': 'POST /api/contact (Rate Limited: 3 istek/15dk)',
+        'Mesajları listele (Admin)': 'GET /api/contact'
+      }
+    },
+    status: 'running',
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // ============================================
-// 404 HANDLER
+// ERROR HANDLERS
 // ============================================
 
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: "Route bulunamadı",
-        path: req.path,
-        method: req.method
-    });
-});
+// 404 Handler
+app.use(notFound);
 
-// ============================================
-// ERROR HANDLER
-// ============================================
-
-app.use((err, req, res, next) => {
-    console.error("❌ Server error:", err);
-    res.status(err.status || 500).json({
-        success: false,
-        message: err.message || "Sunucu hatası",
-        error: process.env.NODE_ENV === "development" ? err.stack : undefined
-    });
-});
+// Merkezi Error Handler
+app.use(errorHandler);
 
 // ============================================
 // SERVER BAŞLAT
 // ============================================
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-    console.log(`
+const server = app.listen(PORT, () => {
+  console.log(`
 ╔════════════════════════════════════════════╗
 ║   🚀 Blog API Server                      ║
 ║   ✅ Server is running on port ${PORT}       ║
 ║   📍 http://localhost:${PORT}                ║
 ║   🌍 Environment: ${process.env.NODE_ENV || 'development'}              ║
+║   🔒 Security: Enabled                    ║
+║   🔗 Frontend: ${process.env.FRONTEND_URL}  ║
 ╚════════════════════════════════════════════╝
-    `);
-    console.log("📋 Available endpoints:");
-    console.log("   - GET  /api/create-admin");
-    console.log("   - GET  /api/seed-blogs");
-    console.log("   - GET  /api/blogs");
-    console.log("   - POST /api/login");
-    console.log("   - POST /api/blogs (Protected)");
+  `);
+  console.log('📋 Available endpoints:');
+  console.log('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('   🧪 TEST ROUTES (No rate limit)');
+  console.log('   - GET  /api/create-admin');
+  console.log('   - GET  /api/seed-blogs');
+  console.log('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('   📝 BLOG ROUTES');
+  console.log('   - GET  /api/blogs');
+  console.log('   - POST /api/blogs (Protected)');
+  console.log('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('   🔐 AUTH ROUTES');
+  console.log('   - POST /api/login');
+  console.log('   - POST /api/register');
+  console.log('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('   📧 CONTACT ROUTES');
+  console.log('   - POST /api/contact (⚡ Rate Limited: 3/15dk)');
+  console.log('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('👋 SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('🔴 HTTP server closed');
+  });
+});
+
+// Unhandled Promise Rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err);
+  server.close(() => process.exit(1));
 });

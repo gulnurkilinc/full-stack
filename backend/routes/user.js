@@ -7,10 +7,8 @@ const User = require("../models/User");
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('🔐 Login attempt:', email);
 
-    console.log('🔐 Login attempt:', email); // DEBUG
-
-    // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -18,10 +16,8 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // Kullanıcıyı bul (şifreyi de getir)
     const user = await User.findOne({ email }).select("+password");
-
-    console.log('👤 User found:', !!user); // DEBUG
+    console.log('👤 User found:', !!user);
 
     if (!user) {
       return res.status(401).json({
@@ -30,10 +26,8 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // Şifreyi kontrol et
     const isPasswordMatch = await user.comparePassword(password);
-
-    console.log('🔑 Password match:', isPasswordMatch); // DEBUG
+    console.log('🔑 Password match:', isPasswordMatch);
 
     if (!isPasswordMatch) {
       return res.status(401).json({
@@ -42,16 +36,14 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // JWT token oluştur
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRE || "7d" }
     );
 
-    console.log('✅ Login successful:', user.email); // DEBUG
+    console.log('✅ Login successful:', user.email);
 
-    // Başarılı response
     res.status(200).json({
       success: true,
       message: "Giriş başarılı",
@@ -64,9 +56,8 @@ router.post("/login", async (req, res) => {
         avatar: user.avatar
       }
     });
-
   } catch (error) {
-    console.error("❌ Login error:", error); // DEBUG
+    console.error("❌ Login error:", error);
     res.status(500).json({
       success: false,
       message: "Giriş yapılırken hata oluştu"
