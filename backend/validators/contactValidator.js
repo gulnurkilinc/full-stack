@@ -7,8 +7,8 @@ exports.contactValidationRules = [
     .notEmpty().withMessage('Ad Soyad alanı zorunludur')
     .isLength({ min: 3, max: 100 })
     .withMessage('Ad Soyad 3-100 karakter arasında olmalıdır')
-    .matches(/^[a-zA-ZğüşöçİĞÜŞÖÇ\s]+$/)
-    .withMessage('Ad Soyad sadece harf içermelidir'),
+    //.matches(/^[a-zA-ZğüşöçİĞÜŞÖÇ\s]+$/)
+     .withMessage('Ad Soyad sadece harf içermelidir'),
   
   body('email')
     .trim()

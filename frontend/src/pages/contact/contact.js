@@ -17,17 +17,45 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Form gönderme işlemi buraya gelecek
-    setTimeout(() => {
-      alert('Mesajınız başarıyla gönderildi!');
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  
+  try {
+    console.log('📤 Form gönderiliyor:', formData);
+
+    // Backend'e API isteği
+    const response = await fetch('http://localhost:4000/api/contact', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        adSoyad: formData.name,      // name → adSoyad
+        email: formData.email,
+        konu: formData.subject,       // subject → konu
+        mesaj: formData.message       // message → mesaj
+      })
+    });
+
+    const data = await response.json();
+    console.log('✅ Yanıt:', data);
+    console.log('🔴 Hatalar:', data.errors); 
+
+    if (data.success) {
+      alert('✅ Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.');
       setFormData({ name: '', email: '', subject: '', message: '' });
-      setIsSubmitting(false);
-    }, 1000);
-  };
+    } else {
+      alert('❌ Hata: ' + (data.message || 'Mesaj gönderilemedi'));
+    }
+  } catch (error) {
+    console.error('❌ Hata:', error);
+    alert('❌ Mesaj gönderilirken bir hata oluştu. Lütfen tekrar deneyin.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   return (
     <div style={{ paddingTop: '80px', minHeight: '100vh', backgroundColor: '#f8f9fa' }}>

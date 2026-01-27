@@ -1,5 +1,6 @@
 const Contact = require('../models/Contact');
 const { validationResult } = require('express-validator');
+const sendEmail = require('../utils/sendEmail');
 
 // @desc    Yeni iletişim mesajı oluştur
 // @route   POST /api/contact
@@ -17,8 +18,8 @@ exports.createContact = async (req, res, next) => {
         }))
       });
     }
-    
-    // Request body'den verileri al
+
+    // ✅ DEĞİŞKENLERİ ÖNCE TANIMLA
     const { adSoyad, email, konu, mesaj } = req.body;
     
     // IP adresini al (opsiyonel - spam takibi için)
@@ -32,8 +33,39 @@ exports.createContact = async (req, res, next) => {
       mesaj,
       ipAddress
     });
+
+    // ✅ E-POSTA GÖNDERİMİ (değişkenler tanımlandıktan sonra)
+    try {
+      await sendEmail({
+        to: process.env.EMAIL_TO,
+        subject: `🔔 Yeni İletişim: ${konu || 'Genel'}`,
+        replyTo: email,
+        html: `
+          <div style="font-family: Arial; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h2 style="color: #007bff;">📧 Yeni İletişim Mesajı</h2>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <p><strong>👤 Ad Soyad:</strong> ${adSoyad}</p>
+              <p><strong>📧 E-posta:</strong> ${email}</p>
+              <p><strong>📌 Konu:</strong> ${konu || 'Genel'}</p>
+              <p><strong>📅 Tarih:</strong> ${new Date().toLocaleString('tr-TR')}</p>
+            </div>
+            <div style="background: #fff; padding: 15px; border-left: 4px solid #007bff;">
+              <h3>💬 Mesaj:</h3>
+              <p style="white-space: pre-wrap;">${mesaj}</p>
+            </div>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+              Yanıtlamak için: ${email}
+            </p>
+          </div>
+        `
+      });
+      console.log('✅ E-posta gönderildi');
+    } catch (emailError) {
+      console.error('❌ E-posta hatası:', emailError);
+      // E-posta hatası olsa bile mesajı veritabanına kaydettik, devam et
+    }
     
-    // Başarılı yanıt
+    // Başarılı yanıt (tek bir kez gönder)
     res.status(201).json({
       success: true,
       message: 'Mesajınız başarıyla gönderildi. En kısa sürede size dönüş yapacağız.',
@@ -44,9 +76,6 @@ exports.createContact = async (req, res, next) => {
         createdAt: contact.createdAt
       }
     });
-    
-    // TODO: Burada admin'e e-posta bildirimi gönderilebilir
-    // await sendEmailNotification(contact);
     
   } catch (error) {
     next(error); // Error handler'a gönder
@@ -104,7 +133,7 @@ exports.getContactById = async (req, res, next) => {
 // @access  Private/Admin
 exports.deleteContact = async (req, res, next) => {
   try {
-    const contact = await Contact.findByIdDelete(req.params.id);
+    const contact = await Contact.findByIdAndDelete(req.params.id); // ✅ findByIdDelete -> findByIdAndDelete
     
     if (!contact) {
       return res.status(404).json({
