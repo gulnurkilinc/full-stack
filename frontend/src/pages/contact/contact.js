@@ -18,59 +18,91 @@ const Contact = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  
-  try {
-    console.log('📤 Form gönderiliyor:', formData);
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      console.log('📤 Form gönderiliyor:', formData);
 
-    // Backend'e API isteği
-    const response = await fetch('http://localhost:4000/api/contact', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        adSoyad: formData.name,      // name → adSoyad
-        email: formData.email,
-        konu: formData.subject,       // subject → konu
-        mesaj: formData.message       // message → mesaj
-      })
-    });
+      const response = await fetch('http://localhost:4000/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          adSoyad: formData.name,
+          email: formData.email,
+          konu: formData.subject,
+          mesaj: formData.message
+        })
+      });
 
-    const data = await response.json();
-    console.log('✅ Yanıt:', data);
-    console.log('🔴 Hatalar:', data.errors); 
+      const data = await response.json();
+      console.log('✅ Yanıt:', data);
+      console.log('🔴 Hatalar:', data.errors); 
 
-    if (data.success) {
-      alert('✅ Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.');
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    } else {
-      alert('❌ Hata: ' + (data.message || 'Mesaj gönderilemedi'));
+      if (data.success) {
+        alert('✅ Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        alert('❌ Hata: ' + (data.message || 'Mesaj gönderilemedi'));
+      }
+    } catch (error) {
+      console.error('❌ Hata:', error);
+      alert('❌ Mesaj gönderilirken bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error) {
-    console.error('❌ Hata:', error);
-    alert('❌ Mesaj gönderilirken bir hata oluştu. Lütfen tekrar deneyin.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
+  };
 
   return (
-    <div style={{ paddingTop: '80px', minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+    <div style={{ 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Animated Background Elements */}
+      <div style={{
+        position: 'absolute',
+        top: '15%',
+        left: '5%',
+        width: '350px',
+        height: '350px',
+        background: 'radial-gradient(circle, rgba(0, 255, 255, 0.08) 0%, transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(50px)',
+        animation: 'float 7s ease-in-out infinite'
+      }}></div>
+      
+      <div style={{
+        position: 'absolute',
+        bottom: '20%',
+        right: '5%',
+        width: '400px',
+        height: '400px',
+        background: 'radial-gradient(circle, rgba(138, 43, 226, 0.12) 0%, transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(50px)',
+        animation: 'float 9s ease-in-out infinite reverse'
+      }}></div>
+
       {/* Hero Section */}
       <section style={{
-        background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+        background: 'linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%)',
         color: 'white',
-        padding: '100px 0',
-        textAlign: 'center'
+        padding: '120px 0 100px',
+        textAlign: 'center',
+        position: 'relative',
+        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)'
       }}>
         <div className="container">
           <h1 style={{ 
             fontSize: '48px', 
             marginBottom: '20px',
-            fontWeight: '700'
+            fontWeight: '700',
+            letterSpacing: '-1px',
+            textShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
           }}>
             İletişim
           </h1>
@@ -79,7 +111,8 @@ const Contact = () => {
             maxWidth: '700px', 
             margin: '0 auto',
             lineHeight: '1.6',
-            opacity: '0.95'
+            opacity: '0.95',
+            fontWeight: '400'
           }}>
             Sorularınız, önerileriniz veya işbirliği teklifleriniz için bizimle iletişime geçebilirsiniz.
           </p>
@@ -87,44 +120,49 @@ const Contact = () => {
       </section>
 
       {/* Contact Content */}
-      <section style={{ padding: '80px 0' }}>
+      <section style={{ padding: '80px 0', position: 'relative', zIndex: 1 }}>
         <div className="container">
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
-            gap: '60px',
+            gap: '40px',
             maxWidth: '1200px',
             margin: '0 auto'
           }}>
             {/* Contact Form */}
             <div style={{
-              backgroundColor: 'white',
-              padding: '40px',
-              borderRadius: '12px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              padding: '48px 40px',
+              borderRadius: '20px',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 100px rgba(0, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
             }}>
               <h2 style={{ 
                 fontSize: '32px', 
-                marginBottom: '10px',
-                color: '#333'
+                marginBottom: '12px',
+                color: '#0f2027',
+                fontWeight: '700',
+                letterSpacing: '-0.5px'
               }}>
                 Mesaj Gönderin
               </h2>
               <p style={{ 
-                color: '#666', 
-                marginBottom: '30px',
-                fontSize: '15px'
+                color: '#4a5568', 
+                marginBottom: '32px',
+                fontSize: '15px',
+                lineHeight: '1.6'
               }}>
                 Formu doldurarak bize ulaşabilirsiniz. En kısa sürede size dönüş yapacağız.
               </p>
 
               <form onSubmit={handleSubmit}>
-                <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label className="form-label" style={{
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
                     display: 'block',
                     marginBottom: '8px',
                     fontWeight: '600',
-                    color: '#333',
+                    color: '#2d3748',
                     fontSize: '14px'
                   }}>
                     Adınız Soyadınız *
@@ -132,32 +170,41 @@ const Contact = () => {
                   <input
                     type="text"
                     name="name"
-                    className="form-input"
                     value={formData.name}
                     onChange={handleChange}
                     required
                     placeholder="Adınız ve soyadınız"
+                    disabled={isSubmitting}
                     style={{
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '15px',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '10px',
                       outline: 'none',
-                      transition: 'border-color 0.3s',
-                      boxSizing: 'border-box'
+                      transition: 'all 0.2s ease',
+                      backgroundColor: isSubmitting ? '#f7fafc' : 'white',
+                      color: '#2d3748',
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                    onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#00ffff';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(0, 255, 255, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                 </div>
 
-                <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label className="form-label" style={{
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
                     display: 'block',
                     marginBottom: '8px',
                     fontWeight: '600',
-                    color: '#333',
+                    color: '#2d3748',
                     fontSize: '14px'
                   }}>
                     E-posta Adresiniz *
@@ -165,32 +212,41 @@ const Contact = () => {
                   <input
                     type="email"
                     name="email"
-                    className="form-input"
                     value={formData.email}
                     onChange={handleChange}
                     required
                     placeholder="ornek@email.com"
+                    disabled={isSubmitting}
                     style={{
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '15px',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '10px',
                       outline: 'none',
-                      transition: 'border-color 0.3s',
-                      boxSizing: 'border-box'
+                      transition: 'all 0.2s ease',
+                      backgroundColor: isSubmitting ? '#f7fafc' : 'white',
+                      color: '#2d3748',
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                    onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#00ffff';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(0, 255, 255, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                 </div>
 
-                <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label className="form-label" style={{
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
                     display: 'block',
                     marginBottom: '8px',
                     fontWeight: '600',
-                    color: '#333',
+                    color: '#2d3748',
                     fontSize: '14px'
                   }}>
                     Konu *
@@ -198,87 +254,122 @@ const Contact = () => {
                   <input
                     type="text"
                     name="subject"
-                    className="form-input"
                     value={formData.subject}
                     onChange={handleChange}
                     required
                     placeholder="Mesajınızın konusu"
+                    disabled={isSubmitting}
                     style={{
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '15px',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '10px',
                       outline: 'none',
-                      transition: 'border-color 0.3s',
-                      boxSizing: 'border-box'
+                      transition: 'all 0.2s ease',
+                      backgroundColor: isSubmitting ? '#f7fafc' : 'white',
+                      color: '#2d3748',
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                    onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#00ffff';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(0, 255, 255, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                 </div>
 
-                <div className="form-group" style={{ marginBottom: '25px' }}>
-                  <label className="form-label" style={{
+                <div style={{ marginBottom: '28px' }}>
+                  <label style={{
                     display: 'block',
                     marginBottom: '8px',
                     fontWeight: '600',
-                    color: '#333',
+                    color: '#2d3748',
                     fontSize: '14px'
                   }}>
                     Mesajınız *
                   </label>
                   <textarea
                     name="message"
-                    className="form-input"
                     value={formData.message}
                     onChange={handleChange}
                     required
                     rows="6"
                     placeholder="Mesajınızı buraya yazın..."
+                    disabled={isSubmitting}
                     style={{ 
                       width: '100%',
                       padding: '12px 16px',
                       fontSize: '15px',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '10px',
                       outline: 'none',
-                      transition: 'border-color 0.3s',
+                      transition: 'all 0.2s ease',
+                      backgroundColor: isSubmitting ? '#f7fafc' : 'white',
+                      color: '#2d3748',
                       resize: 'vertical',
                       fontFamily: 'inherit',
                       lineHeight: '1.6',
                       boxSizing: 'border-box'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#007bff'}
-                    onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#00ffff';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(0, 255, 255, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0';
+                      e.target.style.boxShadow = 'none';
+                    }}
                   />
                 </div>
 
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="btn btn-primary" 
                   style={{ 
                     width: '100%', 
-                    padding: '16px',
-                    fontSize: '16px',
+                    padding: '14px 20px',
+                    fontSize: '15px',
                     fontWeight: '600',
-                    backgroundColor: '#007bff',
+                    background: isSubmitting 
+                      ? '#cbd5e0' 
+                      : 'linear-gradient(135deg, #40c8e3 0%, #7b2cbf 100%)',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: '10px',
                     cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.3s',
-                    opacity: isSubmitting ? 0.6 : 1
+                    transition: 'all 0.2s ease',
+                    boxShadow: isSubmitting 
+                      ? 'none' 
+                      : '0 4px 20px rgba(0, 212, 255, 0.4)'
                   }}
                   onMouseEnter={(e) => {
-                    if (!isSubmitting) e.target.style.backgroundColor = '#0056b3';
+                    if (!isSubmitting) {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 6px 30px rgba(0, 212, 255, 0.6)';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    if (!isSubmitting) e.target.style.backgroundColor = '#007bff';
+                    if (!isSubmitting) {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 4px 20px rgba(0, 212, 255, 0.4)';
+                    }
                   }}
                 >
-                  {isSubmitting ? 'Gönderiliyor...' : 'Mesajı Gönder'}
+                  {isSubmitting ? (
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animation: 'spin 1s linear infinite' }}>
+                        <path d="M8 1.5V4.5M8 11.5V14.5M14.5 8H11.5M4.5 8H1.5M12.7 12.7L10.6 10.6M5.4 5.4L3.3 3.3M12.7 3.3L10.6 5.4M5.4 10.6L3.3 12.7" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      Gönderiliyor...
+                    </span>
+                  ) : (
+                    'Mesajı Gönder'
+                  )}
                 </button>
               </form>
             </div>
@@ -286,22 +377,26 @@ const Contact = () => {
             {/* Contact Info */}
             <div>
               <div style={{
-                backgroundColor: 'white',
-                padding: '40px',
-                borderRadius: '12px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                padding: '48px 40px',
+                borderRadius: '20px',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 100px rgba(0, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
                 marginBottom: '30px'
               }}>
                 <h2 style={{ 
                   fontSize: '32px', 
-                  marginBottom: '10px',
-                  color: '#333'
+                  marginBottom: '12px',
+                  color: '#0f2027',
+                  fontWeight: '700',
+                  letterSpacing: '-0.5px'
                 }}>
                   İletişim Bilgileri
                 </h2>
                 <p style={{ 
-                  color: '#666', 
-                  marginBottom: '30px',
+                  color: '#4a5568', 
+                  marginBottom: '32px',
                   fontSize: '15px',
                   lineHeight: '1.6'
                 }}>
@@ -309,34 +404,34 @@ const Contact = () => {
                 </p>
 
                 {/* Email */}
-                <div className="card" style={{ 
-                  marginBottom: '0',
-                  padding: '20px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid #e9ecef'
+                <div style={{ 
+                  padding: '24px',
+                  background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(123, 44, 191, 0.08) 100%)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(0, 212, 255, 0.2)'
                 }}>
-                  <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
                     <div style={{ 
-                      fontSize: '28px', 
-                      color: '#007bff',
-                      minWidth: '40px'
+                      fontSize: '32px',
+                      minWidth: '40px',
+                      filter: 'grayscale(0.3)'
                     }}>
                       ✉️
                     </div>
                     <div>
                       <h3 style={{ 
-                        marginBottom: '8px', 
+                        marginBottom: '10px', 
                         fontSize: '18px',
                         fontWeight: '600',
-                        color: '#333'
+                        color: '#0f2027'
                       }}>
                         E-posta
                       </h3>
                       <p style={{ 
-                        color: '#666',
+                        color: '#4a5568',
                         lineHeight: '1.8',
-                        margin: 0
+                        margin: 0,
+                        fontSize: '15px'
                       }}>
                         gulnurkilinc@gmail.com<br />
                         destek@blogsitesi.com
@@ -348,69 +443,72 @@ const Contact = () => {
 
               {/* Social Media */}
               <div style={{
-                backgroundColor: 'white',
-                padding: '40px',
-                borderRadius: '12px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                padding: '48px 40px',
+                borderRadius: '20px',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 100px rgba(0, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
               }}>
                 <h3 style={{ 
-                  marginBottom: '20px', 
+                  marginBottom: '12px', 
                   fontSize: '24px',
                   fontWeight: '600',
-                  color: '#333'
+                  color: '#0f2027',
+                  letterSpacing: '-0.3px'
                 }}>
                   Sosyal Medya
                 </h3>
                 <p style={{ 
-                  color: '#666', 
-                  marginBottom: '25px',
+                  color: '#4a5568', 
+                  marginBottom: '28px',
                   fontSize: '15px'
                 }}>
                   Bizi sosyal medyada takip edin!
                 </p>
                 <div style={{ display: 'flex', gap: '15px' }}>
-                 {/* Instagram */}
-<a 
-  href="https://instagram.com" 
-  target="_blank" 
-  rel="noopener noreferrer"
-  style={{
-    width: '60px',
-    height: '60px',
-    background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)',
-    color: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '12px',
-    transition: 'transform 0.3s, box-shadow 0.3s',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.transform = 'translateY(-5px)';
-    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2)';
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = 'translateY(0)';
-    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-  }}
-  title="Instagram"
->
-  <svg 
-    width="28" 
-    height="28" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="white" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-  >
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-  </svg>
-</a>
+                  {/* Instagram */}
+                  <a 
+                    href="https://instagram.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '14px',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.15)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-5px)';
+                      e.currentTarget.style.boxShadow = '0 8px 25px rgba(240, 148, 51, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.15)';
+                    }}
+                    title="Instagram"
+                  >
+                    <svg 
+                      width="28" 
+                      height="28" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="white" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                  </a>
                   
                   {/* X (Twitter) */}
                   <a 
@@ -425,19 +523,21 @@ const Contact = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderRadius: '12px',
+                      borderRadius: '14px',
                       fontSize: '24px',
                       fontWeight: 'bold',
-                      transition: 'transform 0.3s, box-shadow 0.3s',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-5px)';
-                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.3)';
+                      e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 212, 255, 0.4)';
+                      e.currentTarget.style.backgroundColor = '#1a1a1a';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+                      e.currentTarget.style.backgroundColor = '#000000';
                     }}
                     title="X (Twitter)"
                   >
@@ -449,6 +549,19 @@ const Contact = () => {
           </div>
         </div>
       </section>
+
+      {/* Animations */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+      `}</style>
     </div>
   );
 };
