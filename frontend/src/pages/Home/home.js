@@ -59,7 +59,10 @@ const Home = () => {
   };
 
   return (
-    <div>
+    <div style={{ 
+      background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+      minHeight: '100vh'
+    }}>
       {/* Hero Slider */}
       {sliderNews.length > 0 && (
         <section style={{ 
@@ -90,13 +93,24 @@ const Home = () => {
                   backgroundPosition: 'center'
                 }}
               >
+                {/* Sadece üst kısımda (header bölgesi) transparan overlay */}
                 <div style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
                   width: '100%',
-                  height: '100%',
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)'
+                  height: '120px',
+                  background: 'linear-gradient(to bottom, rgba(15, 32, 39, 0.95) 0%, transparent 100%)'
+                }}></div>
+
+                {/* Alt kısımda (yazılar için) transparan overlay */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '300px',
+                  background: 'linear-gradient(to top, rgba(15, 32, 39, 0.85) 0%, transparent 100%)'
                 }}></div>
 
                 <div className="container" style={{
@@ -113,7 +127,8 @@ const Home = () => {
                     fontWeight: 'bold',
                     marginBottom: '20px',
                     maxWidth: '800px',
-                    lineHeight: '1.2'
+                    lineHeight: '1.2',
+                    textShadow: '0 0 20px rgba(0, 255, 255, 0.3), 0 4px 15px rgba(0,0,0,0.5)'
                   }}>
                     {news.title}
                   </h1>
@@ -121,23 +136,33 @@ const Home = () => {
                     fontSize: '20px',
                     maxWidth: '700px',
                     lineHeight: '1.6',
-                    marginBottom: '30px'
+                    marginBottom: '30px',
+                    color: 'rgba(255, 255, 255, 0.95)',
+                    textShadow: '0 2px 10px rgba(0,0,0,0.3)'
                   }}>
                     {news.excerpt}
                   </p>
                   <Link to={`/blog/${news.slug}`}>
                     <button style={{
-                      backgroundColor: '#007bff',
+                      background: 'linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%)',
                       color: 'white',
                       padding: '15px 40px',
                       fontSize: '16px',
                       border: 'none',
-                      borderRadius: '5px',
+                      borderRadius: '8px',
                       cursor: 'pointer',
-                      transition: 'background-color 0.3s'
+                      transition: 'all 0.3s',
+                      fontWeight: '600',
+                      boxShadow: '0 4px 15px rgba(0, 212, 255, 0.4)'
                     }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#0056b3'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#007bff'}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 6px 25px rgba(0, 212, 255, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 4px 15px rgba(0, 212, 255, 0.4)';
+                    }}
                     >
                       Devamını Oku
                     </button>
@@ -156,19 +181,29 @@ const Home = () => {
                   left: '20px',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                  color: 'white',
-                  border: 'none',
+                  backgroundColor: 'rgba(0, 212, 255, 0.2)',
+                  color: '#00ffff',
+                  border: '2px solid rgba(0, 255, 255, 0.5)',
                   width: '50px',
                   height: '50px',
                   borderRadius: '50%',
                   cursor: 'pointer',
                   fontSize: '24px',
                   zIndex: 10,
-                  transition: 'background-color 0.3s'
+                  transition: 'all 0.3s',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 15px rgba(0, 212, 255, 0.3)'
                 }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.5)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.3)'}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = 'rgba(0, 212, 255, 0.4)';
+                  e.target.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.6)';
+                  e.target.style.transform = 'translateY(-50%) scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'rgba(0, 212, 255, 0.2)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(0, 212, 255, 0.3)';
+                  e.target.style.transform = 'translateY(-50%) scale(1)';
+                }}
               >
                 ‹
               </button>
@@ -179,19 +214,29 @@ const Home = () => {
                   right: '20px',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                  color: 'white',
-                  border: 'none',
+                  backgroundColor: 'rgba(0, 212, 255, 0.2)',
+                  color: '#00ffff',
+                  border: '2px solid rgba(0, 255, 255, 0.5)',
                   width: '50px',
                   height: '50px',
                   borderRadius: '50%',
                   cursor: 'pointer',
                   fontSize: '24px',
                   zIndex: 10,
-                  transition: 'background-color 0.3s'
+                  transition: 'all 0.3s',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 15px rgba(0, 212, 255, 0.3)'
                 }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.5)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.3)'}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = 'rgba(0, 212, 255, 0.4)';
+                  e.target.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.6)';
+                  e.target.style.transform = 'translateY(-50%) scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'rgba(0, 212, 255, 0.2)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(0, 212, 255, 0.3)';
+                  e.target.style.transform = 'translateY(-50%) scale(1)';
+                }}
               >
                 ›
               </button>
@@ -214,9 +259,10 @@ const Home = () => {
                       height: '10px',
                       borderRadius: '5px',
                       border: 'none',
-                      backgroundColor: index === currentSlide ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                      backgroundColor: index === currentSlide ? '#00ffff' : 'rgba(0, 255, 255, 0.3)',
                       cursor: 'pointer',
-                      transition: 'all 0.3s'
+                      transition: 'all 0.3s',
+                      boxShadow: index === currentSlide ? '0 0 10px rgba(0, 255, 255, 0.8)' : 'none'
                     }}
                   />
                 ))}
@@ -227,9 +273,19 @@ const Home = () => {
       )}
 
       {/* Blog Posts Section */}
-      <div className="container" style={{ marginTop: '60px', marginBottom: '60px' }}>
+      <div className="container" style={{ marginTop: '60px', marginBottom: '60px', paddingBottom: '60px' }}>
         <section>
-          <h2 style={{ marginBottom: '30px', fontSize: '32px' }}>Son Yazılar</h2>
+          <h2 style={{ 
+            marginBottom: '40px', 
+            fontSize: '36px',
+            color: 'white',
+            textAlign: 'center',
+            textShadow: '0 0 20px rgba(0, 255, 255, 0.4)',
+            fontWeight: 'bold',
+            letterSpacing: '1px'
+          }}>
+            Son Yazılar
+          </h2>
           
           {/* Loading State */}
           {loading && (
@@ -240,19 +296,31 @@ const Home = () => {
               <div style={{
                 width: '50px',
                 height: '50px',
-                border: '4px solid #f3f3f3',
-                borderTop: '4px solid #007bff',
+                border: '4px solid rgba(0, 212, 255, 0.2)',
+                borderTop: '4px solid #00d4ff',
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite',
-                margin: '0 auto 20px'
+                margin: '0 auto 20px',
+                boxShadow: '0 0 20px rgba(0, 212, 255, 0.5)'
               }}></div>
-              <p>Bloglar yükleniyor...</p>
+              <p style={{ 
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '16px'
+              }}>
+                Bloglar yükleniyor...
+              </p>
             </div>
           )}
 
           {/* Blog Grid */}
           {!loading && blogs.length === 0 ? (
-            <p>Henüz blog yazısı yok.</p>
+            <p style={{ 
+              textAlign: 'center',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: '18px'
+            }}>
+              Henüz blog yazısı yok.
+            </p>
           ) : !loading && (
             <>
               <div style={{
@@ -263,23 +331,31 @@ const Home = () => {
                 {blogs.map(post => (
                   <div key={post._id} className="card" style={{ 
                     overflow: 'hidden',
-                    transition: 'transform 0.3s, box-shadow 0.3s',
-                    cursor: 'pointer'
+                    transition: 'all 0.3s',
+                    cursor: 'pointer',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(0, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 20px rgba(0, 212, 255, 0.1)'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)';
+                    e.currentTarget.style.transform = 'translateY(-8px)';
+                    e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 212, 255, 0.3), 0 0 20px rgba(0, 255, 255, 0.2)';
+                    e.currentTarget.style.borderColor = 'rgba(0, 255, 255, 0.5)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 212, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(0, 255, 255, 0.2)';
                   }}
                   >
                     <div style={{ 
                       width: '100%', 
                       height: '200px', 
                       overflow: 'hidden',
-                      backgroundColor: '#f0f0f0'
+                      backgroundColor: 'rgba(15, 32, 39, 0.5)',
+                      position: 'relative'
                     }}>
                       <img 
                         src={post.coverImage?.url || 'https://via.placeholder.com/400x250'} 
@@ -288,21 +364,39 @@ const Home = () => {
                           width: '100%', 
                           height: '100%', 
                           objectFit: 'cover',
-                          display: 'block'
+                          display: 'block',
+                          transition: 'transform 0.3s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = 'scale(1.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'scale(1)';
                         }}
                       />
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'linear-gradient(to bottom, transparent 0%, rgba(15, 32, 39, 0.3) 100%)'
+                      }}></div>
                     </div>
 
                     <div style={{ padding: '20px' }}>
                       <span style={{
                         display: 'inline-block',
-                        backgroundColor: '#007bff',
+                        background: 'linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%)',
                         color: 'white',
-                        padding: '4px 12px',
-                        borderRadius: '3px',
+                        padding: '6px 14px',
+                        borderRadius: '6px',
                         fontSize: '12px',
                         marginBottom: '12px',
-                        fontWeight: '500'
+                        fontWeight: '600',
+                        boxShadow: '0 2px 10px rgba(0, 212, 255, 0.3)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
                       }}>
                         {post.category}
                       </span>
@@ -311,13 +405,15 @@ const Home = () => {
                         marginBottom: '12px',
                         fontSize: '20px',
                         lineHeight: '1.4',
-                        color: '#333'
+                        color: 'white',
+                        fontWeight: '600',
+                        textShadow: '0 2px 8px rgba(0, 255, 255, 0.2)'
                       }}>
                         {post.title}
                       </h3>
 
                       <p style={{ 
-                        color: '#666', 
+                        color: 'rgba(255, 255, 255, 0.75)', 
                         marginBottom: '15px',
                         fontSize: '14px',
                         lineHeight: '1.6'
@@ -326,7 +422,29 @@ const Home = () => {
                       </p>
 
                       <Link to={`/blog/${post.slug}`}>
-                        <button className="btn btn-primary" style={{ width: '100%' }}>
+                        <button className="btn btn-primary" style={{ 
+                          width: '100%',
+                          background: 'linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%)',
+                          border: 'none',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          color: 'white',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s',
+                          boxShadow: '0 4px 15px rgba(0, 212, 255, 0.3)',
+                          letterSpacing: '0.5px'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = 'translateY(-2px)';
+                          e.target.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.5)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = '0 4px 15px rgba(0, 212, 255, 0.3)';
+                        }}
+                        >
                           Devamını Oku
                         </button>
                       </Link>
