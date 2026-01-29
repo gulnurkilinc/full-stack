@@ -89,12 +89,10 @@ const Contact = () => {
 
       {/* Hero Section */}
       <section style={{
-        background: 'linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%)',
         color: 'white',
-        padding: '120px 0 100px',
+        padding: '140px 0 60px',
         textAlign: 'center',
-        position: 'relative',
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)'
+        position: 'relative'
       }}>
         <div className="container">
           <h1 style={{ 
@@ -102,7 +100,8 @@ const Contact = () => {
             marginBottom: '20px',
             fontWeight: '700',
             letterSpacing: '-1px',
-            textShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+            textShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            color: 'white'
           }}>
             İletişim
           </h1>
@@ -111,8 +110,9 @@ const Contact = () => {
             maxWidth: '700px', 
             margin: '0 auto',
             lineHeight: '1.6',
-            opacity: '0.95',
-            fontWeight: '400'
+            opacity: '0.9',
+            fontWeight: '400',
+            color: 'rgba(255, 255, 255, 0.9)'
           }}>
             Sorularınız, önerileriniz veya işbirliği teklifleriniz için bizimle iletişime geçebilirsiniz.
           </p>
@@ -120,7 +120,7 @@ const Contact = () => {
       </section>
 
       {/* Contact Content */}
-      <section style={{ padding: '80px 0', position: 'relative', zIndex: 1 }}>
+      <section style={{ padding: '40px 0 80px', position: 'relative', zIndex: 1 }}>
         <div className="container">
           <div style={{ 
             display: 'grid', 
@@ -337,7 +337,7 @@ const Contact = () => {
                     fontWeight: '600',
                     background: isSubmitting 
                       ? '#cbd5e0' 
-                      : 'linear-gradient(135deg, #40c8e3 0%, #7b2cbf 100%)',
+                      : 'linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '10px',
