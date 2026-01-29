@@ -14,7 +14,6 @@ const Header = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // Redux'tan kullanıcı bilgisi al
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -30,7 +29,6 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Arama çubuğu açıldığında input'a focus
   useEffect(() => {
     if (showSearchBar && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -41,7 +39,7 @@ const Header = () => {
 
   const headerBgColor = isHomePage && !isScrolled 
     ? 'transparent' 
-    : 'rgba(0, 0, 0, 0.9)';
+    : 'rgba(15, 32, 39, 0.95)';
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
@@ -61,7 +59,6 @@ const Header = () => {
     navigate('/');
   };
 
-  // Arama işlemleri
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -78,7 +75,6 @@ const Header = () => {
     }
   };
 
-  // ESC tuşu ile arama çubuğunu kapat
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && showSearchBar) {
@@ -98,25 +94,75 @@ const Header = () => {
       left: 0,
       right: 0,
       backgroundColor: headerBgColor,
-      backdropFilter: isHomePage && !isScrolled ? 'none' : 'blur(10px)',
+      backdropFilter: isHomePage && !isScrolled ? 'none' : 'blur(15px)',
       padding: '1rem 0',
       zIndex: 1000,
       transition: 'all 0.3s ease',
-      boxShadow: isHomePage && !isScrolled ? 'none' : '0 2px 10px rgba(0,0,0,0.1)'
+      boxShadow: isHomePage && !isScrolled 
+        ? 'none' 
+        : '0 4px 20px rgba(0, 255, 255, 0.1), 0 2px 10px rgba(0,0,0,0.3)',
+      borderBottom: isHomePage && !isScrolled 
+        ? 'none' 
+        : '1px solid rgba(0, 255, 255, 0.2)'
     }}>
       <div className="container">
         <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link to="/" style={{ 
             fontSize: '24px', 
             fontWeight: 'bold', 
-            color: 'white'
-          }}>
+            color: 'white',
+            textShadow: '0 2px 10px rgba(0, 255, 255, 0.3)',
+            transition: 'all 0.3s'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.color = '#00ffff';
+            e.target.style.textShadow = '0 0 20px rgba(0, 255, 255, 0.8)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.color = 'white';
+            e.target.style.textShadow = '0 2px 10px rgba(0, 255, 255, 0.3)';
+          }}
+          >
             Blog Sitesi
           </Link>
           
           <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
-            <Link to="/" style={{ color: 'white' }}>Ana Sayfa</Link>
-            <Link to="/blogs" style={{ color: 'white' }}>Bloglar</Link>
+            <Link 
+              to="/" 
+              style={{ 
+                color: 'rgba(255, 255, 255, 0.9)',
+                transition: 'all 0.3s',
+                fontWeight: '500'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.color = '#00ffff';
+                e.target.style.textShadow = '0 0 10px rgba(0, 255, 255, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = 'rgba(255, 255, 255, 0.9)';
+                e.target.style.textShadow = 'none';
+              }}
+            >
+              Ana Sayfa
+            </Link>
+            <Link 
+              to="/blogs" 
+              style={{ 
+                color: 'rgba(255, 255, 255, 0.9)',
+                transition: 'all 0.3s',
+                fontWeight: '500'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.color = '#00ffff';
+                e.target.style.textShadow = '0 0 10px rgba(0, 255, 255, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = 'rgba(255, 255, 255, 0.9)';
+                e.target.style.textShadow = 'none';
+              }}
+            >
+              Bloglar
+            </Link>
             
             <div 
               style={{ position: 'relative' }}
@@ -127,8 +173,19 @@ const Header = () => {
                 cursor: 'pointer',
                 padding: '10px 0',
                 display: 'block',
-                color: 'white'
-              }}>
+                color: 'rgba(255, 255, 255, 0.9)',
+                transition: 'all 0.3s',
+                fontWeight: '500'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.color = '#00ffff';
+                e.target.style.textShadow = '0 0 10px rgba(0, 255, 255, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = 'rgba(255, 255, 255, 0.9)';
+                e.target.style.textShadow = 'none';
+              }}
+              >
                 Bölümler
               </span>
               
@@ -138,14 +195,16 @@ const Header = () => {
                     position: 'absolute',
                     top: '100%',
                     left: '-10px',
-                    backgroundColor: 'white',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 8px 25px rgba(0, 255, 255, 0.2), 0 4px 12px rgba(0,0,0,0.3)',
                     minWidth: '180px',
                     marginTop: '10px',
-                    borderRadius: '8px',
+                    borderRadius: '12px',
                     zIndex: 1000,
                     overflow: 'hidden',
-                    paddingTop: '5px'
+                    paddingTop: '5px',
+                    border: '1px solid rgba(0, 255, 255, 0.3)'
                   }}
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
@@ -155,17 +214,21 @@ const Header = () => {
                     style={{ 
                       display: 'block', 
                       padding: '15px 20px',
-                      color: '#333',
-                      borderBottom: '1px solid #f0f0f0',
-                      backgroundColor: 'white'
+                      color: '#2d3748',
+                      borderBottom: '1px solid rgba(0, 212, 255, 0.1)',
+                      backgroundColor: 'transparent',
+                      transition: 'all 0.2s',
+                      fontWeight: '500'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = '#f0f7ff';
-                      e.target.style.color = '#007bff';
+                      e.target.style.backgroundColor = 'rgba(0, 212, 255, 0.1)';
+                      e.target.style.color = '#00d4ff';
+                      e.target.style.paddingLeft = '25px';
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'white';
-                      e.target.style.color = '#333';
+                      e.target.style.backgroundColor = 'transparent';
+                      e.target.style.color = '#2d3748';
+                      e.target.style.paddingLeft = '20px';
                     }}
                   >
                     Bilim
@@ -175,17 +238,21 @@ const Header = () => {
                     style={{ 
                       display: 'block', 
                       padding: '15px 20px',
-                      color: '#333',
-                      borderBottom: '1px solid #f0f0f0',
-                      backgroundColor: 'white'
+                      color: '#2d3748',
+                      borderBottom: '1px solid rgba(0, 212, 255, 0.1)',
+                      backgroundColor: 'transparent',
+                      transition: 'all 0.2s',
+                      fontWeight: '500'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = '#f0f7ff';
-                      e.target.style.color = '#007bff';
+                      e.target.style.backgroundColor = 'rgba(0, 212, 255, 0.1)';
+                      e.target.style.color = '#00d4ff';
+                      e.target.style.paddingLeft = '25px';
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'white';
-                      e.target.style.color = '#333';
+                      e.target.style.backgroundColor = 'transparent';
+                      e.target.style.color = '#2d3748';
+                      e.target.style.paddingLeft = '20px';
                     }}
                   >
                     Siyaset
@@ -195,16 +262,20 @@ const Header = () => {
                     style={{ 
                       display: 'block', 
                       padding: '15px 20px',
-                      color: '#333',
-                      backgroundColor: 'white'
+                      color: '#2d3748',
+                      backgroundColor: 'transparent',
+                      transition: 'all 0.2s',
+                      fontWeight: '500'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = '#f0f7ff';
-                      e.target.style.color = '#007bff';
+                      e.target.style.backgroundColor = 'rgba(0, 212, 255, 0.1)';
+                      e.target.style.color = '#00d4ff';
+                      e.target.style.paddingLeft = '25px';
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'white';
-                      e.target.style.color = '#333';
+                      e.target.style.backgroundColor = 'transparent';
+                      e.target.style.color = '#2d3748';
+                      e.target.style.paddingLeft = '20px';
                     }}
                   >
                     Dünya
@@ -213,113 +284,149 @@ const Header = () => {
               )}
             </div>
 
-            <Link to="/contact" style={{ color: 'white' }}>İletişim</Link>
+            <Link 
+              to="/contact" 
+              style={{ 
+                color: 'rgba(255, 255, 255, 0.9)',
+                transition: 'all 0.3s',
+                fontWeight: '500'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.color = '#00ffff';
+                e.target.style.textShadow = '0 0 10px rgba(0, 255, 255, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = 'rgba(255, 255, 255, 0.9)';
+                e.target.style.textShadow = 'none';
+              }}
+            >
+              İletişim
+            </Link>
 
             {/* ARAMA BUTONU */}
-<button
-  onClick={toggleSearchBar}
-  style={{
-    backgroundColor: 'transparent',
-    color: 'white',
-    border: '2px solid white',
-    borderRadius: '50%',
-    width: '42px',
-    height: '42px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    transition: 'all 0.3s',
-    padding: 0
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.backgroundColor = 'white';
-    e.currentTarget.style.transform = 'scale(1.1)';
-    const svg = e.currentTarget.querySelector('svg');
-    if (svg) svg.style.stroke = '#007bff';
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.backgroundColor = 'transparent';
-    e.currentTarget.style.transform = 'scale(1)';
-    const svg = e.currentTarget.querySelector('svg');
-    if (svg) svg.style.stroke = 'white';
-  }}
-  aria-label="Arama"
->
-  {showSearchBar ? (
-    // Kapatma ikonu (X)
-    <svg 
-      width="20" 
-      height="20" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2.5" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      style={{ transition: 'stroke 0.3s' }}
-    >
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
-  ) : (
-    // Modern arama ikonu
-    <svg 
-      width="20" 
-      height="20" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="white" 
-      strokeWidth="2.5" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      style={{ transition: 'stroke 0.3s' }}
-    >
-      <circle cx="11" cy="11" r="8"></circle>
-      <path d="m21 21-4.35-4.35"></path>
-    </svg>
-  )}
-</button>
+            <button
+              onClick={toggleSearchBar}
+              style={{
+                backgroundColor: 'transparent',
+                color: '#00ffff',
+                border: '2px solid #00ffff',
+                borderRadius: '50%',
+                width: '42px',
+                height: '42px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                padding: 0,
+                boxShadow: '0 0 10px rgba(0, 255, 255, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#00ffff';
+                e.currentTarget.style.transform = 'scale(1.1)';
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.6)';
+                const svg = e.currentTarget.querySelector('svg');
+                if (svg) svg.style.stroke = '#0f2027';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.3)';
+                const svg = e.currentTarget.querySelector('svg');
+                if (svg) svg.style.stroke = '#00ffff';
+              }}
+              aria-label="Arama"
+            >
+              {showSearchBar ? (
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="#00ffff" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  style={{ transition: 'stroke 0.3s' }}
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              ) : (
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="#00ffff" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  style={{ transition: 'stroke 0.3s' }}
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+              )}
+            </button>
             
             {/* Giriş yapmış kullanıcı için */}
             {isAuthenticated ? (
               <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <span style={{ color: 'white' }}>
+                <span style={{ 
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontWeight: '500'
+                }}>
                   👤 {user?.name}
                 </span>
                 <button
                   onClick={handleLogout}
                   style={{
-                    backgroundColor: '#dc3545',
+                    background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)',
                     color: 'white',
                     padding: '10px 20px',
-                    borderRadius: '5px',
-                    fontSize: '16px',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: '600',
                     border: 'none',
                     cursor: 'pointer',
-                    transition: 'all 0.3s'
+                    transition: 'all 0.3s',
+                    boxShadow: '0 4px 15px rgba(238, 90, 111, 0.3)'
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#c82333'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#dc3545'}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 20px rgba(238, 90, 111, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 4px 15px rgba(238, 90, 111, 0.3)';
+                  }}
                 >
                   Çıkış Yap
                 </button>
               </div>
             ) : (
-              // Giriş yapmamış kullanıcı için
               <Link to="/login">
                 <button style={{
-                  backgroundColor: '#007bff',
+                  background: 'linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%)',
                   color: 'white',
                   padding: '10px 20px',
-                  borderRadius: '5px',
-                  fontSize: '16px',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: '600',
                   border: 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.3s'
+                  transition: 'all 0.3s',
+                  boxShadow: '0 4px 15px rgba(0, 212, 255, 0.3)'
                 }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#0056b3'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#007bff'}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(0, 212, 255, 0.3)';
+                }}
                 >
                   Giriş Yap
                 </button>
@@ -350,18 +457,21 @@ const Header = () => {
                   flex: 1,
                   padding: '12px 20px',
                   fontSize: '15px',
-                  border: '2px solid white',
+                  border: '1.5px solid rgba(0, 255, 255, 0.5)',
                   borderRadius: '25px',
                   outline: 'none',
                   backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  transition: 'all 0.3s'
+                  transition: 'all 0.3s',
+                  color: '#2d3748'
                 }}
                 onFocus={(e) => {
                   e.target.style.backgroundColor = 'white';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                  e.target.style.borderColor = '#00ffff';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(0, 255, 255, 0.2), 0 4px 12px rgba(0,0,0,0.15)';
                 }}
                 onBlur={(e) => {
                   e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                  e.target.style.borderColor = 'rgba(0, 255, 255, 0.5)';
                   e.target.style.boxShadow = 'none';
                 }}
               />
@@ -369,7 +479,7 @@ const Header = () => {
                 type="submit"
                 style={{
                   padding: '12px 30px',
-                  backgroundColor: '#007bff',
+                  background: 'linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '25px',
@@ -377,15 +487,16 @@ const Header = () => {
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.3s',
-                  whiteSpace: 'nowrap'
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 15px rgba(0, 212, 255, 0.3)'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#0056b3';
                   e.target.style.transform = 'scale(1.05)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.5)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = '#007bff';
                   e.target.style.transform = 'scale(1)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(0, 212, 255, 0.3)';
                 }}
               >
                 Ara
@@ -393,10 +504,10 @@ const Header = () => {
             </form>
             <p style={{
               textAlign: 'center',
-              color: 'white',
+              color: 'rgba(255, 255, 255, 0.8)',
               fontSize: '12px',
               marginTop: '10px',
-              opacity: 0.8
+              opacity: 0.9
             }}>
               ESC tuşu ile kapatabilirsiniz
             </p>
