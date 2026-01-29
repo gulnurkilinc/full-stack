@@ -61,8 +61,38 @@ const Home = () => {
   return (
     <div style={{ 
       background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
-      minHeight: '100vh'
+      minHeight: '100vh',
+      paddingBottom: '0',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
+      {/* Animated Background Elements */}
+      <div style={{
+        position: 'absolute',
+        top: '15%',
+        left: '5%',
+        width: '350px',
+        height: '350px',
+        background: 'radial-gradient(circle, rgba(0, 255, 255, 0.08) 0%, transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(50px)',
+        animation: 'float 7s ease-in-out infinite',
+        zIndex: 0
+      }}></div>
+      
+      <div style={{
+        position: 'absolute',
+        bottom: '20%',
+        right: '5%',
+        width: '400px',
+        height: '400px',
+        background: 'radial-gradient(circle, rgba(138, 43, 226, 0.12) 0%, transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(50px)',
+        animation: 'float 9s ease-in-out infinite reverse',
+        zIndex: 0
+      }}></div>
+
       {/* Hero Slider */}
       {sliderNews.length > 0 && (
         <section style={{ 
@@ -70,7 +100,8 @@ const Home = () => {
           width: '100%', 
           height: '100vh',
           minHeight: '100vh',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          zIndex: 1
         }}>
           <div style={{
             position: 'relative',
@@ -273,16 +304,16 @@ const Home = () => {
       )}
 
       {/* Blog Posts Section */}
-      <div className="container" style={{ marginTop: '60px', marginBottom: '60px', paddingBottom: '60px' }}>
+      <div className="container" style={{ marginTop: '60px', marginBottom: '0', paddingBottom: '0', position: 'relative', zIndex: 1 }}>
         <section>
           <h2 style={{ 
-            marginBottom: '40px', 
-            fontSize: '36px',
+            marginBottom: '50px', 
+            fontSize: '48px',
             color: 'white',
             textAlign: 'center',
-            textShadow: '0 0 20px rgba(0, 255, 255, 0.4)',
-            fontWeight: 'bold',
-            letterSpacing: '1px'
+            fontWeight: '700',
+            letterSpacing: '-1px',
+            textShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
           }}>
             Son Yazılar
           </h2>
@@ -333,29 +364,28 @@ const Home = () => {
                     overflow: 'hidden',
                     transition: 'all 0.3s',
                     cursor: 'pointer',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(0, 255, 255, 0.2)',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 20px rgba(0, 212, 255, 0.1)'
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '20px',
+                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 100px rgba(0, 255, 255, 0.1)'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-8px)';
-                    e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 212, 255, 0.3), 0 0 20px rgba(0, 255, 255, 0.2)';
-                    e.currentTarget.style.borderColor = 'rgba(0, 255, 255, 0.5)';
+                    e.currentTarget.style.boxShadow = '0 25px 70px rgba(0, 0, 0, 0.4), 0 0 120px rgba(0, 255, 255, 0.15)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 212, 255, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(0, 255, 255, 0.2)';
+                    e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 100px rgba(0, 255, 255, 0.1)';
                   }}
                   >
                     <div style={{ 
                       width: '100%', 
                       height: '200px', 
                       overflow: 'hidden',
-                      backgroundColor: 'rgba(15, 32, 39, 0.5)',
-                      position: 'relative'
+                      backgroundColor: '#f7fafc',
+                      position: 'relative',
+                      borderRadius: '20px 20px 0 0'
                     }}>
                       <img 
                         src={post.coverImage?.url || 'https://via.placeholder.com/400x250'} 
@@ -374,14 +404,6 @@ const Home = () => {
                           e.target.style.transform = 'scale(1)';
                         }}
                       />
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'linear-gradient(to bottom, transparent 0%, rgba(15, 32, 39, 0.3) 100%)'
-                      }}></div>
                     </div>
 
                     <div style={{ padding: '20px' }}>
@@ -390,11 +412,11 @@ const Home = () => {
                         background: 'linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%)',
                         color: 'white',
                         padding: '6px 14px',
-                        borderRadius: '6px',
+                        borderRadius: '8px',
                         fontSize: '12px',
-                        marginBottom: '12px',
+                        marginBottom: '14px',
                         fontWeight: '600',
-                        boxShadow: '0 2px 10px rgba(0, 212, 255, 0.3)',
+                        boxShadow: '0 2px 10px rgba(0, 212, 255, 0.25)',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
                       }}>
@@ -405,16 +427,16 @@ const Home = () => {
                         marginBottom: '12px',
                         fontSize: '20px',
                         lineHeight: '1.4',
-                        color: 'white',
-                        fontWeight: '600',
-                        textShadow: '0 2px 8px rgba(0, 255, 255, 0.2)'
+                        color: '#0f2027',
+                        fontWeight: '700',
+                        letterSpacing: '-0.3px'
                       }}>
                         {post.title}
                       </h3>
 
                       <p style={{ 
-                        color: 'rgba(255, 255, 255, 0.75)', 
-                        marginBottom: '15px',
+                        color: '#4a5568', 
+                        marginBottom: '18px',
                         fontSize: '14px',
                         lineHeight: '1.6'
                       }}>
@@ -426,23 +448,23 @@ const Home = () => {
                           width: '100%',
                           background: 'linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%)',
                           border: 'none',
-                          padding: '12px',
-                          borderRadius: '8px',
+                          padding: '14px',
+                          borderRadius: '10px',
                           color: 'white',
                           fontWeight: '600',
-                          fontSize: '14px',
+                          fontSize: '15px',
                           cursor: 'pointer',
                           transition: 'all 0.3s',
-                          boxShadow: '0 4px 15px rgba(0, 212, 255, 0.3)',
-                          letterSpacing: '0.5px'
+                          boxShadow: '0 4px 20px rgba(0, 212, 255, 0.4)',
+                          letterSpacing: '0.3px'
                         }}
                         onMouseEnter={(e) => {
                           e.target.style.transform = 'translateY(-2px)';
-                          e.target.style.boxShadow = '0 6px 20px rgba(0, 212, 255, 0.5)';
+                          e.target.style.boxShadow = '0 6px 30px rgba(0, 212, 255, 0.6)';
                         }}
                         onMouseLeave={(e) => {
                           e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = '0 4px 15px rgba(0, 212, 255, 0.3)';
+                          e.target.style.boxShadow = '0 4px 20px rgba(0, 212, 255, 0.4)';
                         }}
                         >
                           Devamını Oku
@@ -473,6 +495,11 @@ const Home = () => {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
         }
       `}</style>
     </div>
