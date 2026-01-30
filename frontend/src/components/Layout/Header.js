@@ -38,8 +38,8 @@ const Header = () => {
   const isHomePage = location.pathname === '/';
 
   const headerBgColor = isHomePage && !isScrolled 
-    ? 'rgba(26, 31, 54, 0.85)' 
-    : 'rgba(26, 31, 54, 0.98)';
+    ? 'transparent' 
+    : 'rgba(255, 255, 255, 0.98)';
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
@@ -94,53 +94,54 @@ const Header = () => {
       left: 0,
       right: 0,
       background: headerBgColor,
-      backdropFilter: 'blur(20px)',
-      padding: '1.2rem 0',
+      backdropFilter: (isHomePage && !isScrolled) ? 'none' : 'blur(12px)',
+      padding: '1.3rem 0',
       zIndex: 1000,
-      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      transition: 'all 0.3s ease',
       boxShadow: isScrolled 
-        ? '0 2px 24px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.05)' 
-        : '0 1px 0 rgba(255, 255, 255, 0.05)',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+        ? '0 1px 3px rgba(0, 0, 0, 0.08)' 
+        : 'none',
+      borderBottom: (isHomePage && !isScrolled) ? 'none' : (isScrolled ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.1)')
     }}>
-      {/* Profesyonel üst gradient çizgi */}
+      {/* Minimal accent line */}
       <div style={{
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        height: '2px',
-        background: 'linear-gradient(90deg, #2563eb 0%, #1e40af 100%)'
+        height: '1px',
+        background: isScrolled 
+          ? 'linear-gradient(90deg, transparent 0%, #1a1a1a 50%, transparent 100%)'
+          : 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
+        opacity: (isHomePage && !isScrolled) ? 0 : 0.15
       }}></div>
       <div className="container">
         <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link to="/" style={{ 
-            fontSize: '26px', 
+            fontSize: '24px', 
             fontWeight: '700', 
-            color: '#ffffff',
-            letterSpacing: '-0.5px',
+            color: isScrolled ? '#1a1a1a' : '#ffffff',
+            letterSpacing: '-0.8px',
             transition: 'all 0.3s ease',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '10px',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            textShadow: !isScrolled ? '0 2px 4px rgba(0, 0, 0, 0.3)' : 'none'
           }}
           onMouseEnter={(e) => {
-            e.target.style.color = '#3b82f6';
-            e.target.style.transform = 'translateY(-1px)';
+            e.target.style.color = isScrolled ? '#000000' : '#f0f0f0';
+            e.target.style.letterSpacing = '-0.9px';
           }}
           onMouseLeave={(e) => {
-            e.target.style.color = '#ffffff';
-            e.target.style.transform = 'translateY(0)';
+            e.target.style.color = isScrolled ? '#1a1a1a' : '#ffffff';
+            e.target.style.letterSpacing = '-0.8px';
           }}
           >
-            <span style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-              display: 'inline-block',
-              boxShadow: '0 0 12px rgba(59, 130, 246, 0.6)'
-            }}></span>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{ transition: 'all 0.3s' }}>
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
             Blog Sitesi
           </Link>
           
@@ -148,19 +149,21 @@ const Header = () => {
             <Link 
               to="/" 
               style={{ 
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: isScrolled ? '#4a5568' : 'rgba(255, 255, 255, 0.9)',
                 transition: 'all 0.3s ease',
                 fontWeight: '500',
                 fontSize: '15px',
                 position: 'relative',
-                paddingBottom: '2px'
+                paddingBottom: '2px',
+                letterSpacing: '-0.2px',
+                textShadow: !isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = isScrolled ? '#1a1a1a' : '#ffffff';
                 e.target.style.fontWeight = '600';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = isScrolled ? '#4a5568' : 'rgba(255, 255, 255, 0.9)';
                 e.target.style.fontWeight = '500';
               }}
             >
@@ -169,19 +172,21 @@ const Header = () => {
             <Link 
               to="/blogs" 
               style={{ 
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: isScrolled ? '#4a5568' : 'rgba(255, 255, 255, 0.9)',
                 transition: 'all 0.3s ease',
                 fontWeight: '500',
                 fontSize: '15px',
                 position: 'relative',
-                paddingBottom: '2px'
+                paddingBottom: '2px',
+                letterSpacing: '-0.2px',
+                textShadow: !isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = isScrolled ? '#1a1a1a' : '#ffffff';
                 e.target.style.fontWeight = '600';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = isScrolled ? '#4a5568' : 'rgba(255, 255, 255, 0.9)';
                 e.target.style.fontWeight = '500';
               }}
             >
@@ -199,17 +204,19 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: isScrolled ? '#4a5568' : 'rgba(255, 255, 255, 0.9)',
                 transition: 'all 0.3s ease',
                 fontWeight: '500',
-                fontSize: '15px'
+                fontSize: '15px',
+                letterSpacing: '-0.2px',
+                textShadow: !isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = isScrolled ? '#1a1a1a' : '#ffffff';
                 e.target.style.fontWeight = '600';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = isScrolled ? '#4a5568' : 'rgba(255, 255, 255, 0.9)';
                 e.target.style.fontWeight = '500';
               }}
               >
@@ -238,17 +245,17 @@ const Header = () => {
                     position: 'absolute',
                     top: '100%',
                     left: '-20px',
-                    background: 'linear-gradient(180deg, #1a1f36 0%, #0f172a 100%)',
-                    backdropFilter: 'blur(20px)',
-                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3)',
+                    background: 'white',
+                    backdropFilter: 'blur(8px)',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08)',
                     minWidth: '220px',
                     marginTop: '12px',
-                    borderRadius: '16px',
+                    borderRadius: '12px',
                     zIndex: 1000,
                     overflow: 'hidden',
-                    padding: '8px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    animation: 'dropdownFade 0.3s ease'
+                    padding: '6px',
+                    border: '1px solid rgba(0, 0, 0, 0.08)',
+                    animation: 'dropdownFade 0.25s ease'
                   }}
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
@@ -259,23 +266,23 @@ const Header = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '12px',
-                      padding: '14px 18px',
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      padding: '12px 16px',
+                      color: '#4a5568',
                       backgroundColor: 'transparent',
                       transition: 'all 0.2s ease',
                       fontWeight: '500',
                       fontSize: '14.5px',
-                      borderRadius: '10px',
+                      borderRadius: '8px',
                       margin: '2px 0'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
-                      e.target.style.color = '#3b82f6';
-                      e.target.style.transform = 'translateX(4px)';
+                      e.target.style.backgroundColor = '#f7f8fa';
+                      e.target.style.color = '#1a1a1a';
+                      e.target.style.transform = 'translateX(3px)';
                     }}
                     onMouseLeave={(e) => {
                       e.target.style.backgroundColor = 'transparent';
-                      e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                      e.target.style.color = '#4a5568';
                       e.target.style.transform = 'translateX(0)';
                     }}
                   >
@@ -288,23 +295,23 @@ const Header = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '12px',
-                      padding: '14px 18px',
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      padding: '12px 16px',
+                      color: '#4a5568',
                       backgroundColor: 'transparent',
                       transition: 'all 0.2s ease',
                       fontWeight: '500',
                       fontSize: '14.5px',
-                      borderRadius: '10px',
+                      borderRadius: '8px',
                       margin: '2px 0'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
-                      e.target.style.color = '#3b82f6';
-                      e.target.style.transform = 'translateX(4px)';
+                      e.target.style.backgroundColor = '#f7f8fa';
+                      e.target.style.color = '#1a1a1a';
+                      e.target.style.transform = 'translateX(3px)';
                     }}
                     onMouseLeave={(e) => {
                       e.target.style.backgroundColor = 'transparent';
-                      e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                      e.target.style.color = '#4a5568';
                       e.target.style.transform = 'translateX(0)';
                     }}
                   >
@@ -317,23 +324,23 @@ const Header = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '12px',
-                      padding: '14px 18px',
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      padding: '12px 16px',
+                      color: '#4a5568',
                       backgroundColor: 'transparent',
                       transition: 'all 0.2s ease',
                       fontWeight: '500',
                       fontSize: '14.5px',
-                      borderRadius: '10px',
+                      borderRadius: '8px',
                       margin: '2px 0'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
-                      e.target.style.color = '#3b82f6';
-                      e.target.style.transform = 'translateX(4px)';
+                      e.target.style.backgroundColor = '#f7f8fa';
+                      e.target.style.color = '#1a1a1a';
+                      e.target.style.transform = 'translateX(3px)';
                     }}
                     onMouseLeave={(e) => {
                       e.target.style.backgroundColor = 'transparent';
-                      e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                      e.target.style.color = '#4a5568';
                       e.target.style.transform = 'translateX(0)';
                     }}
                   >
@@ -347,19 +354,21 @@ const Header = () => {
             <Link 
               to="/contact" 
               style={{ 
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: isScrolled ? '#4a5568' : 'rgba(255, 255, 255, 0.9)',
                 transition: 'all 0.3s ease',
                 fontWeight: '500',
                 fontSize: '15px',
                 position: 'relative',
-                paddingBottom: '2px'
+                paddingBottom: '2px',
+                letterSpacing: '-0.2px',
+                textShadow: !isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = isScrolled ? '#1a1a1a' : '#ffffff';
                 e.target.style.fontWeight = '600';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = isScrolled ? '#4a5568' : 'rgba(255, 255, 255, 0.9)';
                 e.target.style.fontWeight = '500';
               }}
             >
@@ -370,37 +379,34 @@ const Header = () => {
             <button
               onClick={toggleSearchBar}
               style={{
-                backgroundColor: showSearchBar ? '#2563eb' : 'rgba(255, 255, 255, 0.08)',
-                color: showSearchBar ? 'white' : 'rgba(255, 255, 255, 0.7)',
+                backgroundColor: showSearchBar ? '#1a1a1a' : (isScrolled ? 'white' : 'rgba(255, 255, 255, 0.15)'),
+                color: showSearchBar ? 'white' : (isScrolled ? '#4a5568' : 'rgba(255, 255, 255, 0.9)'),
                 border: '1.5px solid',
-                borderColor: showSearchBar ? '#2563eb' : 'rgba(255, 255, 255, 0.15)',
-                borderRadius: '12px',
-                width: '44px',
-                height: '44px',
+                borderColor: showSearchBar ? '#1a1a1a' : (isScrolled ? '#e2e8f0' : 'rgba(255, 255, 255, 0.3)'),
+                borderRadius: '10px',
+                width: '42px',
+                height: '42px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 padding: 0,
-                boxShadow: showSearchBar ? '0 4px 16px rgba(37, 99, 235, 0.25)' : '0 2px 8px rgba(0, 0, 0, 0.2)'
+                boxShadow: isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.08)' : '0 2px 4px rgba(0, 0, 0, 0.2)',
+                backdropFilter: !isScrolled ? 'blur(10px)' : 'none'
               }}
               onMouseEnter={(e) => {
                 if (!showSearchBar) {
-                  e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.15)';
-                  e.currentTarget.style.borderColor = '#3b82f6';
-                  e.currentTarget.style.color = '#3b82f6';
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+                  e.currentTarget.style.backgroundColor = isScrolled ? '#f7f8fa' : 'rgba(255, 255, 255, 0.25)';
+                  e.currentTarget.style.borderColor = isScrolled ? '#cbd5e0' : 'rgba(255, 255, 255, 0.5)';
+                  e.currentTarget.style.color = isScrolled ? '#1a1a1a' : '#ffffff';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!showSearchBar) {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+                  e.currentTarget.style.backgroundColor = isScrolled ? 'white' : 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.borderColor = isScrolled ? '#e2e8f0' : 'rgba(255, 255, 255, 0.3)';
+                  e.currentTarget.style.color = isScrolled ? '#4a5568' : 'rgba(255, 255, 255, 0.9)';
                 }
               }}
               aria-label="Arama"
@@ -444,29 +450,32 @@ const Header = () => {
                   alignItems: 'center',
                   gap: '10px',
                   padding: '8px 16px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.15)'
+                  backgroundColor: isScrolled ? '#f7f8fa' : 'rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  border: '1px solid',
+                  borderColor: isScrolled ? '#e2e8f0' : 'rgba(255, 255, 255, 0.3)',
+                  backdropFilter: !isScrolled ? 'blur(10px)' : 'none'
                 }}>
                   <div style={{
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    background: 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: 'white',
                     fontSize: '14px',
-                    fontWeight: '600',
-                    boxShadow: '0 0 12px rgba(59, 130, 246, 0.4)'
+                    fontWeight: '600'
                   }}>
                     {user?.name?.charAt(0).toUpperCase()}
                   </div>
                   <span style={{ 
-                    color: '#ffffff',
+                    color: isScrolled ? '#1a1a1a' : '#ffffff',
                     fontWeight: '600',
-                    fontSize: '14.5px'
+                    fontSize: '14.5px',
+                    letterSpacing: '-0.2px',
+                    textShadow: !isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
                   }}>
                     {user?.name}
                   </span>
@@ -474,30 +483,33 @@ const Header = () => {
                 <button
                   onClick={handleLogout}
                   style={{
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                    color: '#f87171',
-                    padding: '11px 24px',
-                    borderRadius: '12px',
+                    backgroundColor: (isHomePage && !isScrolled) ? 'rgba(220, 38, 38, 0.15)' : 'white',
+                    color: (isHomePage && !isScrolled) ? '#fca5a5' : '#dc2626',
+                    padding: '10px 22px',
+                    borderRadius: '10px',
                     fontSize: '14.5px',
                     fontWeight: '600',
-                    border: '1.5px solid rgba(220, 38, 38, 0.3)',
+                    border: '1.5px solid',
+                    borderColor: (isHomePage && !isScrolled) ? 'rgba(220, 38, 38, 0.3)' : '#fee2e2',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.15)'
+                    boxShadow: (isHomePage && !isScrolled) ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)',
+                    letterSpacing: '-0.2px',
+                    backdropFilter: (isHomePage && !isScrolled) ? 'blur(10px)' : 'none'
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.backgroundColor = '#dc2626';
                     e.target.style.color = 'white';
                     e.target.style.borderColor = '#dc2626';
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 6px 16px rgba(220, 38, 38, 0.3)';
+                    e.target.style.transform = 'translateY(-1px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.2)';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
-                    e.target.style.color = '#f87171';
-                    e.target.style.borderColor = 'rgba(220, 38, 38, 0.3)';
+                    e.target.style.backgroundColor = (isHomePage && !isScrolled) ? 'rgba(220, 38, 38, 0.15)' : 'white';
+                    e.target.style.color = (isHomePage && !isScrolled) ? '#fca5a5' : '#dc2626';
+                    e.target.style.borderColor = (isHomePage && !isScrolled) ? 'rgba(220, 38, 38, 0.3)' : '#fee2e2';
                     e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 2px 8px rgba(220, 38, 38, 0.15)';
+                    e.target.style.boxShadow = (isHomePage && !isScrolled) ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)';
                   }}
                 >
                   Çıkış Yap
@@ -506,24 +518,40 @@ const Header = () => {
             ) : (
               <Link to="/login">
                 <button style={{
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  background: (isHomePage && !isScrolled) 
+                    ? 'rgba(255, 255, 255, 0.15)' 
+                    : 'linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%)',
                   color: 'white',
-                  padding: '11px 28px',
-                  borderRadius: '12px',
+                  padding: '10px 26px',
+                  borderRadius: '10px',
                   fontSize: '14.5px',
                   fontWeight: '600',
-                  border: 'none',
+                  border: (isHomePage && !isScrolled) ? '1.5px solid rgba(255, 255, 255, 0.3)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 16px rgba(37, 99, 235, 0.25)'
+                  boxShadow: (isHomePage && !isScrolled) 
+                    ? '0 2px 8px rgba(0, 0, 0, 0.2)' 
+                    : '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  letterSpacing: '-0.2px',
+                  backdropFilter: (isHomePage && !isScrolled) ? 'blur(10px)' : 'none'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 8px 24px rgba(37, 99, 235, 0.35)';
+                  e.target.style.transform = 'translateY(-1px)';
+                  if (isHomePage && !isScrolled) {
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                  }
+                  e.target.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.25)';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 16px rgba(37, 99, 235, 0.25)';
+                  if (isHomePage && !isScrolled) {
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                    e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+                  } else {
+                    e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
+                  }
                 }}
                 >
                   Giriş Yap
@@ -554,7 +582,7 @@ const Header = () => {
                   height="20" 
                   viewBox="0 0 24 24" 
                   fill="none" 
-                  stroke="rgba(255, 255, 255, 0.4)" 
+                  stroke="#a0aec0" 
                   strokeWidth="2" 
                   strokeLinecap="round" 
                   strokeLinejoin="round"
@@ -577,24 +605,23 @@ const Header = () => {
                   placeholder="Blog ara... (başlık, içerik, etiketler)"
                   style={{
                     width: '100%',
-                    padding: '14px 20px 14px 52px',
+                    padding: '13px 20px 13px 52px',
                     fontSize: '15px',
-                    border: '1.5px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: '14px',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '12px',
                     outline: 'none',
-                    background: 'rgba(255, 255, 255, 0.08)',
+                    background: 'white',
                     transition: 'all 0.3s ease',
-                    color: '#ffffff',
-                    fontWeight: '500'
+                    color: '#1a1a1a',
+                    fontWeight: '500',
+                    letterSpacing: '-0.2px'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#3b82f6';
-                    e.target.style.background = 'rgba(255, 255, 255, 0.12)';
-                    e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.15), 0 4px 16px rgba(0, 0, 0, 0.3)';
+                    e.target.style.borderColor = '#cbd5e0';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.1)';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                    e.target.style.background = 'rgba(255, 255, 255, 0.08)';
+                    e.target.style.borderColor = '#e2e8f0';
                     e.target.style.boxShadow = 'none';
                   }}
                 />
@@ -602,25 +629,26 @@ const Header = () => {
               <button
                 type="submit"
                 style={{
-                  padding: '14px 32px',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  padding: '13px 30px',
+                  background: 'linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '14px',
+                  borderRadius: '12px',
                   fontSize: '15px',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                   whiteSpace: 'nowrap',
-                  boxShadow: '0 4px 16px rgba(37, 99, 235, 0.25)'
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  letterSpacing: '-0.2px'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 8px 24px rgba(37, 99, 235, 0.35)';
+                  e.target.style.transform = 'translateY(-1px)';
+                  e.target.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.25)';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 16px rgba(37, 99, 235, 0.25)';
+                  e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
                 }}
               >
                 Ara
@@ -628,23 +656,24 @@ const Header = () => {
             </form>
             <p style={{
               textAlign: 'center',
-              color: 'rgba(255, 255, 255, 0.6)',
+              color: '#718096',
               fontSize: '13px',
               marginTop: '12px',
               fontWeight: '500',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px'
+              gap: '8px',
+              letterSpacing: '-0.2px'
             }}>
               <kbd style={{
-                padding: '3px 8px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                padding: '4px 10px',
+                backgroundColor: '#f7f8fa',
+                border: '1px solid #e2e8f0',
                 borderRadius: '6px',
                 fontSize: '12px',
                 fontWeight: '600',
-                color: 'rgba(255, 255, 255, 0.8)'
+                color: '#4a5568'
               }}>ESC</kbd>
               tuşu ile kapatabilirsiniz
             </p>
@@ -657,7 +686,7 @@ const Header = () => {
         @keyframes slideDown {
           from {
             opacity: 0;
-            transform: translateY(-12px);
+            transform: translateY(-8px);
           }
           to {
             opacity: 1;
@@ -668,7 +697,7 @@ const Header = () => {
         @keyframes dropdownFade {
           from {
             opacity: 0;
-            transform: translateY(-8px);
+            transform: translateY(-6px);
           }
           to {
             opacity: 1;
@@ -676,7 +705,7 @@ const Header = () => {
           }
         }
 
-        /* Genel link altı çizgi efekti */
+        /* Modern link underline effect */
         nav a:not(button a) {
           position: relative;
         }
@@ -688,7 +717,7 @@ const Header = () => {
           left: 0;
           width: 0;
           height: 2px;
-          background: linear-gradient(90deg, #3b82f6, #2563eb);
+          background: linear-gradient(90deg, #1a1a1a, #2d3748);
           transition: width 0.3s ease;
         }
 

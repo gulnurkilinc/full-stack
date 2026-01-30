@@ -3,21 +3,22 @@ import React from 'react';
 const Footer = () => {
   return (
     <footer style={{ 
-      background: 'linear-gradient(180deg, #1a1f36 0%, #0f172a 100%)',
-      color: 'white', 
+      background: 'linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%)',
+      color: '#1a1a1a', 
       padding: '70px 0 40px 0', 
       marginTop: '0',
       position: 'relative',
-      borderTop: '2px solid #2d3748'
+      borderTop: '1px solid #e2e8f0'
     }}>
-      {/* Profesyonel üst çizgi */}
+      {/* Modern minimal top line */}
       <div style={{
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
-        height: '2px',
-        background: 'linear-gradient(90deg, #2563eb 0%, #1e40af 100%)'
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent 0%, #1a1a1a 50%, transparent 100%)',
+        opacity: 0.15
       }}></div>
 
       <div className="container">
@@ -31,23 +32,35 @@ const Footer = () => {
         }}>
           {/* Kurum Bilgileri */}
           <div>
-            <h3 style={{
-              fontSize: '24px',
-              fontWeight: '700',
-              marginBottom: '20px',
-              color: '#ffffff',
-              letterSpacing: '-0.3px',
-              fontFamily: 'system-ui, -apple-system, sans-serif'
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '20px'
             }}>
-              Blog Sitesi
-            </h3>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M7 7h10M7 12h10M7 17h6" strokeLinecap="round"/>
+              </svg>
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                margin: 0,
+                color: '#1a1a1a',
+                letterSpacing: '-0.8px',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
+              }}>
+                Blog Sitesi
+              </h3>
+            </div>
             <p style={{
               fontSize: '15px',
-              lineHeight: '1.8',
-              color: 'rgba(255, 255, 255, 0.7)',
+              lineHeight: '1.7',
+              color: '#4a5568',
               marginBottom: '30px',
               maxWidth: '320px',
-              fontWeight: '400'
+              fontWeight: '400',
+              letterSpacing: '-0.2px'
             }}>
               Araştırma odaklı içerikler ve veri destekli analizlerle bilim ve teknoloji dünyasını keşfedin.
             </p>
@@ -62,7 +75,7 @@ const Footer = () => {
                 alignItems: 'center',
                 gap: '10px',
                 fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.65)'
+                color: '#718096'
               }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -75,7 +88,7 @@ const Footer = () => {
                 alignItems: 'center',
                 gap: '10px',
                 fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.65)'
+                color: '#718096'
               }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -89,10 +102,10 @@ const Footer = () => {
           {/* Kurumsal Linkler */}
           <div>
             <h4 style={{
-              fontSize: '16px',
-              fontWeight: '600',
+              fontSize: '15px',
+              fontWeight: '700',
               marginBottom: '25px',
-              color: '#ffffff',
+              color: '#1a1a1a',
               letterSpacing: '0.5px',
               textTransform: 'uppercase'
             }}>
@@ -100,84 +113,88 @@ const Footer = () => {
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <a href="/" style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#4a5568',
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = '#1a1a1a';
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = '#4a5568';
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s' }}>›</span> Ana Sayfa
+                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Ana Sayfa
               </a>
               <a href="/blogs" style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#4a5568',
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = '#1a1a1a';
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = '#4a5568';
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s' }}>›</span> Araştırmalar
+                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Araştırmalar
               </a>
               <a href="/contact" style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#4a5568',
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = '#1a1a1a';
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = '#4a5568';
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s' }}>›</span> İletişim
+                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> İletişim
               </a>
               <a href="/about" style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#4a5568',
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = '#1a1a1a';
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = '#4a5568';
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s' }}>›</span> Hakkımızda
+                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Hakkımızda
               </a>
             </div>
           </div>
@@ -185,10 +202,10 @@ const Footer = () => {
           {/* Yasal */}
           <div>
             <h4 style={{
-              fontSize: '16px',
-              fontWeight: '600',
+              fontSize: '15px',
+              fontWeight: '700',
               marginBottom: '25px',
-              color: '#ffffff',
+              color: '#1a1a1a',
               letterSpacing: '0.5px',
               textTransform: 'uppercase'
             }}>
@@ -196,84 +213,88 @@ const Footer = () => {
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <a href="/privacy" style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#4a5568',
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = '#1a1a1a';
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = '#4a5568';
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s' }}>›</span> Gizlilik Politikası
+                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Gizlilik Politikası
               </a>
               <a href="/terms" style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#4a5568',
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = '#1a1a1a';
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = '#4a5568';
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s' }}>›</span> Kullanım Koşulları
+                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Kullanım Koşulları
               </a>
               <a href="/cookies" style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#4a5568',
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = '#1a1a1a';
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = '#4a5568';
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s' }}>›</span> Çerez Politikası
+                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Çerez Politikası
               </a>
               <a href="/gdpr" style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#4a5568',
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#3b82f6';
+                e.target.style.color = '#1a1a1a';
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                e.target.style.color = '#4a5568';
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s' }}>›</span> KVKK Aydınlatma Metni
+                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> KVKK Aydınlatma Metni
               </a>
             </div>
           </div>
@@ -281,10 +302,10 @@ const Footer = () => {
           {/* İletişim Bilgileri */}
           <div>
             <h4 style={{
-              fontSize: '16px',
-              fontWeight: '600',
+              fontSize: '15px',
+              fontWeight: '700',
               marginBottom: '25px',
-              color: '#ffffff',
+              color: '#1a1a1a',
               letterSpacing: '0.5px',
               textTransform: 'uppercase'
             }}>
@@ -296,12 +317,12 @@ const Footer = () => {
                 alignItems: 'flex-start',
                 gap: '12px'
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.7)" strokeWidth="2" style={{ marginTop: '2px', minWidth: '18px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a5568" strokeWidth="2" style={{ marginTop: '2px', minWidth: '18px' }}>
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
                 <div>
-                  <p style={{ margin: 0, fontSize: '15px', color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.6' }}>
+                  <p style={{ margin: 0, fontSize: '15px', color: '#4a5568', lineHeight: '1.6', letterSpacing: '-0.2px' }}>
                     info@blogsitesi.com
                   </p>
                 </div>
@@ -312,18 +333,18 @@ const Footer = () => {
                 alignItems: 'flex-start',
                 gap: '12px'
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.7)" strokeWidth="2" style={{ marginTop: '2px', minWidth: '18px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a5568" strokeWidth="2" style={{ marginTop: '2px', minWidth: '18px' }}>
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
                 <div>
-                  <p style={{ margin: 0, fontSize: '15px', color: 'rgba(255, 255, 255, 0.7)', lineHeight: '1.6' }}>
+                  <p style={{ margin: 0, fontSize: '15px', color: '#4a5568', lineHeight: '1.6', letterSpacing: '-0.2px' }}>
                     İstanbul, Türkiye
                   </p>
                 </div>
               </div>
 
-              {/* Sosyal Medya - Profesyonel */}
+              {/* Sosyal Medya - Modern */}
               <div style={{ marginTop: '10px' }}>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <a 
@@ -333,24 +354,26 @@ const Footer = () => {
                     style={{ 
                       width: '38px',
                       height: '38px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '6px',
+                      backgroundColor: '#f7f8fa',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.2s',
-                      color: 'rgba(255, 255, 255, 0.7)'
+                      color: '#4a5568'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = '#0077b5';
                       e.currentTarget.style.borderColor = '#0077b5';
                       e.currentTarget.style.color = '#fff';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+                      e.currentTarget.style.backgroundColor = '#f7f8fa';
+                      e.currentTarget.style.borderColor = '#e2e8f0';
+                      e.currentTarget.style.color = '#4a5568';
+                      e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -365,14 +388,14 @@ const Footer = () => {
                     style={{ 
                       width: '38px',
                       height: '38px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '6px',
+                      backgroundColor: '#f7f8fa',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.2s',
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      color: '#4a5568',
                       fontSize: '14px',
                       fontWeight: 'bold'
                     }}
@@ -380,11 +403,13 @@ const Footer = () => {
                       e.currentTarget.style.backgroundColor = '#000000';
                       e.currentTarget.style.borderColor = '#000000';
                       e.currentTarget.style.color = '#fff';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+                      e.currentTarget.style.backgroundColor = '#f7f8fa';
+                      e.currentTarget.style.borderColor = '#e2e8f0';
+                      e.currentTarget.style.color = '#4a5568';
+                      e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
                     𝕏
@@ -397,24 +422,26 @@ const Footer = () => {
                     style={{ 
                       width: '38px',
                       height: '38px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      borderRadius: '6px',
+                      backgroundColor: '#f7f8fa',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.2s',
-                      color: 'rgba(255, 255, 255, 0.7)'
+                      color: '#4a5568'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)';
                       e.currentTarget.style.borderColor = 'transparent';
                       e.currentTarget.style.color = '#fff';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+                      e.currentTarget.style.background = '#f7f8fa';
+                      e.currentTarget.style.borderColor = '#e2e8f0';
+                      e.currentTarget.style.color = '#4a5568';
+                      e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -432,7 +459,7 @@ const Footer = () => {
         {/* Alt Bölüm - Copyright ve Uyumluluk */}
         <div style={{
           paddingTop: '35px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          borderTop: '1px solid #e2e8f0',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -442,17 +469,17 @@ const Footer = () => {
           <div>
             <p style={{
               fontSize: '14px',
-              color: 'rgba(255, 255, 255, 0.6)',
+              color: '#718096',
               margin: '0 0 8px 0',
-              letterSpacing: '0.2px'
+              letterSpacing: '-0.2px'
             }}>
               &copy; 2026 Blog Sitesi. Tüm hakları saklıdır.
             </p>
             <p style={{
               fontSize: '13px',
-              color: 'rgba(255, 255, 255, 0.5)',
+              color: '#a0aec0',
               margin: 0,
-              letterSpacing: '0.2px'
+              letterSpacing: '-0.2px'
             }}>
               Vergi Kimlik No: XXXXXXXXXX
             </p>
@@ -466,34 +493,37 @@ const Footer = () => {
           }}>
             <div style={{
               padding: '6px 14px',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '6px',
+              backgroundColor: '#f7f8fa',
+              borderRadius: '8px',
               fontSize: '12px',
-              color: 'rgba(255, 255, 255, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              fontWeight: '500'
+              color: '#4a5568',
+              border: '1px solid #e2e8f0',
+              fontWeight: '600',
+              letterSpacing: '-0.1px'
             }}>
               ISO 27001
             </div>
             <div style={{
               padding: '6px 14px',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '6px',
+              backgroundColor: '#f7f8fa',
+              borderRadius: '8px',
               fontSize: '12px',
-              color: 'rgba(255, 255, 255, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              fontWeight: '500'
+              color: '#4a5568',
+              border: '1px solid #e2e8f0',
+              fontWeight: '600',
+              letterSpacing: '-0.1px'
             }}>
               KVKK Uyumlu
             </div>
             <div style={{
               padding: '6px 14px',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '6px',
+              backgroundColor: '#f7f8fa',
+              borderRadius: '8px',
               fontSize: '12px',
-              color: 'rgba(255, 255, 255, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              fontWeight: '500'
+              color: '#4a5568',
+              border: '1px solid #e2e8f0',
+              fontWeight: '600',
+              letterSpacing: '-0.1px'
             }}>
               SSL Güvenli
             </div>
