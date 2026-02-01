@@ -3,21 +3,20 @@ import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchBlogs, fetchFeaturedBlogs } from '../../redux/blogSlice';
 import Pagination from '../../components/Pagination';
+import { useTheme } from '../../context/ThemeContext';
 
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const dispatch = useDispatch();
-  
-  // Redux'tan blogları al
+  const { theme } = useTheme();
+
   const { blogs, featuredBlogs, pagination, loading } = useSelector((state) => state.blogs);
 
-  // Component mount olduğunda öne çıkan blogları çek
   useEffect(() => {
     dispatch(fetchFeaturedBlogs());
   }, [dispatch]);
 
-  // Sayfa değiştiğinde blogları çek
   useEffect(() => {
     dispatch(fetchBlogs({ 
       page: currentPage, 
@@ -26,16 +25,13 @@ const Home = () => {
     }));
   }, [dispatch, currentPage]);
 
-  // Slider için öne çıkan blogları kullan
   const sliderNews = featuredBlogs.length > 0 ? featuredBlogs : [];
 
-  // 20 saniyede bir otomatik geçiş
   useEffect(() => {
     if (sliderNews.length > 0) {
       const interval = setInterval(() => {
         setCurrentSlide((prev) => (prev + 1) % sliderNews.length);
       }, 20000);
-
       return () => clearInterval(interval);
     }
   }, [sliderNews.length]);
@@ -52,7 +48,6 @@ const Home = () => {
     setCurrentSlide(index);
   };
 
-  // Sayfa değişimi
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -60,11 +55,12 @@ const Home = () => {
 
   return (
     <div style={{ 
-      background: 'linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%)',
+      background: theme.pageBackground,
       minHeight: '100vh',
       paddingBottom: '0',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      transition: 'background 0.4s ease'
     }}>
       {/* Subtle Background Elements */}
       <div style={{
@@ -73,11 +69,12 @@ const Home = () => {
         left: '5%',
         width: '300px',
         height: '300px',
-        background: 'radial-gradient(circle, rgba(45, 55, 72, 0.03) 0%, transparent 70%)',
+        background: theme.bgBlob1,
         borderRadius: '50%',
         filter: 'blur(60px)',
         animation: 'float 8s ease-in-out infinite',
-        zIndex: 0
+        zIndex: 0,
+        transition: 'background 0.4s ease'
       }}></div>
       
       <div style={{
@@ -86,11 +83,12 @@ const Home = () => {
         right: '5%',
         width: '350px',
         height: '350px',
-        background: 'radial-gradient(circle, rgba(26, 26, 26, 0.02) 0%, transparent 70%)',
+        background: theme.bgBlob2,
         borderRadius: '50%',
         filter: 'blur(60px)',
         animation: 'float 10s ease-in-out infinite reverse',
-        zIndex: 0
+        zIndex: 0,
+        transition: 'background 0.4s ease'
       }}></div>
 
       {/* Hero Slider */}
@@ -124,7 +122,6 @@ const Home = () => {
                   backgroundPosition: 'center'
                 }}
               >
-                {/* Modern gradient overlay for content readability */}
                 <div style={{
                   position: 'absolute',
                   top: 0,
@@ -143,9 +140,7 @@ const Home = () => {
                   paddingBottom: '100px',
                   color: 'white'
                 }}>
-                  <div style={{
-                    maxWidth: '800px'
-                  }}>
+                  <div style={{ maxWidth: '800px' }}>
                     <h1 style={{
                       fontSize: '56px',
                       fontWeight: '800',
@@ -168,28 +163,7 @@ const Home = () => {
                       {news.excerpt}
                     </p>
                     <Link to={`/blog/${news.slug}`}>
-                      <button style={{
-                        background: 'linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%)',
-                        color: 'white',
-                        padding: '16px 42px',
-                        fontSize: '16px',
-                        border: 'none',
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        fontWeight: '600',
-                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-                        letterSpacing: '-0.2px'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.4)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
-                      }}
-                      >
+                      <button className="emerald-btn">
                         Devamını Oku
                       </button>
                     </Link>
@@ -310,16 +284,40 @@ const Home = () => {
       {/* Blog Posts Section */}
       <div className="container" style={{ marginTop: '80px', marginBottom: '0', paddingBottom: '80px', position: 'relative', zIndex: 1 }}>
         <section>
+          <link 
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" 
+            rel="stylesheet" 
+          />
+
           <h2 style={{ 
             marginBottom: '60px', 
             fontSize: '48px',
-            color: '#1a1a1a',
+            color: theme.headingColor,
             textAlign: 'center',
-            fontWeight: '800',
-            letterSpacing: '-1.5px',
-            fontFamily: 'system-ui, -apple-system, sans-serif'
+            fontWeight: '600',
+            letterSpacing: '-0.5px',
+            fontFamily: "'Inter', sans-serif",
+            position: 'relative',
+            transition: 'color 0.4s ease'
           }}>
-            Son Yazılar
+            <span style={{
+              position: 'relative',
+              display: 'inline-block',
+              paddingBottom: '22px'
+            }}>
+              Son Analizler
+              <span style={{
+                position: 'absolute',
+                bottom: 0,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '56px',
+                height: '3px',
+                background: theme.accentGradient,
+                borderRadius: '2px',
+                transition: 'background 0.4s ease'
+              }}></span>
+            </span>
           </h2>
           
           {/* Loading State */}
@@ -331,16 +329,18 @@ const Home = () => {
               <div style={{
                 width: '50px',
                 height: '50px',
-                border: '4px solid #e2e8f0',
-                borderTop: '4px solid #1a1a1a',
+                border: `4px solid ${theme.loaderBorder}`,
+                borderTop: `4px solid ${theme.loaderTop}`,
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite',
-                margin: '0 auto 20px'
+                margin: '0 auto 20px',
+                transition: 'border-color 0.4s ease'
               }}></div>
               <p style={{ 
-                color: '#4a5568',
+                color: theme.textSecondary,
                 fontSize: '16px',
-                letterSpacing: '-0.2px'
+                letterSpacing: '-0.2px',
+                transition: 'color 0.4s ease'
               }}>
                 Bloglar yükleniyor...
               </p>
@@ -351,9 +351,10 @@ const Home = () => {
           {!loading && blogs.length === 0 ? (
             <p style={{ 
               textAlign: 'center',
-              color: '#718096',
+              color: theme.textMuted,
               fontSize: '18px',
-              letterSpacing: '-0.2px'
+              letterSpacing: '-0.2px',
+              transition: 'color 0.4s ease'
             }}>
               Henüz blog yazısı yok.
             </p>
@@ -369,28 +370,29 @@ const Home = () => {
                     overflow: 'hidden',
                     transition: 'all 0.3s ease',
                     cursor: 'pointer',
-                    backgroundColor: 'white',
-                    border: '1px solid #e2e8f0',
+                    backgroundColor: theme.cardBg,
+                    border: `1px solid ${theme.cardBorder}`,
                     borderRadius: '16px',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)'
+                    boxShadow: theme.cardShadow
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-6px)';
-                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.12)';
-                    e.currentTarget.style.borderColor = '#cbd5e0';
+                    e.currentTarget.style.boxShadow = theme.cardShadowHover;
+                    e.currentTarget.style.borderColor = theme.cardBorderHover;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.06)';
-                    e.currentTarget.style.borderColor = '#e2e8f0';
+                    e.currentTarget.style.boxShadow = theme.cardShadow;
+                    e.currentTarget.style.borderColor = theme.cardBorder;
                   }}
                   >
                     <div style={{ 
                       width: '100%', 
                       height: '220px', 
                       overflow: 'hidden',
-                      backgroundColor: '#f7f8fa',
-                      position: 'relative'
+                      backgroundColor: theme.imgPlaceholderBg,
+                      position: 'relative',
+                      transition: 'background-color 0.4s ease'
                     }}>
                       <img 
                         src={post.coverImage?.url || 'https://via.placeholder.com/400x250'} 
@@ -414,16 +416,17 @@ const Home = () => {
                     <div style={{ padding: '24px' }}>
                       <span style={{
                         display: 'inline-block',
-                        background: '#f7f8fa',
-                        color: '#4a5568',
+                        background: theme.categoryBg,
+                        color: theme.categoryText,
                         padding: '6px 14px',
                         borderRadius: '8px',
                         fontSize: '12px',
                         marginBottom: '16px',
                         fontWeight: '600',
-                        border: '1px solid #e2e8f0',
+                        border: `1px solid ${theme.categoryBorder}`,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
+                        letterSpacing: '0.5px',
+                        transition: 'all 0.4s ease'
                       }}>
                         {post.category}
                       </span>
@@ -432,47 +435,27 @@ const Home = () => {
                         marginBottom: '12px',
                         fontSize: '22px',
                         lineHeight: '1.3',
-                        color: '#1a1a1a',
+                        color: theme.textPrimary,
                         fontWeight: '700',
-                        letterSpacing: '-0.5px'
+                        letterSpacing: '-0.5px',
+                        transition: 'color 0.4s ease'
                       }}>
                         {post.title}
                       </h3>
 
                       <p style={{ 
-                        color: '#4a5568', 
+                        color: theme.textSecondary, 
                         marginBottom: '20px',
                         fontSize: '15px',
                         lineHeight: '1.6',
-                        letterSpacing: '-0.2px'
+                        letterSpacing: '-0.2px',
+                        transition: 'color 0.4s ease'
                       }}>
                         {post.excerpt}
                       </p>
 
                       <Link to={`/blog/${post.slug}`}>
-                        <button className="btn btn-primary" style={{ 
-                          width: '100%',
-                          background: 'linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%)',
-                          border: 'none',
-                          padding: '14px',
-                          borderRadius: '10px',
-                          color: 'white',
-                          fontWeight: '600',
-                          fontSize: '15px',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
-                          letterSpacing: '-0.2px'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.transform = 'translateY(-2px)';
-                          e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.25)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.15)';
-                        }}
-                        >
+                        <button className="emerald-btn emerald-btn--card">
                           Devamını Oku
                         </button>
                       </Link>
@@ -496,7 +479,7 @@ const Home = () => {
         </section>
       </div>
 
-      {/* CSS Animation */}
+      {/* CSS Animations & Button Styles */}
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -506,6 +489,83 @@ const Home = () => {
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-25px); }
+        }
+
+        /* ─── Button Base ─── */
+        .emerald-btn {
+          display: inline-block;
+          background: linear-gradient(135deg, #1f2937 0%, #111827 45%, #0a0e18 100%);
+          color: #ffffff;
+          font-weight: 600;
+          font-size: 16px;
+          padding: 16px 42px;
+          border: none;
+          border-radius: 12px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          transition: 
+            transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+            box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+            background 0.35s ease;
+          box-shadow: 
+            0 4px 18px rgba(17, 24, 39, 0.45),
+            0 1px 3px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+          letter-spacing: -0.2px;
+        }
+
+        /* Shine sweep overlay */
+        .emerald-btn::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -110%;
+          width: 80%;
+          height: 100%;
+          background: linear-gradient(
+            100deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.18) 40%,
+            rgba(255, 255, 255, 0.22) 50%,
+            rgba(255, 255, 255, 0.18) 60%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          transition: left 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        /* Hover */
+        .emerald-btn:hover {
+          background: linear-gradient(135deg, #374151 0%, #1f2937 45%, #111827 100%);
+          color: #ffffff;
+          transform: translateY(-2px);
+          box-shadow: 
+            0 8px 28px rgba(17, 24, 39, 0.55),
+            0 2px 6px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+
+        .emerald-btn:hover::before {
+          left: 120%;
+        }
+
+        /* Active */
+        .emerald-btn:active {
+          transform: translateY(0px);
+          box-shadow: 
+            0 2px 10px rgba(17, 24, 39, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.06),
+            inset 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Card variant */
+        .emerald-btn--card {
+          width: 100%;
+          padding: 14px 16px;
+          font-size: 15px;
+          border-radius: 10px;
         }
       `}</style>
     </div>
