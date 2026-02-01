@@ -1,14 +1,34 @@
 import React from 'react';
+import { useTheme } from '../../context/ThemeContext';
 
 const Footer = () => {
+  const { themeName } = useTheme();
+
+  // Tema renklerini tanımlama
+  const footerBg = themeName === 'light' 
+    ? 'linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%)'
+    : themeName === 'dark'
+      ? 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)'
+      : 'linear-gradient(180deg, #1a1a1a 0%, #000000 100%)';
+
+  const textPrimary = themeName === 'light' ? '#1a1a1a' : themeName === 'dark' ? '#f1f5f9' : '#e5e5e5';
+  const textSecondary = themeName === 'light' ? '#4a5568' : themeName === 'dark' ? '#cbd5e0' : '#a3a3a3';
+  const textMuted = themeName === 'light' ? '#718096' : themeName === 'dark' ? '#94a3b8' : '#737373';
+  const textLight = themeName === 'light' ? '#a0aec0' : themeName === 'dark' ? '#64748b' : '#525252';
+  const borderColor = themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#334155' : '#2a2a2a';
+  const accentColor = themeName === 'light' ? '#cbd5e0' : themeName === 'dark' ? '#475569' : '#3a3a3a';
+  const cardBg = themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a';
+  const cardBorder = themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a';
+
   return (
     <footer style={{ 
-      background: 'linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%)',
-      color: '#1a1a1a', 
+      background: footerBg,
+      color: textPrimary, 
       padding: '70px 0 40px 0', 
       marginTop: '0',
       position: 'relative',
-      borderTop: '1px solid #e2e8f0'
+      borderTop: `1px solid ${borderColor}`,
+      transition: 'all 0.3s ease'
     }}>
       {/* Modern minimal top line */}
       <div style={{
@@ -17,7 +37,7 @@ const Footer = () => {
         left: 0,
         right: 0,
         height: '1px',
-        background: 'linear-gradient(90deg, transparent 0%, #1a1a1a 50%, transparent 100%)',
+        background: `linear-gradient(90deg, transparent 0%, ${textPrimary} 50%, transparent 100%)`,
         opacity: 0.15
       }}></div>
 
@@ -38,7 +58,7 @@ const Footer = () => {
               gap: '10px',
               marginBottom: '20px'
             }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" strokeWidth="1.5">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={textPrimary} strokeWidth="1.5">
                 <rect x="3" y="3" width="18" height="18" rx="2"/>
                 <path d="M7 7h10M7 12h10M7 17h6" strokeLinecap="round"/>
               </svg>
@@ -46,7 +66,7 @@ const Footer = () => {
                 fontSize: '24px',
                 fontWeight: '700',
                 margin: 0,
-                color: '#1a1a1a',
+                color: textPrimary,
                 letterSpacing: '-0.8px',
                 fontFamily: 'system-ui, -apple-system, sans-serif'
               }}>
@@ -56,7 +76,7 @@ const Footer = () => {
             <p style={{
               fontSize: '15px',
               lineHeight: '1.7',
-              color: '#4a5568',
+              color: textSecondary,
               marginBottom: '30px',
               maxWidth: '320px',
               fontWeight: '400',
@@ -75,7 +95,7 @@ const Footer = () => {
                 alignItems: 'center',
                 gap: '10px',
                 fontSize: '14px',
-                color: '#718096'
+                color: textMuted
               }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -88,7 +108,7 @@ const Footer = () => {
                 alignItems: 'center',
                 gap: '10px',
                 fontSize: '14px',
-                color: '#718096'
+                color: textMuted
               }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -105,7 +125,7 @@ const Footer = () => {
               fontSize: '15px',
               fontWeight: '700',
               marginBottom: '25px',
-              color: '#1a1a1a',
+              color: textPrimary,
               letterSpacing: '0.5px',
               textTransform: 'uppercase'
             }}>
@@ -113,7 +133,7 @@ const Footer = () => {
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <a href="/" style={{
-                color: '#4a5568',
+                color: textSecondary,
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
@@ -123,18 +143,18 @@ const Footer = () => {
                 letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#1a1a1a';
+                e.target.style.color = textPrimary;
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = '#4a5568';
+                e.target.style.color = textSecondary;
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Ana Sayfa
+                <span style={{ transition: 'transform 0.2s', color: accentColor }}>›</span> Ana Sayfa
               </a>
               <a href="/blogs" style={{
-                color: '#4a5568',
+                color: textSecondary,
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
@@ -144,18 +164,18 @@ const Footer = () => {
                 letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#1a1a1a';
+                e.target.style.color = textPrimary;
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = '#4a5568';
+                e.target.style.color = textSecondary;
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Araştırmalar
+                <span style={{ transition: 'transform 0.2s', color: accentColor }}>›</span> Araştırmalar
               </a>
               <a href="/contact" style={{
-                color: '#4a5568',
+                color: textSecondary,
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
@@ -165,18 +185,18 @@ const Footer = () => {
                 letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#1a1a1a';
+                e.target.style.color = textPrimary;
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = '#4a5568';
+                e.target.style.color = textSecondary;
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> İletişim
+                <span style={{ transition: 'transform 0.2s', color: accentColor }}>›</span> İletişim
               </a>
               <a href="/about" style={{
-                color: '#4a5568',
+                color: textSecondary,
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
@@ -186,15 +206,15 @@ const Footer = () => {
                 letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#1a1a1a';
+                e.target.style.color = textPrimary;
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = '#4a5568';
+                e.target.style.color = textSecondary;
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Hakkımızda
+                <span style={{ transition: 'transform 0.2s', color: accentColor }}>›</span> Hakkımızda
               </a>
             </div>
           </div>
@@ -205,7 +225,7 @@ const Footer = () => {
               fontSize: '15px',
               fontWeight: '700',
               marginBottom: '25px',
-              color: '#1a1a1a',
+              color: textPrimary,
               letterSpacing: '0.5px',
               textTransform: 'uppercase'
             }}>
@@ -213,7 +233,7 @@ const Footer = () => {
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <a href="/privacy" style={{
-                color: '#4a5568',
+                color: textSecondary,
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
@@ -223,18 +243,18 @@ const Footer = () => {
                 letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#1a1a1a';
+                e.target.style.color = textPrimary;
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = '#4a5568';
+                e.target.style.color = textSecondary;
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Gizlilik Politikası
+                <span style={{ transition: 'transform 0.2s', color: accentColor }}>›</span> Gizlilik Politikası
               </a>
               <a href="/terms" style={{
-                color: '#4a5568',
+                color: textSecondary,
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
@@ -244,18 +264,18 @@ const Footer = () => {
                 letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#1a1a1a';
+                e.target.style.color = textPrimary;
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = '#4a5568';
+                e.target.style.color = textSecondary;
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Kullanım Koşulları
+                <span style={{ transition: 'transform 0.2s', color: accentColor }}>›</span> Kullanım Koşulları
               </a>
               <a href="/cookies" style={{
-                color: '#4a5568',
+                color: textSecondary,
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
@@ -265,18 +285,18 @@ const Footer = () => {
                 letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#1a1a1a';
+                e.target.style.color = textPrimary;
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = '#4a5568';
+                e.target.style.color = textSecondary;
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> Çerez Politikası
+                <span style={{ transition: 'transform 0.2s', color: accentColor }}>›</span> Çerez Politikası
               </a>
               <a href="/gdpr" style={{
-                color: '#4a5568',
+                color: textSecondary,
                 textDecoration: 'none',
                 fontSize: '15px',
                 transition: 'all 0.2s',
@@ -286,15 +306,15 @@ const Footer = () => {
                 letterSpacing: '-0.2px'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = '#1a1a1a';
+                e.target.style.color = textPrimary;
                 e.target.querySelector('span').style.transform = 'translateX(3px)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = '#4a5568';
+                e.target.style.color = textSecondary;
                 e.target.querySelector('span').style.transform = 'translateX(0)';
               }}
               >
-                <span style={{ transition: 'transform 0.2s', color: '#cbd5e0' }}>›</span> KVKK Aydınlatma Metni
+                <span style={{ transition: 'transform 0.2s', color: accentColor }}>›</span> KVKK Aydınlatma Metni
               </a>
             </div>
           </div>
@@ -305,7 +325,7 @@ const Footer = () => {
               fontSize: '15px',
               fontWeight: '700',
               marginBottom: '25px',
-              color: '#1a1a1a',
+              color: textPrimary,
               letterSpacing: '0.5px',
               textTransform: 'uppercase'
             }}>
@@ -317,12 +337,12 @@ const Footer = () => {
                 alignItems: 'flex-start',
                 gap: '12px'
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a5568" strokeWidth="2" style={{ marginTop: '2px', minWidth: '18px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="2" style={{ marginTop: '2px', minWidth: '18px' }}>
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
                 <div>
-                  <p style={{ margin: 0, fontSize: '15px', color: '#4a5568', lineHeight: '1.6', letterSpacing: '-0.2px' }}>
+                  <p style={{ margin: 0, fontSize: '15px', color: textSecondary, lineHeight: '1.6', letterSpacing: '-0.2px' }}>
                     info@blogsitesi.com
                   </p>
                 </div>
@@ -333,12 +353,12 @@ const Footer = () => {
                 alignItems: 'flex-start',
                 gap: '12px'
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a5568" strokeWidth="2" style={{ marginTop: '2px', minWidth: '18px' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={textSecondary} strokeWidth="2" style={{ marginTop: '2px', minWidth: '18px' }}>
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
                 <div>
-                  <p style={{ margin: 0, fontSize: '15px', color: '#4a5568', lineHeight: '1.6', letterSpacing: '-0.2px' }}>
+                  <p style={{ margin: 0, fontSize: '15px', color: textSecondary, lineHeight: '1.6', letterSpacing: '-0.2px' }}>
                     İstanbul, Türkiye
                   </p>
                 </div>
@@ -354,14 +374,14 @@ const Footer = () => {
                     style={{ 
                       width: '38px',
                       height: '38px',
-                      backgroundColor: '#f7f8fa',
-                      border: '1px solid #e2e8f0',
+                      backgroundColor: cardBg,
+                      border: `1px solid ${cardBorder}`,
                       borderRadius: '8px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.2s',
-                      color: '#4a5568'
+                      color: textSecondary
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = '#0077b5';
@@ -370,9 +390,9 @@ const Footer = () => {
                       e.currentTarget.style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f7f8fa';
-                      e.currentTarget.style.borderColor = '#e2e8f0';
-                      e.currentTarget.style.color = '#4a5568';
+                      e.currentTarget.style.backgroundColor = cardBg;
+                      e.currentTarget.style.borderColor = cardBorder;
+                      e.currentTarget.style.color = textSecondary;
                       e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
@@ -388,14 +408,14 @@ const Footer = () => {
                     style={{ 
                       width: '38px',
                       height: '38px',
-                      backgroundColor: '#f7f8fa',
-                      border: '1px solid #e2e8f0',
+                      backgroundColor: cardBg,
+                      border: `1px solid ${cardBorder}`,
                       borderRadius: '8px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.2s',
-                      color: '#4a5568',
+                      color: textSecondary,
                       fontSize: '14px',
                       fontWeight: 'bold'
                     }}
@@ -406,9 +426,9 @@ const Footer = () => {
                       e.currentTarget.style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f7f8fa';
-                      e.currentTarget.style.borderColor = '#e2e8f0';
-                      e.currentTarget.style.color = '#4a5568';
+                      e.currentTarget.style.backgroundColor = cardBg;
+                      e.currentTarget.style.borderColor = cardBorder;
+                      e.currentTarget.style.color = textSecondary;
                       e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
@@ -422,14 +442,14 @@ const Footer = () => {
                     style={{ 
                       width: '38px',
                       height: '38px',
-                      backgroundColor: '#f7f8fa',
-                      border: '1px solid #e2e8f0',
+                      backgroundColor: cardBg,
+                      border: `1px solid ${cardBorder}`,
                       borderRadius: '8px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.2s',
-                      color: '#4a5568'
+                      color: textSecondary
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)';
@@ -438,9 +458,9 @@ const Footer = () => {
                       e.currentTarget.style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#f7f8fa';
-                      e.currentTarget.style.borderColor = '#e2e8f0';
-                      e.currentTarget.style.color = '#4a5568';
+                      e.currentTarget.style.background = cardBg;
+                      e.currentTarget.style.borderColor = cardBorder;
+                      e.currentTarget.style.color = textSecondary;
                       e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
@@ -459,7 +479,7 @@ const Footer = () => {
         {/* Alt Bölüm - Copyright ve Uyumluluk */}
         <div style={{
           paddingTop: '35px',
-          borderTop: '1px solid #e2e8f0',
+          borderTop: `1px solid ${borderColor}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -469,7 +489,7 @@ const Footer = () => {
           <div>
             <p style={{
               fontSize: '14px',
-              color: '#718096',
+              color: textMuted,
               margin: '0 0 8px 0',
               letterSpacing: '-0.2px'
             }}>
@@ -477,7 +497,7 @@ const Footer = () => {
             </p>
             <p style={{
               fontSize: '13px',
-              color: '#a0aec0',
+              color: textLight,
               margin: 0,
               letterSpacing: '-0.2px'
             }}>
@@ -493,11 +513,11 @@ const Footer = () => {
           }}>
             <div style={{
               padding: '6px 14px',
-              backgroundColor: '#f7f8fa',
+              backgroundColor: cardBg,
               borderRadius: '8px',
               fontSize: '12px',
-              color: '#4a5568',
-              border: '1px solid #e2e8f0',
+              color: textSecondary,
+              border: `1px solid ${cardBorder}`,
               fontWeight: '600',
               letterSpacing: '-0.1px'
             }}>
@@ -505,11 +525,11 @@ const Footer = () => {
             </div>
             <div style={{
               padding: '6px 14px',
-              backgroundColor: '#f7f8fa',
+              backgroundColor: cardBg,
               borderRadius: '8px',
               fontSize: '12px',
-              color: '#4a5568',
-              border: '1px solid #e2e8f0',
+              color: textSecondary,
+              border: `1px solid ${cardBorder}`,
               fontWeight: '600',
               letterSpacing: '-0.1px'
             }}>
@@ -517,11 +537,11 @@ const Footer = () => {
             </div>
             <div style={{
               padding: '6px 14px',
-              backgroundColor: '#f7f8fa',
+              backgroundColor: cardBg,
               borderRadius: '8px',
               fontSize: '12px',
-              color: '#4a5568',
-              border: '1px solid #e2e8f0',
+              color: textSecondary,
+              border: `1px solid ${cardBorder}`,
               fontWeight: '600',
               letterSpacing: '-0.1px'
             }}>
