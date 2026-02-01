@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { useTheme } from '../../context/ThemeContext';
 import CategoryFilter from '../../components/Blog/CategoryFilter';
 import Pagination from '../../components/Pagination';
 
@@ -8,6 +9,7 @@ import Pagination from '../../components/Pagination';
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
 
 const Blogs = () => {
+  const { themeName } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // URL'den kategoriyi al veya 'all' kullan
@@ -22,6 +24,28 @@ const Blogs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [isSearching, setIsSearching] = useState(false);
+
+  // Tema renkleri
+  const pageBg = themeName === 'light' ? '#f8f9fa' : themeName === 'dark' ? '#0f172a' : '#000000';
+  const heroBg = pageBg; // Hero section arka planı sayfa arka planı ile aynı
+  
+  const cardBg = themeName === 'light' ? '#ffffff' : themeName === 'dark' ? '#1e293b' : '#1a1a1a';
+  const textPrimary = themeName === 'light' ? '#333333' : themeName === 'dark' ? '#f1f5f9' : '#e5e5e5';
+  const textSecondary = themeName === 'light' ? '#666666' : themeName === 'dark' ? '#cbd5e0' : '#a3a3a3';
+  const textMuted = themeName === 'light' ? '#999999' : themeName === 'dark' ? '#94a3b8' : '#737373';
+  const borderColor = themeName === 'light' ? '#eeeeee' : themeName === 'dark' ? '#334155' : '#2a2a2a';
+  const inputBorder = themeName === 'light' ? '#e0e0e0' : themeName === 'dark' ? '#334155' : '#2a2a2a';
+  const inputBg = themeName === 'light' ? '#ffffff' : themeName === 'dark' ? '#1e293b' : '#1a1a1a';
+  const shadowColor = themeName === 'light' ? 'rgba(0,0,0,0.1)' : themeName === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.5)';
+  const shadowHoverColor = themeName === 'light' ? 'rgba(0,0,0,0.15)' : themeName === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.7)';
+  
+  // Buton ve aksiyon renkleri - ThemeContext ile uyumlu
+  const accentColor = themeName === 'light' ? '#111827' : themeName === 'dark' ? '#a5b4fc' : '#d4d4d4';
+  const accentHover = themeName === 'light' ? '#0a0e18' : themeName === 'dark' ? '#818cf8' : '#e5e5e5';
+  
+  const infoBg = themeName === 'light' ? '#e7f3ff' : themeName === 'dark' ? '#1e3a5f' : '#1a2332';
+  const infoBorder = themeName === 'light' ? '#b3d9ff' : themeName === 'dark' ? '#2563eb' : '#1e40af';
+  const infoText = themeName === 'light' ? '#004085' : themeName === 'dark' ? '#bfdbfe' : '#93c5fd';
 
   // Blogları yükle
   const loadBlogs = async (category = 'all', page = 1, search = '') => {
@@ -151,6 +175,327 @@ const Blogs = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Dinamik stiller
+  const styles = {
+    pageContainer: {
+      minHeight: '100vh',
+      backgroundColor: pageBg,
+      paddingTop: '80px',
+      transition: 'background-color 0.3s ease'
+    },
+    heroSection: {
+      background: heroBg,
+      padding: '80px 0',
+      textAlign: 'center',
+      color: textPrimary,
+      transition: 'background 0.3s ease'
+    },
+    heroContent: {
+      maxWidth: '800px',
+      margin: '0 auto',
+      padding: '0 20px'
+    },
+    heroTitle: {
+      fontSize: '48px',
+      fontWeight: '700',
+      marginBottom: '20px',
+      lineHeight: '1.2',
+      color: textPrimary,
+      transition: 'color 0.3s ease'
+    },
+    heroSubtitle: {
+      fontSize: '18px',
+      opacity: '0.85',
+      lineHeight: '1.6',
+      color: textSecondary,
+      transition: 'color 0.3s ease'
+    },
+    container: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '40px 20px'
+    },
+    resultsInfo: {
+      marginBottom: '30px',
+      padding: '15px 20px',
+      backgroundColor: cardBg,
+      borderRadius: '8px',
+      boxShadow: `0 2px 4px ${shadowColor}`,
+      transition: 'all 0.3s ease'
+    },
+    resultsText: {
+      margin: 0,
+      fontSize: '14px',
+      color: textSecondary,
+      fontWeight: '500'
+    },
+    loadingContainer: {
+      textAlign: 'center',
+      padding: '80px 20px',
+      backgroundColor: cardBg,
+      borderRadius: '8px',
+      transition: 'background-color 0.3s ease'
+    },
+    spinner: {
+      width: '50px',
+      height: '50px',
+      border: `4px solid ${borderColor}`,
+      borderTop: `4px solid ${accentColor}`,
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite',
+      margin: '0 auto 20px'
+    },
+    loadingText: {
+      fontSize: '16px',
+      color: textSecondary,
+      margin: 0
+    },
+    errorContainer: {
+      textAlign: 'center',
+      padding: '60px 20px',
+      backgroundColor: cardBg,
+      borderRadius: '8px',
+      boxShadow: `0 2px 8px ${shadowColor}`,
+      transition: 'all 0.3s ease'
+    },
+    errorIcon: {
+      fontSize: '48px',
+      marginBottom: '20px'
+    },
+    errorText: {
+      fontSize: '16px',
+      color: '#dc3545',
+      marginBottom: '20px'
+    },
+    retryButton: {
+      padding: '12px 30px',
+      backgroundColor: accentColor,
+      color: 'white',
+      border: 'none',
+      borderRadius: '6px',
+      fontSize: '15px',
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition: 'background-color 0.3s'
+    },
+    emptyState: {
+      textAlign: 'center',
+      padding: '80px 20px',
+      backgroundColor: cardBg,
+      borderRadius: '8px',
+      boxShadow: `0 2px 8px ${shadowColor}`,
+      transition: 'all 0.3s ease'
+    },
+    emptyIcon: {
+      fontSize: '64px',
+      marginBottom: '20px'
+    },
+    emptyTitle: {
+      fontSize: '24px',
+      color: textPrimary,
+      marginBottom: '10px'
+    },
+    emptyText: {
+      fontSize: '16px',
+      color: textSecondary,
+      marginBottom: '30px'
+    },
+    emptyButton: {
+      padding: '12px 30px',
+      backgroundColor: accentColor,
+      color: 'white',
+      border: 'none',
+      borderRadius: '6px',
+      fontSize: '15px',
+      fontWeight: '500',
+      cursor: 'pointer'
+    },
+    blogGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+      gap: '30px',
+      marginBottom: '40px'
+    },
+    blogCard: {
+      backgroundColor: cardBg,
+      borderRadius: '12px',
+      overflow: 'hidden',
+      boxShadow: `0 4px 12px ${shadowColor}`,
+      transition: 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease',
+      textDecoration: 'none',
+      color: 'inherit',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%'
+    },
+    imageContainer: {
+      position: 'relative',
+      width: '100%',
+      height: '220px',
+      overflow: 'hidden',
+      backgroundColor: themeName === 'light' ? '#f0f0f0' : themeName === 'dark' ? '#2d3748' : '#262626'
+    },
+    image: {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      display: 'block',
+      transition: 'transform 0.3s ease'
+    },
+    categoryBadge: {
+      position: 'absolute',
+      top: '15px',
+      right: '15px',
+      backgroundColor: accentColor,
+      color: 'white',
+      padding: '6px 14px',
+      borderRadius: '6px',
+      fontSize: '12px',
+      fontWeight: '600',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+    },
+    cardContent: {
+      padding: '24px',
+      display: 'flex',
+      flexDirection: 'column',
+      flex: 1
+    },
+    blogTitle: {
+      fontSize: '20px',
+      fontWeight: '600',
+      marginBottom: '12px',
+      color: textPrimary,
+      lineHeight: '1.4',
+      display: '-webkit-box',
+      WebkitLineClamp: 2,
+      WebkitBoxOrient: 'vertical',
+      overflow: 'hidden',
+      transition: 'color 0.3s ease'
+    },
+    blogExcerpt: {
+      fontSize: '14px',
+      color: textSecondary,
+      lineHeight: '1.6',
+      marginBottom: '20px',
+      flex: 1,
+      display: '-webkit-box',
+      WebkitLineClamp: 3,
+      WebkitBoxOrient: 'vertical',
+      overflow: 'hidden',
+      transition: 'color 0.3s ease'
+    },
+    cardFooter: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+      paddingTop: '15px',
+      borderTop: `1px solid ${borderColor}`,
+      transition: 'border-color 0.3s ease'
+    },
+    meta: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px'
+    },
+    author: {
+      fontSize: '13px',
+      color: textSecondary,
+      fontWeight: '500',
+      transition: 'color 0.3s ease'
+    },
+    date: {
+      fontSize: '12px',
+      color: textMuted,
+      transition: 'color 0.3s ease'
+    },
+    searchSection: {
+      marginBottom: '30px'
+    },
+    searchForm: {
+      display: 'flex',
+      gap: '10px',
+      marginBottom: '15px'
+    },
+    searchInputWrapper: {
+      position: 'relative',
+      flex: 1,
+      maxWidth: '600px'
+    },
+    searchIcon: {
+      position: 'absolute',
+      left: '15px',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      fontSize: '18px',
+      pointerEvents: 'none',
+      color: textMuted
+    },
+    searchInput: {
+      width: '100%',
+      padding: '12px 45px 12px 45px',
+      fontSize: '15px',
+      border: `2px solid ${inputBorder}`,
+      borderRadius: '8px',
+      outline: 'none',
+      transition: 'border-color 0.3s, background-color 0.3s, color 0.3s',
+      boxSizing: 'border-box',
+      backgroundColor: inputBg,
+      color: textPrimary
+    },
+    clearButton: {
+      position: 'absolute',
+      right: '10px',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      backgroundColor: 'transparent',
+      border: 'none',
+      fontSize: '18px',
+      color: textMuted,
+      cursor: 'pointer',
+      padding: '5px 10px',
+      borderRadius: '50%',
+      transition: 'background-color 0.3s'
+    },
+    searchButton: {
+      padding: '12px 30px',
+      backgroundColor: accentColor,
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '15px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'background-color 0.3s',
+      whiteSpace: 'nowrap'
+    },
+    searchInfo: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '15px 20px',
+      backgroundColor: infoBg,
+      borderRadius: '8px',
+      border: `1px solid ${infoBorder}`,
+      transition: 'all 0.3s ease'
+    },
+    searchInfoText: {
+      margin: 0,
+      fontSize: '14px',
+      color: infoText
+    },
+    clearSearchButton: {
+      padding: '8px 20px',
+      backgroundColor: accentColor,
+      color: 'white',
+      border: 'none',
+      borderRadius: '6px',
+      fontSize: '13px',
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition: 'background-color 0.3s'
+    }
+  };
+
   return (
     <div style={styles.pageContainer}>
       {/* Hero Section */}
@@ -203,7 +548,12 @@ const Blogs = () => {
                 </button>
               )}
             </div>
-            <button type="submit" style={styles.searchButton}>
+            <button 
+              type="submit" 
+              style={styles.searchButton}
+              onMouseEnter={(e) => e.target.style.backgroundColor = accentHover}
+              onMouseLeave={(e) => e.target.style.backgroundColor = accentColor}
+            >
               Ara
             </button>
           </form>
@@ -214,7 +564,12 @@ const Blogs = () => {
               <p style={styles.searchInfoText}>
                 "<strong>{searchQuery}</strong>" için {pagination.totalBlogs || 0} sonuç bulundu
               </p>
-              <button onClick={clearSearch} style={styles.clearSearchButton}>
+              <button 
+                onClick={clearSearch} 
+                style={styles.clearSearchButton}
+                onMouseEnter={(e) => e.target.style.backgroundColor = accentHover}
+                onMouseLeave={(e) => e.target.style.backgroundColor = accentColor}
+              >
                 Aramayı Temizle
               </button>
             </div>
@@ -237,6 +592,8 @@ const Blogs = () => {
             <button 
               onClick={() => loadBlogs(selectedCategory, currentPage)}
               style={styles.retryButton}
+              onMouseEnter={(e) => e.target.style.backgroundColor = accentHover}
+              onMouseLeave={(e) => e.target.style.backgroundColor = accentColor}
             >
               Tekrar Dene
             </button>
@@ -262,6 +619,8 @@ const Blogs = () => {
                   <button
                     onClick={() => handleCategoryChange('all')}
                     style={styles.emptyButton}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = accentHover}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = accentColor}
                   >
                     Tüm Blogları Görüntüle
                   </button>
@@ -286,11 +645,11 @@ const Blogs = () => {
                       style={styles.blogCard}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = 'translateY(-8px)';
-                        e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.15)';
+                        e.currentTarget.style.boxShadow = `0 12px 24px ${shadowHoverColor}`;
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                        e.currentTarget.style.boxShadow = `0 4px 12px ${shadowColor}`;
                       }}
                     >
                       {/* Image Container */}
@@ -337,7 +696,9 @@ const Blogs = () => {
                               })}
                             </span>
                           </div>
-                          <span style={styles.readMore}>Devamını Oku →</span>
+                          <button className="emerald-btn emerald-btn--card" style={{ marginTop: '12px' }}>
+                            Devamını Oku
+                          </button>
                         </div>
                       </div>
                     </Link>
@@ -366,316 +727,86 @@ const Blogs = () => {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+
+        /* ─── Button Base ─── */
+        .emerald-btn {
+          display: inline-block;
+          background: linear-gradient(135deg, #1f2937 0%, #111827 45%, #0a0e18 100%);
+          color: #ffffff;
+          font-weight: 600;
+          font-size: 16px;
+          padding: 16px 42px;
+          border: none;
+          border-radius: 12px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          transition: 
+            transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+            box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+            background 0.35s ease;
+          box-shadow: 
+            0 4px 18px rgba(17, 24, 39, 0.45),
+            0 1px 3px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+          letter-spacing: -0.2px;
+        }
+
+        /* Shine sweep overlay */
+        .emerald-btn::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -110%;
+          width: 80%;
+          height: 100%;
+          background: linear-gradient(
+            100deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.18) 40%,
+            rgba(255, 255, 255, 0.22) 50%,
+            rgba(255, 255, 255, 0.18) 60%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          transition: left 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        /* Hover */
+        .emerald-btn:hover {
+          background: linear-gradient(135deg, #374151 0%, #1f2937 45%, #111827 100%);
+          color: #ffffff;
+          transform: translateY(-2px);
+          box-shadow: 
+            0 8px 28px rgba(17, 24, 39, 0.55),
+            0 2px 6px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+
+        .emerald-btn:hover::before {
+          left: 120%;
+        }
+
+        /* Active */
+        .emerald-btn:active {
+          transform: translateY(0px);
+          box-shadow: 
+            0 2px 10px rgba(17, 24, 39, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.06),
+            inset 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Card variant */
+        .emerald-btn--card {
+          width: 100%;
+          padding: 14px 16px;
+          font-size: 15px;
+          border-radius: 10px;
+        }
       `}</style>
     </div>
   );
-};
-
-const styles = {
-  pageContainer: {
-    minHeight: '100vh',
-    backgroundColor: '#f8f9fa',
-    paddingTop: '80px'
-  },
-  heroSection: {
-    background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
-    padding: '80px 0',
-    textAlign: 'center',
-    color: 'white'
-  },
-  heroContent: {
-    maxWidth: '800px',
-    margin: '0 auto',
-    padding: '0 20px'
-  },
-  heroTitle: {
-    fontSize: '48px',
-    fontWeight: '700',
-    marginBottom: '20px',
-    lineHeight: '1.2'
-  },
-  heroSubtitle: {
-    fontSize: '18px',
-    opacity: '0.95',
-    lineHeight: '1.6'
-  },
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '40px 20px'
-  },
-  resultsInfo: {
-    marginBottom: '30px',
-    padding: '15px 20px',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-  },
-  resultsText: {
-    margin: 0,
-    fontSize: '14px',
-    color: '#666',
-    fontWeight: '500'
-  },
-  loadingContainer: {
-    textAlign: 'center',
-    padding: '80px 20px',
-    backgroundColor: 'white',
-    borderRadius: '8px'
-  },
-  spinner: {
-    width: '50px',
-    height: '50px',
-    border: '4px solid #f3f3f3',
-    borderTop: '4px solid #007bff',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-    margin: '0 auto 20px'
-  },
-  loadingText: {
-    fontSize: '16px',
-    color: '#666',
-    margin: 0
-  },
-  errorContainer: {
-    textAlign: 'center',
-    padding: '60px 20px',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-  },
-  errorIcon: {
-    fontSize: '48px',
-    marginBottom: '20px'
-  },
-  errorText: {
-    fontSize: '16px',
-    color: '#dc3545',
-    marginBottom: '20px'
-  },
-  retryButton: {
-    padding: '12px 30px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '15px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s'
-  },
-  emptyState: {
-    textAlign: 'center',
-    padding: '80px 20px',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-  },
-  emptyIcon: {
-    fontSize: '64px',
-    marginBottom: '20px'
-  },
-  emptyTitle: {
-    fontSize: '24px',
-    color: '#333',
-    marginBottom: '10px'
-  },
-  emptyText: {
-    fontSize: '16px',
-    color: '#666',
-    marginBottom: '30px'
-  },
-  emptyButton: {
-    padding: '12px 30px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '15px',
-    fontWeight: '500',
-    cursor: 'pointer'
-  },
-  blogGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-    gap: '30px',
-    marginBottom: '40px'
-  },
-  blogCard: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-    textDecoration: 'none',
-    color: 'inherit',
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%'
-  },
-  imageContainer: {
-    position: 'relative',
-    width: '100%',
-    height: '220px',
-    overflow: 'hidden',
-    backgroundColor: '#f0f0f0'
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    display: 'block',
-    transition: 'transform 0.3s ease'
-  },
-  categoryBadge: {
-    position: 'absolute',
-    top: '15px',
-    right: '15px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    padding: '6px 14px',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '600',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-  },
-  cardContent: {
-    padding: '24px',
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1
-  },
-  blogTitle: {
-    fontSize: '20px',
-    fontWeight: '600',
-    marginBottom: '12px',
-    color: '#333',
-    lineHeight: '1.4',
-    display: '-webkit-box',
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: 'vertical',
-    overflow: 'hidden'
-  },
-  blogExcerpt: {
-    fontSize: '14px',
-    color: '#666',
-    lineHeight: '1.6',
-    marginBottom: '20px',
-    flex: 1,
-    display: '-webkit-box',
-    WebkitLineClamp: 3,
-    WebkitBoxOrient: 'vertical',
-    overflow: 'hidden'
-  },
-  cardFooter: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    paddingTop: '15px',
-    borderTop: '1px solid #eee'
-  },
-  meta: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  author: {
-    fontSize: '13px',
-    color: '#666',
-    fontWeight: '500'
-  },
-  date: {
-    fontSize: '12px',
-    color: '#999'
-  },
-  readMore: {
-    fontSize: '14px',
-    color: '#007bff',
-    fontWeight: '600',
-    alignSelf: 'flex-end'
-  },
-  searchSection: {
-    marginBottom: '30px'
-  },
-  searchForm: {
-    display: 'flex',
-    gap: '10px',
-    marginBottom: '15px'
-  },
-  searchInputWrapper: {
-    position: 'relative',
-    flex: 1,
-    maxWidth: '600px'
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: '15px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    fontSize: '18px',
-    pointerEvents: 'none'
-  },
-  searchInput: {
-    width: '100%',
-    padding: '12px 45px 12px 45px',
-    fontSize: '15px',
-    border: '2px solid #e0e0e0',
-    borderRadius: '8px',
-    outline: 'none',
-    transition: 'border-color 0.3s',
-    boxSizing: 'border-box'
-  },
-  clearButton: {
-    position: 'absolute',
-    right: '10px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    backgroundColor: 'transparent',
-    border: 'none',
-    fontSize: '18px',
-    color: '#999',
-    cursor: 'pointer',
-    padding: '5px 10px',
-    borderRadius: '50%',
-    transition: 'background-color 0.3s'
-  },
-  searchButton: {
-    padding: '12px 30px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '15px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s',
-    whiteSpace: 'nowrap'
-  },
-  searchInfo: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '15px 20px',
-    backgroundColor: '#e7f3ff',
-    borderRadius: '8px',
-    border: '1px solid #b3d9ff'
-  },
-  searchInfoText: {
-    margin: 0,
-    fontSize: '14px',
-    color: '#004085'
-  },
-  clearSearchButton: {
-    padding: '8px 20px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s'
-  }
 };
 
 export default Blogs;
