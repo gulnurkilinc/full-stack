@@ -10,8 +10,11 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState('tr');
   const timeoutRef = useRef(null);
   const themeTimeoutRef = useRef(null);
+  const languageTimeoutRef = useRef(null);
   const searchInputRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,7 +44,10 @@ const Header = () => {
 
   const isHomePage = location.pathname === '/';
 
-  const headerBgColor = isHomePage && !isScrolled 
+  // Sadece home sayfasında ve scroll yapılmadığında şeffaf olsun
+  const isTransparent = isHomePage && !isScrolled;
+
+  const headerBgColor = isTransparent
     ? 'transparent' 
     : themeName === 'light'
       ? 'rgba(255, 255, 255, 0.98)'
@@ -86,6 +92,17 @@ const Header = () => {
   const handleThemeMouseLeave = () => {
     themeTimeoutRef.current = setTimeout(() => {
       setShowThemeMenu(false);
+    }, 300);
+  };
+
+  const handleLanguageMouseEnter = () => {
+    if (languageTimeoutRef.current) clearTimeout(languageTimeoutRef.current);
+    setShowLanguageMenu(true);
+  };
+
+  const handleLanguageMouseLeave = () => {
+    languageTimeoutRef.current = setTimeout(() => {
+      setShowLanguageMenu(false);
     }, 300);
   };
 
@@ -145,6 +162,12 @@ const Header = () => {
     )
   };
 
+  const languages = {
+    tr: { name: 'Türkçe', flag: '🇹🇷' },
+    en: { name: 'English', flag: '🇬🇧' },
+    de: { name: 'Deutsch', flag: '🇩🇪' }
+  };
+
   return (
     <header style={{
       position: 'fixed',
@@ -152,14 +175,14 @@ const Header = () => {
       left: 0,
       right: 0,
       background: headerBgColor,
-      backdropFilter: (isHomePage && !isScrolled) ? 'none' : 'blur(12px)',
+      backdropFilter: isTransparent ? 'none' : 'blur(12px)',
       padding: '1.3rem 0',
       zIndex: 1000,
       transition: 'all 0.3s ease',
       boxShadow: isScrolled 
         ? '0 1px 3px rgba(0, 0, 0, 0.08)' 
         : 'none',
-      borderBottom: (isHomePage && !isScrolled) ? 'none' : (isScrolled ? `1px solid ${scrolledBorderColor}` : '1px solid rgba(255, 255, 255, 0.1)')
+      borderBottom: isTransparent ? 'none' : (isScrolled ? `1px solid ${scrolledBorderColor}` : '1px solid rgba(255, 255, 255, 0.1)')
     }}>
       {/* Minimal accent line */}
       <div style={{
@@ -171,28 +194,28 @@ const Header = () => {
         background: isScrolled 
           ? `linear-gradient(90deg, transparent 0%, ${scrolledLogoColor} 50%, transparent 100%)`
           : 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
-        opacity: (isHomePage && !isScrolled) ? 0 : 0.15
+        opacity: isTransparent ? 0 : 0.15
       }}></div>
       <div className="container">
         <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link to="/" style={{ 
             fontSize: '24px', 
             fontWeight: '700', 
-            color: isScrolled ? scrolledLogoColor : '#ffffff',
+            color: isTransparent ? '#ffffff' : scrolledLogoColor,
             letterSpacing: '-0.8px',
             transition: 'all 0.3s ease',
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            textShadow: !isScrolled ? '0 2px 4px rgba(0, 0, 0, 0.3)' : 'none'
+            textShadow: isTransparent ? '0 2px 4px rgba(0, 0, 0, 0.3)' : 'none'
           }}
           onMouseEnter={(e) => {
-            e.target.style.color = isScrolled ? scrolledTextHover : '#f0f0f0';
+            e.target.style.color = isTransparent ? '#f0f0f0' : scrolledTextHover;
             e.target.style.letterSpacing = '-0.9px';
           }}
           onMouseLeave={(e) => {
-            e.target.style.color = isScrolled ? scrolledLogoColor : '#ffffff';
+            e.target.style.color = isTransparent ? '#ffffff' : scrolledLogoColor;
             e.target.style.letterSpacing = '-0.8px';
           }}
           >
@@ -203,25 +226,25 @@ const Header = () => {
             Blog Sitesi
           </Link>
           
-          <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
             <Link 
               to="/" 
               style={{ 
-                color: isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)',
+                color: isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor,
                 transition: 'all 0.3s ease',
                 fontWeight: '500',
                 fontSize: '15px',
                 position: 'relative',
                 paddingBottom: '2px',
                 letterSpacing: '-0.2px',
-                textShadow: !isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
+                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = isScrolled ? scrolledTextHover : '#ffffff';
+                e.target.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
                 e.target.style.fontWeight = '600';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)';
+                e.target.style.color = isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor;
                 e.target.style.fontWeight = '500';
               }}
             >
@@ -230,25 +253,25 @@ const Header = () => {
             <Link 
               to="/blogs" 
               style={{ 
-                color: isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)',
+                color: isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor,
                 transition: 'all 0.3s ease',
                 fontWeight: '500',
                 fontSize: '15px',
                 position: 'relative',
                 paddingBottom: '2px',
                 letterSpacing: '-0.2px',
-                textShadow: !isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
+                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = isScrolled ? scrolledTextHover : '#ffffff';
+                e.target.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
                 e.target.style.fontWeight = '600';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)';
+                e.target.style.color = isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor;
                 e.target.style.fontWeight = '500';
               }}
             >
-              Bloglar
+              Analizler
             </Link>
             
             {/* Bölümler Dropdown */}
@@ -263,23 +286,23 @@ const Header = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                color: isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)',
+                color: isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor,
                 transition: 'all 0.3s ease',
                 fontWeight: '500',
                 fontSize: '15px',
                 letterSpacing: '-0.2px',
-                textShadow: !isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
+                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = isScrolled ? scrolledTextHover : '#ffffff';
+                e.target.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
                 e.target.style.fontWeight = '600';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)';
+                e.target.style.color = isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor;
                 e.target.style.fontWeight = '500';
               }}
               >
-                Bölümler
+                Parlamento
                 <svg 
                   width="14" 
                   height="14" 
@@ -363,27 +386,53 @@ const Header = () => {
             <Link 
               to="/contact" 
               style={{ 
-                color: isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)',
+                color: isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor,
                 transition: 'all 0.3s ease',
                 fontWeight: '500',
                 fontSize: '15px',
                 position: 'relative',
                 paddingBottom: '2px',
                 letterSpacing: '-0.2px',
-                textShadow: !isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
+                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = isScrolled ? scrolledTextHover : '#ffffff';
+                e.target.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
                 e.target.style.fontWeight = '600';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)';
+                e.target.style.color = isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor;
                 e.target.style.fontWeight = '500';
               }}
             >
               İletişim
             </Link>
 
+            <Link 
+              to="/packages" 
+              style={{ 
+                color: isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor,
+                transition: 'all 0.3s ease',
+                fontWeight: '500',
+                fontSize: '15px',
+                position: 'relative',
+                paddingBottom: '2px',
+                letterSpacing: '-0.2px',
+                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
+                e.target.style.fontWeight = '600';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor;
+                e.target.style.fontWeight = '500';
+              }}
+            >
+              Paketler
+            </Link>
+
+            {/* BUTONLAR GRUBU - Tema, Dil, Arama */}
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             {/* TEMA SEÇICI BUTONU */}
             <div
               style={{ position: 'relative' }}
@@ -392,14 +441,14 @@ const Header = () => {
             >
               <button
                 style={{
-                  backgroundColor: isScrolled
-                    ? (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a')
-                    : 'rgba(255, 255, 255, 0.15)',
-                  color: isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)',
+                  backgroundColor: isTransparent
+                    ? 'rgba(255, 255, 255, 0.15)'
+                    : (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a'),
+                  color: isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor,
                   border: '1.5px solid',
-                  borderColor: isScrolled
-                    ? (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a')
-                    : 'rgba(255, 255, 255, 0.3)',
+                  borderColor: isTransparent
+                    ? 'rgba(255, 255, 255, 0.3)'
+                    : (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a'),
                   borderRadius: '10px',
                   width: '42px',
                   height: '42px',
@@ -409,18 +458,18 @@ const Header = () => {
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                   padding: 0,
-                  boxShadow: isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.08)' : '0 2px 4px rgba(0, 0, 0, 0.2)',
-                  backdropFilter: !isScrolled ? 'blur(10px)' : 'none'
+                  boxShadow: isTransparent ? '0 2px 4px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)',
+                  backdropFilter: isTransparent ? 'blur(10px)' : 'none'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = isScrolled
-                    ? (themeName === 'light' ? '#edf2f7' : themeName === 'dark' ? '#475569' : '#333333')
-                    : 'rgba(255, 255, 255, 0.25)';
+                  e.currentTarget.style.backgroundColor = isTransparent
+                    ? 'rgba(255, 255, 255, 0.25)'
+                    : (themeName === 'light' ? '#edf2f7' : themeName === 'dark' ? '#475569' : '#333333');
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = isScrolled
-                    ? (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a')
-                    : 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.backgroundColor = isTransparent
+                    ? 'rgba(255, 255, 255, 0.15)'
+                    : (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a');
                 }}
                 aria-label="Tema"
               >
@@ -493,14 +542,128 @@ const Header = () => {
               )}
             </div>
 
+            {/* DİL SEÇİCİ BUTONU */}
+            <div
+              style={{ position: 'relative' }}
+              onMouseEnter={handleLanguageMouseEnter}
+              onMouseLeave={handleLanguageMouseLeave}
+            >
+              <button
+                style={{
+                  backgroundColor: isTransparent
+                    ? 'rgba(255, 255, 255, 0.15)'
+                    : (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a'),
+                  color: isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor,
+                  border: '1.5px solid',
+                  borderColor: isTransparent
+                    ? 'rgba(255, 255, 255, 0.3)'
+                    : (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a'),
+                  borderRadius: '10px',
+                  width: '42px',
+                  height: '42px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  padding: 0,
+                  boxShadow: isTransparent ? '0 2px 4px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)',
+                  backdropFilter: isTransparent ? 'blur(10px)' : 'none',
+                  fontSize: '20px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = isTransparent
+                    ? 'rgba(255, 255, 255, 0.25)'
+                    : (themeName === 'light' ? '#edf2f7' : themeName === 'dark' ? '#475569' : '#333333');
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isTransparent
+                    ? 'rgba(255, 255, 255, 0.15)'
+                    : (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a');
+                }}
+                aria-label="Dil"
+              >
+                {languages[currentLanguage].flag}
+              </button>
+
+              {/* Dil Dropdown Menu */}
+              {showLanguageMenu && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  background: dropdownBg,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08)',
+                  minWidth: '160px',
+                  marginTop: '10px',
+                  borderRadius: '12px',
+                  zIndex: 1001,
+                  overflow: 'hidden',
+                  padding: '6px',
+                  border: `1px solid ${scrolledBorderColor}`,
+                  animation: 'dropdownFade 0.25s ease'
+                }}>
+                  {Object.keys(languages).map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => { setCurrentLanguage(key); setShowLanguageMenu(false); }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '11px 16px',
+                        color: currentLanguage === key ? (themeName === 'light' ? '#111827' : '#a5b4fc') : dropdownItemColor,
+                        backgroundColor: currentLanguage === key
+                          ? (themeName === 'light' ? '#eef2ff' : themeName === 'dark' ? '#312e81' : '#2a2a3a')
+                          : 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        fontWeight: currentLanguage === key ? '600' : '500',
+                        fontSize: '14.5px',
+                        borderRadius: '8px',
+                        margin: '2px 0',
+                        textAlign: 'left'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (currentLanguage !== key) {
+                          e.currentTarget.style.backgroundColor = dropdownItemHoverBg;
+                          e.currentTarget.style.color = dropdownItemHoverColor;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (currentLanguage !== key) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = dropdownItemColor;
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: '18px' }}>{languages[key].flag}</span>
+                      {languages[key].name}
+                      {currentLanguage === key && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto' }}>
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* ARAMA BUTONU */}
             <button
               onClick={toggleSearchBar}
               style={{
-                backgroundColor: showSearchBar ? (themeName === 'light' ? '#1a1a1a' : themeName === 'dark' ? '#a5b4fc' : '#d4d4d4') : (isScrolled ? (themeName === 'light' ? 'white' : themeName === 'dark' ? '#334155' : '#2a2a2a') : 'rgba(255, 255, 255, 0.15)'),
-                color: showSearchBar ? 'white' : (isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)'),
+                backgroundColor: showSearchBar 
+                  ? (themeName === 'light' ? '#1a1a1a' : themeName === 'dark' ? '#a5b4fc' : '#d4d4d4') 
+                  : (isTransparent ? 'rgba(255, 255, 255, 0.15)' : (themeName === 'light' ? 'white' : themeName === 'dark' ? '#334155' : '#2a2a2a')),
+                color: showSearchBar ? 'white' : (isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor),
                 border: '1.5px solid',
-                borderColor: showSearchBar ? (themeName === 'light' ? '#1a1a1a' : themeName === 'dark' ? '#a5b4fc' : '#d4d4d4') : (isScrolled ? (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a') : 'rgba(255, 255, 255, 0.3)'),
+                borderColor: showSearchBar 
+                  ? (themeName === 'light' ? '#1a1a1a' : themeName === 'dark' ? '#a5b4fc' : '#d4d4d4') 
+                  : (isTransparent ? 'rgba(255, 255, 255, 0.3)' : (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a')),
                 borderRadius: '10px',
                 width: '42px',
                 height: '42px',
@@ -510,21 +673,29 @@ const Header = () => {
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 padding: 0,
-                boxShadow: isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.08)' : '0 2px 4px rgba(0, 0, 0, 0.2)',
-                backdropFilter: !isScrolled ? 'blur(10px)' : 'none'
+                boxShadow: isTransparent ? '0 2px 4px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)',
+                backdropFilter: isTransparent ? 'blur(10px)' : 'none'
               }}
               onMouseEnter={(e) => {
                 if (!showSearchBar) {
-                  e.currentTarget.style.backgroundColor = isScrolled ? (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#475569' : '#333333') : 'rgba(255, 255, 255, 0.25)';
-                  e.currentTarget.style.borderColor = isScrolled ? (themeName === 'light' ? '#cbd5e0' : themeName === 'dark' ? '#64748b' : '#444444') : 'rgba(255, 255, 255, 0.5)';
-                  e.currentTarget.style.color = isScrolled ? scrolledTextHover : '#ffffff';
+                  e.currentTarget.style.backgroundColor = isTransparent 
+                    ? 'rgba(255, 255, 255, 0.25)' 
+                    : (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#475569' : '#333333');
+                  e.currentTarget.style.borderColor = isTransparent 
+                    ? 'rgba(255, 255, 255, 0.5)' 
+                    : (themeName === 'light' ? '#cbd5e0' : themeName === 'dark' ? '#64748b' : '#444444');
+                  e.currentTarget.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
                 }
               }}
               onMouseLeave={(e) => {
                 if (!showSearchBar) {
-                  e.currentTarget.style.backgroundColor = isScrolled ? (themeName === 'light' ? 'white' : themeName === 'dark' ? '#334155' : '#2a2a2a') : 'rgba(255, 255, 255, 0.15)';
-                  e.currentTarget.style.borderColor = isScrolled ? (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a') : 'rgba(255, 255, 255, 0.3)';
-                  e.currentTarget.style.color = isScrolled ? scrolledTextColor : 'rgba(255, 255, 255, 0.9)';
+                  e.currentTarget.style.backgroundColor = isTransparent 
+                    ? 'rgba(255, 255, 255, 0.15)' 
+                    : (themeName === 'light' ? 'white' : themeName === 'dark' ? '#334155' : '#2a2a2a');
+                  e.currentTarget.style.borderColor = isTransparent 
+                    ? 'rgba(255, 255, 255, 0.3)' 
+                    : (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a');
+                  e.currentTarget.style.color = isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor;
                 }
               }}
               aria-label="Arama"
@@ -541,6 +712,8 @@ const Header = () => {
                 </svg>
               )}
             </button>
+            </div>
+            {/* BUTONLAR GRUBU SONU */}
             
             {/* Giriş yapmış kullanıcı için */}
             {isAuthenticated ? (
@@ -550,11 +723,15 @@ const Header = () => {
                   alignItems: 'center',
                   gap: '10px',
                   padding: '8px 16px',
-                  backgroundColor: isScrolled ? (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a') : 'rgba(255, 255, 255, 0.15)',
+                  backgroundColor: isTransparent 
+                    ? 'rgba(255, 255, 255, 0.15)' 
+                    : (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a'),
                   borderRadius: '10px',
                   border: '1px solid',
-                  borderColor: isScrolled ? (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a') : 'rgba(255, 255, 255, 0.3)',
-                  backdropFilter: !isScrolled ? 'blur(10px)' : 'none'
+                  borderColor: isTransparent 
+                    ? 'rgba(255, 255, 255, 0.3)' 
+                    : (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a'),
+                  backdropFilter: isTransparent ? 'blur(10px)' : 'none'
                 }}>
                   <div style={{
                     width: '32px',
@@ -571,11 +748,11 @@ const Header = () => {
                     {user?.name?.charAt(0).toUpperCase()}
                   </div>
                   <span style={{ 
-                    color: isScrolled ? scrolledTextHover : '#ffffff',
+                    color: isTransparent ? '#ffffff' : scrolledTextHover,
                     fontWeight: '600',
                     fontSize: '14.5px',
                     letterSpacing: '-0.2px',
-                    textShadow: !isScrolled ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
+                    textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
                   }}>
                     {user?.name}
                   </span>
@@ -583,19 +760,21 @@ const Header = () => {
                 <button
                   onClick={handleLogout}
                   style={{
-                    backgroundColor: (isHomePage && !isScrolled) ? 'rgba(220, 38, 38, 0.15)' : (themeName === 'light' ? 'white' : themeName === 'dark' ? '#1e293b' : '#1a1a1a'),
-                    color: (isHomePage && !isScrolled) ? '#fca5a5' : '#dc2626',
+                    backgroundColor: isTransparent 
+                      ? 'rgba(220, 38, 38, 0.15)' 
+                      : (themeName === 'light' ? 'white' : themeName === 'dark' ? '#1e293b' : '#1a1a1a'),
+                    color: isTransparent ? '#fca5a5' : '#dc2626',
                     padding: '10px 22px',
                     borderRadius: '10px',
                     fontSize: '14.5px',
                     fontWeight: '600',
                     border: '1.5px solid',
-                    borderColor: (isHomePage && !isScrolled) ? 'rgba(220, 38, 38, 0.3)' : '#fee2e2',
+                    borderColor: isTransparent ? 'rgba(220, 38, 38, 0.3)' : '#fee2e2',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    boxShadow: (isHomePage && !isScrolled) ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)',
+                    boxShadow: isTransparent ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)',
                     letterSpacing: '-0.2px',
-                    backdropFilter: (isHomePage && !isScrolled) ? 'blur(10px)' : 'none'
+                    backdropFilter: isTransparent ? 'blur(10px)' : 'none'
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.backgroundColor = '#dc2626';
@@ -605,11 +784,13 @@ const Header = () => {
                     e.target.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.2)';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = (isHomePage && !isScrolled) ? 'rgba(220, 38, 38, 0.15)' : (themeName === 'light' ? 'white' : themeName === 'dark' ? '#1e293b' : '#1a1a1a');
-                    e.target.style.color = (isHomePage && !isScrolled) ? '#fca5a5' : '#dc2626';
-                    e.target.style.borderColor = (isHomePage && !isScrolled) ? 'rgba(220, 38, 38, 0.3)' : '#fee2e2';
+                    e.target.style.backgroundColor = isTransparent 
+                      ? 'rgba(220, 38, 38, 0.15)' 
+                      : (themeName === 'light' ? 'white' : themeName === 'dark' ? '#1e293b' : '#1a1a1a');
+                    e.target.style.color = isTransparent ? '#fca5a5' : '#dc2626';
+                    e.target.style.borderColor = isTransparent ? 'rgba(220, 38, 38, 0.3)' : '#fee2e2';
                     e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = (isHomePage && !isScrolled) ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)';
+                    e.target.style.boxShadow = isTransparent ? '0 2px 8px rgba(0, 0, 0, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)';
                   }}
                 >
                   Çıkış Yap
@@ -618,7 +799,7 @@ const Header = () => {
             ) : (
               <Link to="/login">
                 <button style={{
-                  background: (isHomePage && !isScrolled) 
+                  background: isTransparent
                     ? 'rgba(255, 255, 255, 0.15)' 
                     : 'linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%)',
                   color: 'white',
@@ -626,18 +807,18 @@ const Header = () => {
                   borderRadius: '10px',
                   fontSize: '14.5px',
                   fontWeight: '600',
-                  border: (isHomePage && !isScrolled) ? '1.5px solid rgba(255, 255, 255, 0.3)' : 'none',
+                  border: isTransparent ? '1.5px solid rgba(255, 255, 255, 0.3)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  boxShadow: (isHomePage && !isScrolled) 
+                  boxShadow: isTransparent
                     ? '0 2px 8px rgba(0, 0, 0, 0.2)' 
                     : '0 2px 8px rgba(0, 0, 0, 0.15)',
                   letterSpacing: '-0.2px',
-                  backdropFilter: (isHomePage && !isScrolled) ? 'blur(10px)' : 'none'
+                  backdropFilter: isTransparent ? 'blur(10px)' : 'none'
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.transform = 'translateY(-1px)';
-                  if (isHomePage && !isScrolled) {
+                  if (isTransparent) {
                     e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
                     e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
                   }
@@ -645,7 +826,7 @@ const Header = () => {
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.transform = 'translateY(0)';
-                  if (isHomePage && !isScrolled) {
+                  if (isTransparent) {
                     e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
                     e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
                     e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';

@@ -503,7 +503,7 @@ const Blogs = () => {
         <div className="container" style={styles.heroContent}>
           <h1 style={styles.heroTitle}>
             {selectedCategory === 'all' 
-              ? 'Tüm Blog Yazıları' 
+              ? 'Tüm Analizler' 
               : `${selectedCategory} Blog Yazıları`
             }
           </h1>
