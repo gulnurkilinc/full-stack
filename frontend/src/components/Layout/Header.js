@@ -344,9 +344,8 @@ const Header = () => {
                   onMouseLeave={handleMouseLeave}
                 >
                   {[
-                    { to: '/category/bilim', emoji: '🔬', label: 'Bilim' },
-                    { to: '/category/siyaset', emoji: '🏛️', label: 'Siyaset' },
-                    { to: '/category/dunya', emoji: '🌍', label: 'Dünya' }
+                    { to: '/category/tbmm', label: 'TBMM', emoji: '🏛️' },
+                   
                   ].map((item) => (
                     <Link 
                       key={item.label}
@@ -433,7 +432,7 @@ const Header = () => {
 
             {/* BUTONLAR GRUBU - Tema, Dil, Arama */}
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            {/* TEMA SEÇICI BUTONU */}
+            {/* TEMA SEÇİCİ BUTONU */}
             <div
               style={{ position: 'relative' }}
               onMouseEnter={handleThemeMouseEnter}

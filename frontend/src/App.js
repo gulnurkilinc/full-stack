@@ -9,6 +9,8 @@ import Contact from './pages/contact/contact';
 import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import BlogDetail from './pages/BlogDetail/BlogDetail';
+import TBMM from './pages/Parlamento/TBMM';
+import KanunTeklifiDetay from './pages/Parlamento/KanunTeklifiDetay'; // YENİ EKLENEN
 import AdminRoute from './components/Admin/AdminRoute';
 import Dashboard from './pages/Admin/Dashboard';
 import BlogCreate from './pages/Admin/BlogCreate';
@@ -60,6 +62,28 @@ function App() {
               </>
             } />
             
+            {/* TBMM Ana Sayfası */}
+            <Route path="/category/tbmm" element={
+              <>
+                <Header />
+                <main style={{ flex: 1 }}>
+                  <TBMM />
+                </main>
+                <Footer />
+              </>
+            } />
+            
+            {/* Kanun Teklifi Detay Sayfası - YENİ EKLENEN */}
+            <Route path="/category/tbmm/kanun-teklifi/:id" element={
+              <>
+                <Header />
+                <main style={{ flex: 1 }}>
+                  <KanunTeklifiDetay />
+                </main>
+                <Footer />
+              </>
+            } />
+            
             {/* İletişim */}
             <Route path="/contact" element={
               <>
@@ -95,7 +119,7 @@ function App() {
               } 
             />
             
-            {/* Blog Yönetimi (Liste) - YENİ */}
+            {/* Blog Yönetimi (Liste) */}
             <Route 
               path="/dashboard/blogs" 
               element={
@@ -115,7 +139,7 @@ function App() {
               } 
             />
             
-            {/* Blog Düzenle - YENİ */}
+            {/* Blog Düzenle */}
             <Route 
               path="/dashboard/blogs/edit/:id" 
               element={
