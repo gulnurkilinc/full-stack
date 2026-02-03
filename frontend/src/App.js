@@ -11,6 +11,7 @@ import Register from './pages/Register/Register';
 import BlogDetail from './pages/BlogDetail/BlogDetail';
 import TBMM from './pages/Parlamento/TBMM';
 import KanunTeklifiDetay from './pages/Parlamento/KanunTeklifiDetay'; // YENİ EKLENEN
+import Packages from './pages/Packages/Packages';
 import AdminRoute from './components/Admin/AdminRoute';
 import Dashboard from './pages/Admin/Dashboard';
 import BlogCreate from './pages/Admin/BlogCreate';
@@ -98,7 +99,15 @@ function App() {
             {/* ============================================ */}
             {/* AUTH ROUTES - Header/Footer YOK */}
             {/* ============================================ */}
-            
+            <Route path="/packages" element={
+  <>
+    <Header />
+    <main style={{ flex: 1 }}>
+      <Packages />
+    </main>
+    <Footer />
+  </>
+} />
             {/* Login */}
             <Route path="/login" element={<Login />} />
             
