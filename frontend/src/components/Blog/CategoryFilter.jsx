@@ -76,7 +76,7 @@ const CategoryFilter = ({ selectedCategory, onCategoryChange }) => {
   if (loading) {
     return (
       <div style={styles.container}>
-        <div style={styles.skeleton}>Kategoriler yükleniyor...</div>
+        <div style={styles.skeleton}>Analiz kategorileri yükleniyor...</div>
       </div>
     );
   }
@@ -91,7 +91,7 @@ const CategoryFilter = ({ selectedCategory, onCategoryChange }) => {
 
   return (
     <div style={styles.container}>
-      <h3 style={styles.title}>Kategoriler</h3>
+      <h3 style={styles.title}>📊 Araştırma Kategorileri</h3>
       
       <div style={styles.filterButtons}>
         {/* Tümü Butonu */}
@@ -121,7 +121,7 @@ const CategoryFilter = ({ selectedCategory, onCategoryChange }) => {
             }
           }}
         >
-          <span style={styles.buttonText}>Tümü</span>
+          <span style={styles.buttonText}>Tüm Analizler</span>
           <span style={styles.buttonCount}>
             {categories.reduce((sum, cat) => sum + cat.count, 0)}
           </span>

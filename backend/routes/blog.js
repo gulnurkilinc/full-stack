@@ -1,52 +1,112 @@
-const express = require("express");
-const router = express.Router();
-const {
-  getAllBlogs,
-  getBlogBySlug,
-  createBlog,
-  updateBlog,
-  deleteBlog,
-  getRelatedBlogs,
-  getCategories, 
-  getCategoryStats,
-  searchBlogs
-} = require("../controllers/blogController");
+const mongoose = require("mongoose");
 
-// Middleware'leri import et
-const { authMiddleware } = require("../middleware/authMiddleware");
-const { adminMiddleware } = require("../middleware/adminMiddleware");
+const blogSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, "Analiz başlığı gereklidir"],
+      trim: true,
+      maxlength: [200, "Başlık en fazla 200 karakter olabilir"]
+    },
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      index: true // ÖNEMLİ: Performans için index
+    },
+    content: {
+      type: String,
+      required: [true, "Analiz içeriği gereklidir"]
+    },
+    excerpt: {
+      type: String,
+      maxlength: [500, "Özet en fazla 500 karakter olabilir"]
+    },
+    coverImage: {
+      public_id: String,
+      url: String
+    },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+    category: {
+      type: String,
+      required: [true, "Kategori gereklidir"],
+      enum: {
+        values: [
+          "Teknoloji Analizi",
+          "Sağlık Araştırmaları", 
+          "Küresel Trendler", 
+          "Bilimsel İncelemeler", 
+          "Ekonomi ve Finans",
+          "Eğitim ve Gelişim", 
+          "Spor Analizleri", 
+          "Kültür ve Toplum", 
+          "Sanat ve Tasarım",
+          "Seyahat ve Keşif",
+          "Gastronomi Araştırmaları"
+        ],
+        message: '{VALUE} geçerli bir kategori değil'
+      },
+      index: true // ÖNEMLİ: Kategori sorguları için index
+    },
+    tags: [{
+      type: String,
+      lowercase: true,
+      trim: true
+    }],
+    status: {
+      type: String,
+      enum: ["draft", "published", "archived"],
+      default: "draft",
+      index: true
+    },
+    featured: {
+      type: Boolean,
+      default: false
+    },
+    viewCount: {
+      type: Number,
+      default: 0
+    },
+    publishedAt: {
+      type: Date,
+      default: null
+    },
+    metaTitle: {
+      type: String,
+      maxlength: [70, "Meta title en fazla 70 karakter olabilir"]
+    },
+    metaDescription: {
+      type: String,
+      maxlength: [160, "Meta description en fazla 160 karakter olabilir"]
+    }
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
+);
 
-// ============================================
-// PUBLIC ROUTES - Herkes erişebilir
-// ============================================
+// Compound Index - Status + Category + PublishedAt (performans için)
+blogSchema.index({ status: 1, category: 1, publishedAt: -1 });
 
-// Tüm blogları getir (filtreleme, pagination destekli)
-router.get("/blogs", getAllBlogs);
+// Virtual: Okunma süresi
+blogSchema.virtual('readingTime').get(function() {
+  if (!this.content) return 0;
+  const words = this.content.trim().split(/\s+/).length;
+  return Math.ceil(words / 200);
+});
 
-// Blog ara
-router.get("/blogs/search", searchBlogs);
+// Static method: Kategoriye göre analiz sayısı
+blogSchema.statics.countByCategory = async function() {
+  return await this.aggregate([
+    { $match: { status: 'published' } },
+    { $group: { _id: '$category', count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+  ]);
+};
 
-// Tek blog getir (slug veya ID ile)
-router.get("/blogs/:identifier", getBlogBySlug);
-
-// İlgili blogları getir
-router.get("/blogs/:identifier/related", getRelatedBlogs);
-
-router.get("/categories", getCategories);
-
-router.get("/categories/stats", getCategoryStats);
-
-// ============================================
-// PROTECTED ROUTES - Sadece Admin
-// ============================================
-
-// Yeni blog oluştur (Sadece admin)
-router.post("/blogs", authMiddleware, adminMiddleware, createBlog);
-
-// Blog güncelle (Sadece admin)
-router.put("/blogs/:id", authMiddleware, adminMiddleware, updateBlog);
-
-// Blog sil (Sadece admin)
-router.delete("/blogs/:id", authMiddleware, adminMiddleware, deleteBlog);
-
-module.exports = router;
+module.exports = mongoose.models.Blog || mongoose.model("Blog", blogSchema);

@@ -47,7 +47,7 @@ const Blogs = () => {
   const infoBorder = themeName === 'light' ? '#b3d9ff' : themeName === 'dark' ? '#2563eb' : '#1e40af';
   const infoText = themeName === 'light' ? '#004085' : themeName === 'dark' ? '#bfdbfe' : '#93c5fd';
 
-  // Blogları yükle
+  // Blogları yükle - 17 analiz per page
   const loadBlogs = async (category = 'all', page = 1, search = '') => {
     try {
       setLoading(true);
@@ -63,7 +63,7 @@ const Blogs = () => {
           params: {
             q: search.trim(),
             page,
-            limit: 15
+            limit: 17 // 17 analiz per page
           }
         });
 
@@ -82,7 +82,7 @@ const Blogs = () => {
         
         const params = {
           page,
-          limit: 15,
+          limit: 17, // 17 analiz per page
           status: 'published'
         };
 
@@ -112,7 +112,7 @@ const Blogs = () => {
       } else if (err.request) {
         setError('Sunucuya bağlanılamıyor. Backend çalışıyor mu kontrol edin.');
       } else {
-        setError('Bloglar yüklenirken hata oluştu');
+        setError('Analizler yüklenirken hata oluştu');
       }
       
       setBlogs([]);
@@ -409,42 +409,41 @@ const Blogs = () => {
       transition: 'color 0.3s ease'
     },
     searchSection: {
-      marginBottom: '30px'
+      marginBottom: '30px',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'column'
     },
     searchForm: {
       display: 'flex',
-      gap: '10px',
-      marginBottom: '15px'
+      marginBottom: '15px',
+      maxWidth: '700px',
+      width: '100%'
     },
     searchInputWrapper: {
       position: 'relative',
-      flex: 1,
-      maxWidth: '600px'
-    },
-    searchIcon: {
-      position: 'absolute',
-      left: '15px',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      fontSize: '18px',
-      pointerEvents: 'none',
-      color: textMuted
+      flex: 1
     },
     searchInput: {
       width: '100%',
-      padding: '12px 45px 12px 45px',
+      padding: '16px 110px 16px 24px',
       fontSize: '15px',
-      border: `2px solid ${inputBorder}`,
-      borderRadius: '8px',
+      border: `1px solid ${inputBorder}`,
+      borderRadius: '50px',
       outline: 'none',
-      transition: 'border-color 0.3s, background-color 0.3s, color 0.3s',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       boxSizing: 'border-box',
       backgroundColor: inputBg,
-      color: textPrimary
+      color: textPrimary,
+      boxShadow: themeName === 'light' 
+        ? '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' 
+        : '0 2px 8px rgba(0,0,0,0.2)',
+      fontWeight: '400'
     },
     clearButton: {
       position: 'absolute',
-      right: '10px',
+      right: '70px',
       top: '50%',
       transform: 'translateY(-50%)',
       backgroundColor: 'transparent',
@@ -452,21 +451,35 @@ const Blogs = () => {
       fontSize: '18px',
       color: textMuted,
       cursor: 'pointer',
-      padding: '5px 10px',
+      padding: '6px',
       borderRadius: '50%',
-      transition: 'background-color 0.3s'
+      transition: 'all 0.2s ease',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '28px',
+      height: '28px',
+      opacity: '0.6'
     },
     searchButton: {
-      padding: '12px 30px',
-      backgroundColor: accentColor,
-      color: 'white',
+      position: 'absolute',
+      right: '6px',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      padding: '0',
+      backgroundColor: 'transparent',
+      color: textPrimary,
       border: 'none',
-      borderRadius: '8px',
-      fontSize: '15px',
-      fontWeight: '600',
+      borderRadius: '50%',
+      fontSize: '18px',
       cursor: 'pointer',
-      transition: 'background-color 0.3s',
-      whiteSpace: 'nowrap'
+      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '48px',
+      height: '48px',
+      opacity: '0.7'
     },
     searchInfo: {
       display: 'flex',
@@ -476,7 +489,9 @@ const Blogs = () => {
       backgroundColor: infoBg,
       borderRadius: '8px',
       border: `1px solid ${infoBorder}`,
-      transition: 'all 0.3s ease'
+      transition: 'all 0.3s ease',
+      maxWidth: '700px',
+      width: '100%'
     },
     searchInfoText: {
       margin: 0,
@@ -504,13 +519,13 @@ const Blogs = () => {
           <h1 style={styles.heroTitle}>
             {selectedCategory === 'all' 
               ? 'Tüm Analizler' 
-              : `${selectedCategory} Blog Yazıları`
+              : `${selectedCategory} Analizleri`
             }
           </h1>
           <p style={styles.heroSubtitle}>
             {selectedCategory === 'all'
-              ? 'Teknoloji, sağlık, bilim ve daha fazlası hakkında güncel içerikler'
-              : `${selectedCategory} kategorisindeki en güncel yazıları keşfedin`
+              ? 'Derinlemesine araştırmalar, veri analizleri ve uzman görüşleri'
+              : `${selectedCategory} kategorisindeki en güncel araştırma ve analizleri keşfedin`
             }
           </p>
         </div>
@@ -525,17 +540,33 @@ const Blogs = () => {
           onCategoryChange={handleCategoryChange}
         />
 
-        {/* ARAMA BÖLÜMÜ */}
+        {/* ARAMA BÖLÜMÜ - ORTALANMIŞ VE MODERN */}
         <div style={styles.searchSection}>
           <form onSubmit={handleSearch} style={styles.searchForm}>
             <div style={styles.searchInputWrapper}>
-              <span style={styles.searchIcon}>🔍</span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
-                placeholder="Blog ara... (başlık, içerik, etiketler)"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch(e);
+                  }
+                }}
+                placeholder="Analiz ara..."
                 style={styles.searchInput}
+                onFocus={(e) => {
+                  e.target.style.borderColor = themeName === 'light' ? '#666666' : '#64748b';
+                  e.target.style.boxShadow = themeName === 'light' 
+                    ? '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)' 
+                    : '0 4px 16px rgba(0,0,0,0.3)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = inputBorder;
+                  e.target.style.boxShadow = themeName === 'light' 
+                    ? '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' 
+                    : '0 2px 8px rgba(0,0,0,0.2)';
+                }}
               />
               {searchQuery && (
                 <button
@@ -543,26 +574,53 @@ const Blogs = () => {
                   onClick={clearSearch}
                   style={styles.clearButton}
                   aria-label="Aramayı temizle"
+                  onMouseEnter={(e) => {
+                    e.target.style.opacity = '1';
+                    e.target.style.backgroundColor = themeName === 'light' ? '#f3f4f6' : '#334155';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.opacity = '0.6';
+                    e.target.style.backgroundColor = 'transparent';
+                  }}
                 >
                   ✕
                 </button>
               )}
+              <button 
+                type="submit" 
+                style={styles.searchButton}
+                aria-label="Ara"
+                onMouseEnter={(e) => {
+                  e.target.style.opacity = '1';
+                  e.target.style.transform = 'translateY(-50%) scale(1.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.opacity = '0.7';
+                  e.target.style.transform = 'translateY(-50%) scale(1)';
+                }}
+              >
+                <svg 
+                  width="22" 
+                  height="22" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+              </button>
             </div>
-            <button 
-              type="submit" 
-              style={styles.searchButton}
-              onMouseEnter={(e) => e.target.style.backgroundColor = accentHover}
-              onMouseLeave={(e) => e.target.style.backgroundColor = accentColor}
-            >
-              Ara
-            </button>
           </form>
           
           {/* Arama sonucu bilgisi */}
           {isSearching && searchQuery && (
             <div style={styles.searchInfo}>
               <p style={styles.searchInfoText}>
-                "<strong>{searchQuery}</strong>" için {pagination.totalBlogs || 0} sonuç bulundu
+                "<strong>{searchQuery}</strong>" için {pagination.totalBlogs || 0} analiz bulundu
               </p>
               <button 
                 onClick={clearSearch} 
@@ -580,7 +638,7 @@ const Blogs = () => {
         {loading && (
           <div style={styles.loadingContainer}>
             <div style={styles.spinner}></div>
-            <p style={styles.loadingText}>Bloglar yükleniyor...</p>
+            <p style={styles.loadingText}>Analizler yükleniyor...</p>
           </div>
         )}
 
@@ -605,11 +663,11 @@ const Blogs = () => {
           <>
             {blogs.length === 0 ? (
               <div style={styles.emptyState}>
-                <div style={styles.emptyIcon}>📝</div>
+                <div style={styles.emptyIcon}>📊</div>
                 <h3 style={styles.emptyTitle}>
                   {selectedCategory === 'all' 
-                    ? 'Henüz blog yazısı yok'
-                    : `${selectedCategory} kategorisinde henüz blog yazısı yok`
+                    ? 'Henüz analiz yok'
+                    : `${selectedCategory} kategorisinde henüz analiz yok`
                   }
                 </h3>
                 <p style={styles.emptyText}>
@@ -622,7 +680,7 @@ const Blogs = () => {
                     onMouseEnter={(e) => e.target.style.backgroundColor = accentHover}
                     onMouseLeave={(e) => e.target.style.backgroundColor = accentColor}
                   >
-                    Tüm Blogları Görüntüle
+                    Tüm Analizleri Görüntüle
                   </button>
                 )}
               </div>
@@ -631,7 +689,7 @@ const Blogs = () => {
                 {/* Results Info */}
                 <div style={styles.resultsInfo}>
                   <p style={styles.resultsText}>
-                    {pagination.totalBlogs || blogs.length} blog bulundu
+                    {pagination.totalBlogs || blogs.length} analiz bulundu
                     {selectedCategory !== 'all' && ` · ${selectedCategory}`}
                   </p>
                 </div>
@@ -659,7 +717,7 @@ const Blogs = () => {
                           alt={blog.title}
                           style={styles.image}
                           onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/400x250?text=Blog+Image';
+                            e.target.src = 'https://via.placeholder.com/400x250?text=Analiz+Görseli';
                           }}
                         />
                         {/* Category Badge */}
@@ -675,7 +733,7 @@ const Blogs = () => {
 
                         {/* Excerpt */}
                         <p style={styles.blogExcerpt}>
-                          {blog.excerpt || 'Blog özeti bulunamadı...'}
+                          {blog.excerpt || 'Analiz özeti bulunamadı...'}
                         </p>
 
                         {/* Footer */}
@@ -697,7 +755,7 @@ const Blogs = () => {
                             </span>
                           </div>
                           <button className="emerald-btn emerald-btn--card" style={{ marginTop: '12px' }}>
-                            Devamını Oku
+                            Analizi İncele
                           </button>
                         </div>
                       </div>
@@ -711,7 +769,7 @@ const Blogs = () => {
                     currentPage={pagination.currentPage || currentPage}
                     totalPages={pagination.totalPages || 1}
                     totalItems={pagination.totalBlogs || 0}
-                    itemsPerPage={15}
+                    itemsPerPage={17}
                     onPageChange={handlePageChange}
                   />
                 )}

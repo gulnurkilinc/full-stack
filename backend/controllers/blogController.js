@@ -1,12 +1,12 @@
 const Blog = require("../models/blog");
 const mongoose = require("mongoose");
 
-// Tüm blogları getir (filtreleme, pagination, sorting)
+// Tüm analizleri getir (filtreleme, pagination, sorting)
 exports.getAllBlogs = async (req, res) => {
   try {
     const {
       page = 1,
-      limit = 15, // Frontend ile uyumlu (15 blog)
+      limit = 17, // Frontend ile uyumlu (17 analiz)
       category,
       tags,
       status = "published",
@@ -81,16 +81,16 @@ exports.getAllBlogs = async (req, res) => {
     console.error("❌ Get all blogs error:", error);
     res.status(500).json({
       success: false,
-      message: "Bloglar getirilirken hata oluştu",
+      message: "Analizler getirilirken hata oluştu",
       error: error.message
     });
   }
 };
 
-// Kategorileri ve blog sayılarını getir
+// Kategorileri ve analiz sayılarını getir
 exports.getCategories = async (req, res) => {
   try {
-    // Tüm kategorileri ve blog sayılarını al
+    // Tüm kategorileri ve analiz sayılarını al
     const categoryCounts = await Blog.aggregate([
       { $match: { status: 'published' } },
       { $group: { _id: '$category', count: { $sum: 1 } } },
@@ -99,8 +99,17 @@ exports.getCategories = async (req, res) => {
 
     // Enum'dan tüm kategorileri al
     const allCategories = Blog.schema.path('category').enumValues || [
-      "Teknoloji", "Sağlık", "Dünya", "Bilim", 
-      "Ekonomi", "Eğitim", "Spor", "Kültür", "Sanat"
+      "Teknoloji Analizi",
+      "Sağlık Araştırmaları", 
+      "Küresel Trendler", 
+      "Bilimsel İncelemeler", 
+      "Ekonomi ve Finans",
+      "Eğitim ve Gelişim", 
+      "Spor Analizleri", 
+      "Kültür ve Toplum", 
+      "Sanat ve Tasarım",
+      "Seyahat ve Keşif",
+      "Gastronomi Araştırmaları"
     ];
 
     // Her kategori için count ekle
@@ -120,7 +129,7 @@ exports.getCategories = async (req, res) => {
       };
     });
 
-    // Toplam blog sayısı
+    // Toplam analiz sayısı
     const totalBlogs = await Blog.countDocuments({ status: 'published' });
 
     res.status(200).json({
@@ -138,7 +147,7 @@ exports.getCategories = async (req, res) => {
   }
 };
 
-// Tek blog getir (ID veya SLUG ile)
+// Tek analiz getir (ID veya SLUG ile)
 exports.getBlogBySlug = async (req, res) => {
   try {
     const { identifier } = req.params;
@@ -158,7 +167,7 @@ exports.getBlogBySlug = async (req, res) => {
     if (!blog) {
       return res.status(404).json({
         success: false,
-        message: "Blog bulunamadı"
+        message: "Analiz bulunamadı"
       });
     }
 
@@ -174,13 +183,13 @@ exports.getBlogBySlug = async (req, res) => {
     console.error("❌ Get blog error:", error);
     res.status(500).json({
       success: false,
-      message: "Blog getirilirken hata oluştu",
+      message: "Analiz getirilirken hata oluştu",
       error: error.message
     });
   }
 };
 
-// Yeni blog oluştur
+// Yeni analiz oluştur
 exports.createBlog = async (req, res) => {
   try {
     const blogData = {
@@ -192,20 +201,20 @@ exports.createBlog = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Blog başarıyla oluşturuldu",
+      message: "Analiz başarıyla oluşturuldu",
       blog
     });
   } catch (error) {
     console.error("❌ Create blog error:", error);
     res.status(400).json({
       success: false,
-      message: "Blog oluşturulurken hata oluştu",
+      message: "Analiz oluşturulurken hata oluştu",
       error: error.message
     });
   }
 };
 
-// Blog güncelle
+// Analiz güncelle
 exports.updateBlog = async (req, res) => {
   try {
     const { id } = req.params;
@@ -218,26 +227,26 @@ exports.updateBlog = async (req, res) => {
     if (!blog) {
       return res.status(404).json({
         success: false,
-        message: "Blog bulunamadı"
+        message: "Analiz bulunamadı"
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Blog başarıyla güncellendi",
+      message: "Analiz başarıyla güncellendi",
       blog
     });
   } catch (error) {
     console.error("❌ Update blog error:", error);
     res.status(400).json({
       success: false,
-      message: "Blog güncellenirken hata oluştu",
+      message: "Analiz güncellenirken hata oluştu",
       error: error.message
     });
   }
 };
 
-// Blog sil
+// Analiz sil
 exports.deleteBlog = async (req, res) => {
   try {
     const { id } = req.params;
@@ -247,31 +256,31 @@ exports.deleteBlog = async (req, res) => {
     if (!blog) {
       return res.status(404).json({
         success: false,
-        message: "Blog bulunamadı"
+        message: "Analiz bulunamadı"
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Blog başarıyla silindi"
+      message: "Analiz başarıyla silindi"
     });
   } catch (error) {
     console.error("❌ Delete blog error:", error);
     res.status(500).json({
       success: false,
-      message: "Blog silinirken hata oluştu",
+      message: "Analiz silinirken hata oluştu",
       error: error.message
     });
   }
 };
 
-// İlgili blogları getir
+// İlgili analizleri getir
 exports.getRelatedBlogs = async (req, res) => {
   try {
     const { identifier } = req.params;
     const limit = parseInt(req.query.limit) || 3;
 
-    // Önce ana blogu bul
+    // Önce ana analizi bul
     let mainBlog;
     if (mongoose.Types.ObjectId.isValid(identifier) && identifier.length === 24) {
       mainBlog = await Blog.findById(identifier);
@@ -282,11 +291,11 @@ exports.getRelatedBlogs = async (req, res) => {
     if (!mainBlog) {
       return res.status(404).json({
         success: false,
-        message: "Blog bulunamadı"
+        message: "Analiz bulunamadı"
       });
     }
 
-    // Aynı kategorideki diğer blogları getir
+    // Aynı kategorideki diğer analizleri getir
     const relatedBlogs = await Blog.find({
       _id: { $ne: mainBlog._id },
       category: mainBlog.category,
@@ -305,7 +314,7 @@ exports.getRelatedBlogs = async (req, res) => {
     console.error("❌ Get related blogs error:", error);
     res.status(500).json({
       success: false,
-      message: "İlgili bloglar getirilirken hata oluştu",
+      message: "İlgili analizler getirilirken hata oluştu",
       error: error.message
     });
   }
@@ -341,10 +350,10 @@ exports.getCategoryStats = async (req, res) => {
   }
 };
 
-// Blog ara (Search)
+// Analiz ara (Search)
 exports.searchBlogs = async (req, res) => {
   try {
-    const { q, page = 1, limit = 15 } = req.query;
+    const { q, page = 1, limit = 17 } = req.query;
 
     // Arama metni kontrolü
     if (!q || q.trim() === '') {
