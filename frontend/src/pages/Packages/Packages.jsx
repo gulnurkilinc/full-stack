@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const Packages = () => {
   const { themeName } = useTheme();
   const navigate = useNavigate();
+  const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' veya 'yearly'
   const [showComparison, setShowComparison] = useState(false);
 
   // Tema renklerini belirle
@@ -15,17 +16,15 @@ const Packages = () => {
   const borderColor = themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#334155' : '#2a2a2a';
   const accentColor = themeName === 'light' ? '#007bff' : themeName === 'dark' ? '#60a5fa' : '#3b82f6';
   const successColor = '#10b981';
-  const errorColor = '#ef4444';
 
   const packages = [
     {
       id: 1,
-      name: '🎓 Ücretsiz Paket',
+      name: 'Ücretsiz',
       badge: null,
-      badgeColor: '#3b82f6',
       description: 'Temel seviyede platformu deneyimlemek isteyenler için.',
-      price: 0,
-      priceLabel: 'Ücretsiz',
+      monthlyPrice: 0,
+      yearlyPrice: 0,
       features: [
         { text: 'LMM modeline sınırlı erişim', included: true },
         { text: 'Haftalık 3 analiz hakkı', included: true },
@@ -34,35 +33,32 @@ const Packages = () => {
         { text: 'Gelişmiş raporlar', included: false }
       ],
       buttonText: 'Ücretsiz Başla',
-      buttonColor: '#3b82f6',
       highlighted: false
     },
     {
       id: 2,
-      name: '📰 Analiz Okuma Paketi',
+      name: 'Premium',
       badge: null,
-      badgeColor: '#eab308',
       description: 'Sadece platformda yayınlanan analizleri okumak isteyenler için.',
-      price: 80,
-      priceLabel: '₺80 / aylık',
+      monthlyPrice: 80,
+      yearlyPrice: 800,
       features: [
         { text: 'Tüm yayınlanan analizleri okuma', included: true },
         { text: 'TBMM, medya ve politika analizleri', included: true },
         { text: 'LMM kullanımı yok', included: false },
-        { text: 'Analiz üretme yok', included: false }
+        { text: 'Analiz üretme yok', included: false },
+        { text: 'Özel raporlama yok', included: false }
       ],
-      buttonText: 'Okuma Aboneliği Al',
-      buttonColor: '#eab308',
+      buttonText: 'Premium Al',
       highlighted: false
     },
     {
       id: 3,
-      name: '🚀 Profesyonel Paket',
+      name: 'Profesyonel',
       badge: 'EN ÇOK TERCİH EDİLEN',
-      badgeColor: '#10b981',
       description: 'Hem okumak hem de analiz üretmek isteyen profesyoneller için.',
-      price: 700,
-      priceLabel: '₺700 / aylık',
+      monthlyPrice: 700,
+      yearlyPrice: 7000,
       features: [
         { text: 'Tüm analizleri okuma', included: true },
         { text: 'LMM modeline tam erişim', included: true },
@@ -71,17 +67,15 @@ const Packages = () => {
         { text: 'Karşılaştırmalı raporlar', included: true }
       ],
       buttonText: 'Profesyonel Ol',
-      buttonColor: '#10b981',
       highlighted: true
     },
     {
       id: 4,
-      name: '🏛️ Özel Talep / Kurumsal',
+      name: 'Kurumsal',
       badge: null,
-      badgeColor: '#8b5cf6',
       description: 'Kuruma veya projeye özel analizler ve raporlar.',
-      price: null,
-      priceLabel: 'Özel Fiyatlandırma',
+      monthlyPrice: null,
+      yearlyPrice: null,
       features: [
         { text: 'Özel veri setleri', included: true },
         { text: 'Talebe özel analiz modeli', included: true },
@@ -89,18 +83,10 @@ const Packages = () => {
         { text: 'Danışmanlık & destek', included: true },
         { text: 'Akademik veya stratejik çıktı', included: true }
       ],
-      buttonText: 'Bizimle İletişime Geçin',
-      buttonColor: '#8b5cf6',
+      buttonText: 'İletişime Geçin',
       highlighted: false,
       note: 'Analiz ihtiyaçlarınızı bize iletin, size özel bir çözüm oluşturalım.'
     }
-  ];
-
-  const trustFeatures = [
-    { icon: '🔒', text: 'Güvenli ödeme' },
-    { icon: '📊', text: 'Şeffaf veri kullanımı' },
-    { icon: '📚', text: 'Akademik metodoloji' },
-    { icon: '🏛️', text: 'Açık kaynaklara dayalı analizler' }
   ];
 
   const handlePackageSelect = (pkg) => {
@@ -124,181 +110,333 @@ const Packages = () => {
       <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px' }}>
         
         {/* Başlık Bölümü */}
-        <div style={{ textAlign: 'center', marginBottom: '70px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '50px' }}>
           <h1 style={{
-            fontSize: '52px',
-            fontWeight: '800',
+            fontSize: '48px',
+            fontWeight: '700',
             color: textColor,
-            marginBottom: '20px',
-            letterSpacing: '-1.5px',
+            marginBottom: '16px',
+            letterSpacing: '-1px',
             lineHeight: '1.2'
           }}>
-            Size Uygun Paketi Seçin
+            Paketlerimiz
           </h1>
           <p style={{
-            fontSize: '20px',
+            fontSize: '18px',
             color: subtextColor,
-            maxWidth: '700px',
-            margin: '0 auto',
-            lineHeight: '1.7',
+            maxWidth: '650px',
+            margin: '0 auto 40px auto',
+            lineHeight: '1.6',
             fontWeight: '400'
           }}>
-            Siyasi analizler, TBMM takibi ve medya izleme için ihtiyacınıza en uygun paketi seçin
+            Siyasi analizler, TBMM takibi ve medya izleme için ihtiyacınıza uygun paketi seçin
           </p>
+
+          {/* Aylık/Yıllık Toggle - Referans Görseldeki Gibi */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '4px',
+            backgroundColor: themeName === 'light' ? '#e5e7eb' : themeName === 'dark' ? '#1e293b' : '#0a0a0a',
+            borderRadius: '50px',
+            position: 'relative',
+            gap: '0'
+          }}>
+            {/* Animasyonlu Arka Plan - Kayan Pill */}
+            <div style={{
+              position: 'absolute',
+              top: '4px',
+              bottom: '4px',
+              left: billingCycle === 'monthly' ? '4px' : '50%',
+              width: 'calc(50% - 4px)',
+              backgroundColor: themeName === 'light' ? '#ffffff' : themeName === 'dark' ? '#334155' : '#1a1a1a',
+              borderRadius: '50px',
+              transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: themeName === 'light' 
+                ? '0 2px 4px rgba(0, 0, 0, 0.1)' 
+                : '0 2px 8px rgba(0, 0, 0, 0.3)',
+              zIndex: 0
+            }}></div>
+            
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              style={{
+                padding: '10px 32px',
+                fontSize: '15px',
+                fontWeight: '600',
+                backgroundColor: 'transparent',
+                color: billingCycle === 'monthly' ? textColor : subtextColor,
+                border: 'none',
+                borderRadius: '50px',
+                cursor: 'pointer',
+                transition: 'color 0.3s ease',
+                position: 'relative',
+                zIndex: 1,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              Aylık
+            </button>
+            <button
+              onClick={() => setBillingCycle('yearly')}
+              style={{
+                padding: '10px 32px',
+                fontSize: '15px',
+                fontWeight: '600',
+                backgroundColor: 'transparent',
+                color: billingCycle === 'yearly' ? textColor : subtextColor,
+                border: 'none',
+                borderRadius: '50px',
+                cursor: 'pointer',
+                transition: 'color 0.3s ease',
+                position: 'relative',
+                zIndex: 1,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              Yıllık
+              <span style={{
+                position: 'absolute',
+                top: '-6px',
+                right: '-6px',
+                backgroundColor: '#10b981',
+                color: 'white',
+                fontSize: '9px',
+                padding: '2px 6px',
+                borderRadius: '10px',
+                fontWeight: '700',
+                lineHeight: '1'
+              }}>
+                -17%
+              </span>
+            </button>
+          </div>
         </div>
 
-        {/* Paket Kartları */}
+        {/* Paket Kartları - Grid ile Hizalı */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '28px',
-          marginBottom: '80px'
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '20px',
+          marginBottom: '60px',
+          alignItems: 'stretch' // Tüm kartları aynı yükseklikte tutar
         }}>
           {packages.map((pkg) => (
             <div
               key={pkg.id}
               style={{
                 backgroundColor: cardBg,
-                border: pkg.highlighted ? `3px solid ${pkg.badgeColor}` : `1.5px solid ${borderColor}`,
-                borderRadius: '20px',
-                padding: pkg.highlighted ? '42px 34px' : '40px 32px',
+                border: pkg.highlighted ? `2px solid ${accentColor}` : `1px solid ${borderColor}`,
+                borderRadius: '16px',
+                padding: '28px 24px',
                 position: 'relative',
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'all 0.3s ease',
+                display: 'grid',
+                gridTemplateRows: 'auto auto auto 1fr auto auto', // Sabit yapı
                 boxShadow: pkg.highlighted 
-                  ? `0 12px 40px ${pkg.badgeColor}30` 
-                  : '0 4px 12px rgba(0, 0, 0, 0.08)',
-                transform: pkg.highlighted ? 'scale(1.05)' : 'scale(1)',
-                cursor: 'pointer'
+                  ? `0 8px 24px ${accentColor}20` 
+                  : '0 2px 8px rgba(0, 0, 0, 0.04)',
+                height: '100%' // Tüm kartların aynı yükseklikte olmasını sağlar
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.08) translateY(-8px)';
-                e.currentTarget.style.boxShadow = `0 20px 50px ${pkg.badgeColor}40`;
+                if (!pkg.highlighted) {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = pkg.highlighted ? 'scale(1.05)' : 'scale(1)';
-                e.currentTarget.style.boxShadow = pkg.highlighted 
-                  ? `0 12px 40px ${pkg.badgeColor}30` 
-                  : '0 4px 12px rgba(0, 0, 0, 0.08)';
+                if (!pkg.highlighted) {
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
               }}
             >
-              {/* Badge */}
+              {/* Badge - Sadece Profesyonel Pakette */}
               {pkg.badge && (
                 <div style={{
                   position: 'absolute',
-                  top: '-14px',
+                  top: '-12px',
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  backgroundColor: pkg.badgeColor,
+                  backgroundColor: accentColor,
                   color: 'white',
-                  padding: '8px 20px',
-                  borderRadius: '25px',
-                  fontSize: '11px',
-                  fontWeight: '800',
-                  letterSpacing: '1px',
-                  boxShadow: `0 4px 15px ${pkg.badgeColor}50`,
-                  textTransform: 'uppercase'
+                  padding: '6px 16px',
+                  borderRadius: '20px',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  whiteSpace: 'nowrap'
                 }}>
                   {pkg.badge}
                 </div>
               )}
 
-              {/* Paket Başlığı */}
-              <div style={{ marginBottom: '24px', marginTop: pkg.badge ? '12px' : '0' }}>
+              {/* Paket Başlığı - Grid Row 1 */}
+              <div style={{ marginBottom: '12px', marginTop: pkg.badge ? '8px' : '0' }}>
                 <h3 style={{
-                  fontSize: '26px',
+                  fontSize: '24px',
                   fontWeight: '700',
-                  color: textColor,
-                  marginBottom: '12px',
-                  lineHeight: '1.3'
+                  color: pkg.highlighted ? accentColor : textColor,
+                  marginBottom: '0',
+                  textAlign: 'left'
                 }}>
                   {pkg.name}
                 </h3>
-                <p style={{
-                  fontSize: '15px',
-                  color: subtextColor,
-                  lineHeight: '1.6',
-                  minHeight: '48px'
-                }}>
-                  {pkg.description}
-                </p>
               </div>
 
-              {/* Fiyat */}
-              <div style={{ marginBottom: '32px', paddingBottom: '28px', borderBottom: `1.5px solid ${borderColor}` }}>
-                {pkg.price !== null ? (
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+              {/* Fiyat - Grid Row 2 */}
+              <div style={{ 
+                marginBottom: '12px',
+                textAlign: 'left'
+              }}>
+                {pkg.monthlyPrice !== null ? (
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                    {billingCycle === 'yearly' && pkg.yearlyPrice > 0 && (
+                      <span style={{
+                        fontSize: '24px',
+                        fontWeight: '600',
+                        color: subtextColor,
+                        textDecoration: 'line-through',
+                        opacity: 0.5
+                      }}>
+                        ₺{pkg.monthlyPrice}
+                      </span>
+                    )}
                     <span style={{
-                      fontSize: pkg.price === 0 ? '36px' : '52px',
-                      fontWeight: '900',
-                      color: pkg.badgeColor,
-                      letterSpacing: '-2px'
+                      fontSize: pkg.monthlyPrice === 0 ? '32px' : '48px',
+                      fontWeight: '700',
+                      color: pkg.highlighted ? accentColor : textColor,
+                      letterSpacing: '-1px'
                     }}>
-                      {pkg.price === 0 ? 'Ücretsiz' : `₺${pkg.price}`}
+                      {pkg.monthlyPrice === 0 
+                        ? '₺0' 
+                        : `₺${billingCycle === 'monthly' ? pkg.monthlyPrice : Math.floor(pkg.yearlyPrice / 12)}`}
                     </span>
-                    {pkg.price > 0 && (
-                      <span style={{ fontSize: '17px', color: subtextColor, fontWeight: '600' }}>
-                        / aylık
+                    {pkg.monthlyPrice > 0 && (
+                      <span style={{ 
+                        fontSize: '16px', 
+                        color: subtextColor, 
+                        fontWeight: '500',
+                        alignSelf: 'flex-end',
+                        marginBottom: '8px'
+                      }}>
+                        /ay
                       </span>
                     )}
                   </div>
                 ) : (
                   <div style={{
-                    fontSize: '22px',
-                    fontWeight: '700',
-                    color: pkg.badgeColor,
-                    letterSpacing: '-0.5px'
+                    fontSize: '20px',
+                    fontWeight: '600',
+                    color: textColor
                   }}>
-                    {pkg.priceLabel}
+                    Özel Fiyat
                   </div>
+                )}
+                {billingCycle === 'yearly' && pkg.yearlyPrice > 0 && (
+                  <p style={{
+                    fontSize: '12px',
+                    color: subtextColor,
+                    margin: '4px 0 0 0'
+                  }}>
+                    ilk ay boyunca
+                  </p>
                 )}
               </div>
 
-              {/* Özellikler */}
-              <div style={{ marginBottom: '32px' }}>
+              {/* Açıklama - Grid Row 3 */}
+              <p style={{
+                fontSize: '14px',
+                color: subtextColor,
+                lineHeight: '1.5',
+                marginBottom: '20px',
+                minHeight: '42px'
+              }}>
+                {pkg.description}
+              </p>
+
+              {/* Buton - Grid Row 4 */}
+              <div style={{ marginBottom: '24px' }}>
+                <button
+                  onClick={() => handlePackageSelect(pkg)}
+                  style={{
+                    width: '100%',
+                    padding: '13px 24px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    backgroundColor: pkg.highlighted ? accentColor : 'transparent',
+                    color: pkg.highlighted ? '#ffffff' : textColor,
+                    border: `2px solid ${pkg.highlighted ? accentColor : borderColor}`,
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (pkg.highlighted) {
+                      e.target.style.backgroundColor = themeName === 'light' ? '#0056b3' : '#3b82f6';
+                      e.target.style.borderColor = themeName === 'light' ? '#0056b3' : '#3b82f6';
+                    } else {
+                      e.target.style.backgroundColor = themeName === 'light' ? '#f8f9fa' : themeName === 'dark' ? '#334155' : '#2a2a2a';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pkg.highlighted) {
+                      e.target.style.backgroundColor = accentColor;
+                      e.target.style.borderColor = accentColor;
+                    } else {
+                      e.target.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  {pkg.buttonText}
+                </button>
+              </div>
+
+              {/* Özellikler - Grid Row 5 (flex: 1 ile genişler) */}
+              <div style={{ marginBottom: '16px' }}>
                 {pkg.features.map((feature, index) => (
                   <div
                     key={index}
                     style={{
                       display: 'flex',
                       alignItems: 'flex-start',
-                      gap: '14px',
-                      marginBottom: '14px',
-                      fontSize: '15px',
+                      gap: '10px',
+                      marginBottom: '12px',
+                      fontSize: '14px',
                       color: feature.included ? textColor : subtextColor,
-                      opacity: feature.included ? 1 : 0.6,
-                      fontWeight: feature.included ? '500' : '400'
+                      opacity: feature.included ? 1 : 0.5
                     }}
                   >
                     <div style={{ flexShrink: 0, marginTop: '2px' }}>
                       {feature.included ? (
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={successColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={pkg.highlighted ? accentColor : successColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
                       ) : (
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={errorColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={subtextColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <line x1="18" y1="6" x2="6" y2="18"></line>
                           <line x1="6" y1="6" x2="18" y2="18"></line>
                         </svg>
                       )}
                     </div>
-                    <span style={{ lineHeight: '1.5' }}>{feature.text}</span>
+                    <span style={{ lineHeight: '1.4' }}>{feature.text}</span>
                   </div>
                 ))}
               </div>
 
-              {/* Not (Sadece Kurumsal Pakette) */}
+              {/* Not (Sadece Kurumsal Pakette) - Grid Row 6 */}
               {pkg.note && (
                 <div style={{
-                  backgroundColor: themeName === 'light' ? '#f0f9ff' : themeName === 'dark' ? '#1e3a5f' : '#1a2332',
-                  padding: '14px 16px',
-                  borderRadius: '12px',
-                  marginBottom: '24px',
-                  border: `1px solid ${pkg.badgeColor}30`
+                  backgroundColor: themeName === 'light' ? '#f8f9fa' : themeName === 'dark' ? '#1e293b' : '#1a1a1a',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: `1px solid ${borderColor}`
                 }}>
                   <p style={{
-                    fontSize: '13px',
+                    fontSize: '12px',
                     color: subtextColor,
-                    lineHeight: '1.6',
+                    lineHeight: '1.5',
                     margin: 0,
                     fontStyle: 'italic'
                   }}>
@@ -306,223 +444,135 @@ const Packages = () => {
                   </p>
                 </div>
               )}
-
-              {/* Buton */}
-              <button
-                onClick={() => handlePackageSelect(pkg)}
-                style={{
-                  width: '100%',
-                  padding: '16px 28px',
-                  fontSize: '16px',
-                  fontWeight: '700',
-                  backgroundColor: pkg.buttonColor,
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: `0 4px 15px ${pkg.buttonColor}40`,
-                  letterSpacing: '-0.3px'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-3px)';
-                  e.target.style.boxShadow = `0 8px 25px ${pkg.buttonColor}60`;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = `0 4px 15px ${pkg.buttonColor}40`;
-                }}
-              >
-                {pkg.buttonText}
-              </button>
             </div>
           ))}
-        </div>
-
-        {/* Güven & Şeffaflık Alanı */}
-        <div style={{
-          backgroundColor: cardBg,
-          padding: '50px 40px',
-          borderRadius: '20px',
-          border: `1.5px solid ${borderColor}`,
-          marginBottom: '60px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)'
-        }}>
-          <h3 style={{
-            fontSize: '26px',
-            fontWeight: '700',
-            color: textColor,
-            marginBottom: '36px',
-            textAlign: 'center',
-            letterSpacing: '-0.5px'
-          }}>
-            Güven & Şeffaflık
-          </h3>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '32px'
-          }}>
-            {trustFeatures.map((feature, index) => (
-              <div
-                key={index}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                  gap: '12px'
-                }}
-              >
-                <div style={{ fontSize: '48px' }}>{feature.icon}</div>
-                <p style={{
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  color: textColor,
-                  margin: 0,
-                  lineHeight: '1.4'
-                }}>
-                  {feature.text}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Footer Üstü CTA */}
         <div style={{
           backgroundColor: cardBg,
-          padding: '60px 40px',
-          borderRadius: '20px',
-          border: `1.5px solid ${borderColor}`,
+          padding: '50px 40px',
+          borderRadius: '12px',
+          border: `1px solid ${borderColor}`,
           textAlign: 'center',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
         }}>
           <h2 style={{
-            fontSize: '36px',
-            fontWeight: '800',
+            fontSize: '32px',
+            fontWeight: '700',
             color: textColor,
-            marginBottom: '24px',
-            letterSpacing: '-1px'
+            marginBottom: '16px',
+            letterSpacing: '-0.5px'
           }}>
             Size uygun paket hangisi?
           </h2>
           <p style={{
-            fontSize: '17px',
+            fontSize: '16px',
             color: subtextColor,
-            marginBottom: '40px',
+            marginBottom: '32px',
             maxWidth: '600px',
-            margin: '0 auto 40px auto',
-            lineHeight: '1.7'
+            margin: '0 auto 32px auto',
+            lineHeight: '1.6'
           }}>
             Paketler arasında karşılaştırma yapmak veya daha fazla bilgi almak için bizimle iletişime geçebilirsiniz.
           </p>
           <div style={{
             display: 'flex',
-            gap: '16px',
+            gap: '12px',
             justifyContent: 'center',
             flexWrap: 'wrap'
           }}>
             <button
               onClick={() => setShowComparison(!showComparison)}
               style={{
-                padding: '16px 36px',
-                fontSize: '16px',
-                fontWeight: '700',
-                backgroundColor: accentColor,
-                color: '#ffffff',
+                padding: '14px 32px',
+                fontSize: '15px',
+                fontWeight: '600',
+                backgroundColor: textColor,
+                color: bgColor,
                 border: 'none',
-                borderRadius: '12px',
+                borderRadius: '8px',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: `0 4px 15px ${accentColor}40`,
-                letterSpacing: '-0.3px'
+                transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-3px)';
-                e.target.style.boxShadow = `0 8px 25px ${accentColor}60`;
+                e.target.style.opacity = '0.9';
               }}
               onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = `0 4px 15px ${accentColor}40`;
+                e.target.style.opacity = '1';
               }}
             >
-              📊 Paketleri Karşılaştır
+              Paketleri Karşılaştır
             </button>
             <button
               onClick={() => navigate('/contact')}
               style={{
-                padding: '16px 36px',
-                fontSize: '16px',
-                fontWeight: '700',
+                padding: '14px 32px',
+                fontSize: '15px',
+                fontWeight: '600',
                 backgroundColor: 'transparent',
-                color: accentColor,
-                border: `2px solid ${accentColor}`,
-                borderRadius: '12px',
+                color: textColor,
+                border: `1.5px solid ${borderColor}`,
+                borderRadius: '8px',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                letterSpacing: '-0.3px'
+                transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.target.style.backgroundColor = accentColor;
-                e.target.style.color = '#ffffff';
-                e.target.style.transform = 'translateY(-3px)';
+                e.target.style.backgroundColor = themeName === 'light' ? '#f8f9fa' : themeName === 'dark' ? '#334155' : '#2a2a2a';
               }}
               onMouseLeave={(e) => {
                 e.target.style.backgroundColor = 'transparent';
-                e.target.style.color = accentColor;
-                e.target.style.transform = 'translateY(0)';
               }}
             >
-              💬 Bize Sorun
+              Bize Sorun
             </button>
           </div>
         </div>
 
-        {/* Karşılaştırma Tablosu (Toggle ile açılır) */}
+        {/* Karşılaştırma Tablosu */}
         {showComparison && (
           <div style={{
-            marginTop: '40px',
+            marginTop: '32px',
             backgroundColor: cardBg,
             padding: '40px',
-            borderRadius: '20px',
-            border: `1.5px solid ${borderColor}`,
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
-            animation: 'slideDown 0.4s ease'
+            borderRadius: '12px',
+            border: `1px solid ${borderColor}`,
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+            animation: 'slideDown 0.3s ease'
           }}>
             <h3 style={{
-              fontSize: '28px',
+              fontSize: '24px',
               fontWeight: '700',
               color: textColor,
-              marginBottom: '32px',
+              marginBottom: '24px',
               textAlign: 'center'
             }}>
-              📊 Detaylı Paket Karşılaştırması
+              Detaylı Karşılaştırma
             </h3>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
-                  <tr style={{ backgroundColor: themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#0f172a' : '#0a0a0a' }}>
-                    <th style={{ padding: '16px', textAlign: 'left', color: textColor, fontWeight: '700', borderBottom: `2px solid ${borderColor}` }}>Özellik</th>
+                  <tr style={{ borderBottom: `2px solid ${borderColor}` }}>
+                    <th style={{ padding: '12px', textAlign: 'left', color: textColor, fontWeight: '600' }}>Özellik</th>
                     {packages.map(pkg => (
-                      <th key={pkg.id} style={{ padding: '16px', textAlign: 'center', color: textColor, fontWeight: '700', borderBottom: `2px solid ${borderColor}` }}>
+                      <th key={pkg.id} style={{ padding: '12px', textAlign: 'center', color: textColor, fontWeight: '600' }}>
                         {pkg.name}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {['LMM Erişimi', 'Analiz Okuma', 'Analiz Üretme', 'Gelişmiş Raporlar', 'Özel Destek'].map((feature, idx) => (
+                  {packages[0].features.map((_, idx) => (
                     <tr key={idx} style={{ borderBottom: `1px solid ${borderColor}` }}>
-                      <td style={{ padding: '16px', color: textColor, fontWeight: '600' }}>{feature}</td>
+                      <td style={{ padding: '12px', color: textColor }}>{packages[0].features[idx].text}</td>
                       {packages.map(pkg => (
-                        <td key={pkg.id} style={{ padding: '16px', textAlign: 'center' }}>
-                          {Math.random() > 0.3 ? (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={successColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <td key={pkg.id} style={{ padding: '12px', textAlign: 'center' }}>
+                          {pkg.features[idx]?.included ? (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={successColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                           ) : (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={errorColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={subtextColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <line x1="18" y1="6" x2="6" y2="18"></line>
                               <line x1="6" y1="6" x2="18" y2="18"></line>
                             </svg>
@@ -541,7 +591,7 @@ const Packages = () => {
       {/* CSS Animasyonu */}
       <style>{`
         @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-20px); }
+          from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
