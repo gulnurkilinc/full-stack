@@ -4,7 +4,7 @@ const blogSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, "Blog başlığı gereklidir"],
+      required: [true, "Analiz başlığı gereklidir"],
       trim: true,
       maxlength: [200, "Başlık en fazla 200 karakter olabilir"]
     },
@@ -16,7 +16,7 @@ const blogSchema = new mongoose.Schema(
     },
     content: {
       type: String,
-      required: [true, "Blog içeriği gereklidir"]
+      required: [true, "Analiz içeriği gereklidir"]
     },
     excerpt: {
       type: String,
@@ -35,17 +35,17 @@ const blogSchema = new mongoose.Schema(
       required: [true, "Kategori gereklidir"],
       enum: {
         values: [
-          "Teknoloji", 
-          "Sağlık", 
-          "Dünya", 
-          "Bilim", 
-          "Ekonomi", 
-          "Eğitim", 
-          "Spor", 
-          "Kültür", 
-          "Sanat",
-          "Seyahat",
-          "Yemek"
+          "Teknoloji Analizi",
+          "Sağlık Araştırmaları", 
+          "Küresel Trendler", 
+          "Bilimsel İncelemeler", 
+          "Ekonomi ve Finans",
+          "Eğitim ve Gelişim", 
+          "Spor Analizleri", 
+          "Kültür ve Toplum", 
+          "Sanat ve Tasarım",
+          "Seyahat ve Keşif",
+          "Gastronomi Araştırmaları"
         ],
         message: '{VALUE} geçerli bir kategori değil'
       },
@@ -100,7 +100,7 @@ blogSchema.virtual('readingTime').get(function() {
   return Math.ceil(words / 200);
 });
 
-// Static method: Kategoriye göre blog sayısı
+// Static method: Kategoriye göre analiz sayısı
 blogSchema.statics.countByCategory = async function() {
   return await this.aggregate([
     { $match: { status: 'published' } },
