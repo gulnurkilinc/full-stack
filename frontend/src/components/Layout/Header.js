@@ -235,9 +235,10 @@ const Header = () => {
                 fontWeight: '500',
                 fontSize: '15px',
                 position: 'relative',
-                paddingBottom: '2px',
                 letterSpacing: '-0.2px',
-                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
+                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none',
+                textDecoration: 'none',
+                display: 'inline-block'
               }}
               onMouseEnter={(e) => {
                 e.target.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
@@ -250,6 +251,72 @@ const Header = () => {
             >
               Ana Sayfa
             </Link>
+
+            {/* AnalyticaAI Logo - Tıklanabilir ve Göz Çarpıcı */}
+            <Link 
+              to="/analytica-ai"
+              style={{
+                fontSize: '18px',
+                fontWeight: '700',
+                background: isTransparent 
+                  ? 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)'
+                  : themeName === 'light'
+                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                    : themeName === 'dark'
+                      ? 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)'
+                      : 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                letterSpacing: '-0.5px',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                textDecoration: 'none',
+                position: 'relative',
+                display: 'inline-block',
+                transition: 'all 0.3s ease',
+                padding: '8px 16px',
+                borderRadius: '10px',
+                backgroundColor: isTransparent 
+                  ? 'rgba(59, 130, 246, 0.1)' 
+                  : themeName === 'light'
+                    ? 'rgba(59, 130, 246, 0.08)'
+                    : 'rgba(96, 165, 250, 0.1)',
+                border: '1.5px solid',
+                borderColor: isTransparent
+                  ? 'rgba(59, 130, 246, 0.3)'
+                  : themeName === 'light'
+                    ? 'rgba(59, 130, 246, 0.2)'
+                    : 'rgba(96, 165, 250, 0.25)',
+                boxShadow: isTransparent
+                  ? '0 0 20px rgba(59, 130, 246, 0.15), 0 0 40px rgba(59, 130, 246, 0.1)'
+                  : '0 2px 8px rgba(59, 130, 246, 0.15)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px) scale(1.05)';
+                e.target.style.boxShadow = isTransparent
+                  ? '0 0 30px rgba(59, 130, 246, 0.3), 0 0 60px rgba(59, 130, 246, 0.2)'
+                  : '0 4px 16px rgba(59, 130, 246, 0.3)';
+                e.target.style.backgroundColor = isTransparent
+                  ? 'rgba(59, 130, 246, 0.15)'
+                  : themeName === 'light'
+                    ? 'rgba(59, 130, 246, 0.12)'
+                    : 'rgba(96, 165, 250, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0) scale(1)';
+                e.target.style.boxShadow = isTransparent
+                  ? '0 0 20px rgba(59, 130, 246, 0.15), 0 0 40px rgba(59, 130, 246, 0.1)'
+                  : '0 2px 8px rgba(59, 130, 246, 0.15)';
+                e.target.style.backgroundColor = isTransparent
+                  ? 'rgba(59, 130, 246, 0.1)'
+                  : themeName === 'light'
+                    ? 'rgba(59, 130, 246, 0.08)'
+                    : 'rgba(96, 165, 250, 0.1)';
+              }}
+            >
+              AnalyticaAI
+            </Link>
+
             <Link 
               to="/blogs" 
               style={{ 
@@ -258,9 +325,10 @@ const Header = () => {
                 fontWeight: '500',
                 fontSize: '15px',
                 position: 'relative',
-                paddingBottom: '2px',
                 letterSpacing: '-0.2px',
-                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
+                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none',
+                textDecoration: 'none',
+                display: 'inline-block'
               }}
               onMouseEnter={(e) => {
                 e.target.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
@@ -276,13 +344,12 @@ const Header = () => {
             
             {/* Bölümler Dropdown */}
             <div 
-              style={{ position: 'relative' }}
+              style={{ position: 'relative', display: 'inline-block' }}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
               <span style={{ 
                 cursor: 'pointer',
-                padding: '10px 0',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
@@ -294,12 +361,12 @@ const Header = () => {
                 textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
-                e.target.style.fontWeight = '600';
+                e.currentTarget.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
+                e.currentTarget.style.fontWeight = '600';
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor;
-                e.target.style.fontWeight = '500';
+                e.currentTarget.style.color = isTransparent ? 'rgba(255, 255, 255, 0.9)' : scrolledTextColor;
+                e.currentTarget.style.fontWeight = '500';
               }}
               >
                 Parlamento
@@ -361,7 +428,8 @@ const Header = () => {
                         fontWeight: '500',
                         fontSize: '14.5px',
                         borderRadius: '8px',
-                        margin: '2px 0'
+                        margin: '2px 0',
+                        textDecoration: 'none'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = dropdownItemHoverBg;
@@ -390,9 +458,10 @@ const Header = () => {
                 fontWeight: '500',
                 fontSize: '15px',
                 position: 'relative',
-                paddingBottom: '2px',
                 letterSpacing: '-0.2px',
-                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
+                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none',
+                textDecoration: 'none',
+                display: 'inline-block'
               }}
               onMouseEnter={(e) => {
                 e.target.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
@@ -414,9 +483,10 @@ const Header = () => {
                 fontWeight: '500',
                 fontSize: '15px',
                 position: 'relative',
-                paddingBottom: '2px',
                 letterSpacing: '-0.2px',
-                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
+                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none',
+                textDecoration: 'none',
+                display: 'inline-block'
               }}
               onMouseEnter={(e) => {
                 e.target.style.color = isTransparent ? '#ffffff' : scrolledTextHover;
@@ -961,21 +1031,6 @@ const Header = () => {
           from { opacity: 0; transform: translateY(-6px); }
           to { opacity: 1; transform: translateY(0); }
         }
-
-        nav a:not(button a) { position: relative; }
-
-        nav a:not(button a)::after {
-          content: '';
-          position: absolute;
-          bottom: -2px;
-          left: 0;
-          width: 0;
-          height: 2px;
-          background: linear-gradient(90deg, #1a1a1a, #2d3748);
-          transition: width 0.3s ease;
-        }
-
-        nav a:not(button a):hover::after { width: 100%; }
       `}</style>
     </header>
   );

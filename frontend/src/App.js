@@ -10,7 +10,8 @@ import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import BlogDetail from './pages/BlogDetail/BlogDetail';
 import TBMM from './pages/Parlamento/TBMM';
-import KanunTeklifiDetay from './pages/Parlamento/KanunTeklifiDetay'; // YENİ EKLENEN
+import KanunTeklifiDetay from './pages/Parlamento/KanunTeklifiDetay';
+import ScrollToTop from './components/ScrollToTop';
 import Packages from './pages/Packages/Packages';
 import AdminRoute from './components/Admin/AdminRoute';
 import Dashboard from './pages/Admin/Dashboard';
@@ -23,6 +24,7 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
+        <ScrollToTop /> {/* ✅ BURAYA EKLENDİ - Router içinde ilk sırada */}
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           
           <Routes>
@@ -74,7 +76,7 @@ function App() {
               </>
             } />
             
-            {/* Kanun Teklifi Detay Sayfası - YENİ EKLENEN */}
+            {/* Kanun Teklifi Detay Sayfası */}
             <Route path="/category/tbmm/kanun-teklifi/:id" element={
               <>
                 <Header />
@@ -96,18 +98,21 @@ function App() {
               </>
             } />
             
+            {/* Paketler */}
+            <Route path="/packages" element={
+              <>
+                <Header />
+                <main style={{ flex: 1 }}>
+                  <Packages />
+                </main>
+                <Footer />
+              </>
+            } />
+            
             {/* ============================================ */}
             {/* AUTH ROUTES - Header/Footer YOK */}
             {/* ============================================ */}
-            <Route path="/packages" element={
-  <>
-    <Header />
-    <main style={{ flex: 1 }}>
-      <Packages />
-    </main>
-    <Footer />
-  </>
-} />
+            
             {/* Login */}
             <Route path="/login" element={<Login />} />
             

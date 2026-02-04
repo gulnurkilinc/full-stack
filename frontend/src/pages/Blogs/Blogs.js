@@ -180,12 +180,12 @@ const Blogs = () => {
     pageContainer: {
       minHeight: '100vh',
       backgroundColor: pageBg,
-      paddingTop: '80px',
+      paddingTop: '70px',
       transition: 'background-color 0.3s ease'
     },
     heroSection: {
       background: heroBg,
-      padding: '80px 0',
+      padding: '40px 0 30px 0',
       textAlign: 'center',
       color: textPrimary,
       transition: 'background 0.3s ease'
@@ -196,15 +196,15 @@ const Blogs = () => {
       padding: '0 20px'
     },
     heroTitle: {
-      fontSize: '48px',
+      fontSize: '36px',
       fontWeight: '700',
-      marginBottom: '20px',
+      marginBottom: '12px',
       lineHeight: '1.2',
       color: textPrimary,
       transition: 'color 0.3s ease'
     },
     heroSubtitle: {
-      fontSize: '18px',
+      fontSize: '16px',
       opacity: '0.85',
       lineHeight: '1.6',
       color: textSecondary,
@@ -213,7 +213,7 @@ const Blogs = () => {
     container: {
       maxWidth: '1200px',
       margin: '0 auto',
-      padding: '40px 20px'
+      padding: '20px 20px 40px 20px'
     },
     resultsInfo: {
       marginBottom: '30px',
