@@ -252,22 +252,19 @@ const Header = () => {
               Ana Sayfa
             </Link>
 
-            {/* AnalyticaAI Logo - Tıklanabilir ve Göz Çarpıcı */}
+            {/* AnalyticaAI Logo - Scroll durumuna göre uyumlu */}
             <Link 
               to="/analytica-ai"
               style={{
                 fontSize: '18px',
                 fontWeight: '700',
-                background: isTransparent 
-                  ? 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)'
+                color: isTransparent 
+                  ? '#60a5fa'  // Ana sayfada üstteyken mavi solid renk
                   : themeName === 'light'
-                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                    ? '#3b82f6'  // Light temada mavi
                     : themeName === 'dark'
-                      ? 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)'
-                      : 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                      ? '#60a5fa'  // Dark temada açık mavi
+                      : '#60a5fa',  // Black temada açık mavi
                 letterSpacing: '-0.5px',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
                 textDecoration: 'none',
@@ -276,42 +273,38 @@ const Header = () => {
                 transition: 'all 0.3s ease',
                 padding: '8px 16px',
                 borderRadius: '10px',
-                backgroundColor: isTransparent 
-                  ? 'rgba(59, 130, 246, 0.1)' 
-                  : themeName === 'light'
-                    ? 'rgba(59, 130, 246, 0.08)'
-                    : 'rgba(96, 165, 250, 0.1)',
                 border: '1.5px solid',
                 borderColor: isTransparent
-                  ? 'rgba(59, 130, 246, 0.3)'
+                  ? 'rgba(96, 165, 250, 0.4)'
                   : themeName === 'light'
-                    ? 'rgba(59, 130, 246, 0.2)'
-                    : 'rgba(96, 165, 250, 0.25)',
+                    ? 'rgba(59, 130, 246, 0.3)'
+                    : 'rgba(96, 165, 250, 0.3)',
                 boxShadow: isTransparent
-                  ? '0 0 20px rgba(59, 130, 246, 0.15), 0 0 40px rgba(59, 130, 246, 0.1)'
-                  : '0 2px 8px rgba(59, 130, 246, 0.15)'
+                  ? '0 0 20px rgba(96, 165, 250, 0.2)'
+                  : '0 2px 8px rgba(59, 130, 246, 0.15)',
+                textShadow: isTransparent ? '0 1px 3px rgba(0, 0, 0, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-2px) scale(1.05)';
-                e.target.style.boxShadow = isTransparent
-                  ? '0 0 30px rgba(59, 130, 246, 0.3), 0 0 60px rgba(59, 130, 246, 0.2)'
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
+                e.currentTarget.style.boxShadow = isTransparent
+                  ? '0 0 30px rgba(96, 165, 250, 0.4)'
                   : '0 4px 16px rgba(59, 130, 246, 0.3)';
-                e.target.style.backgroundColor = isTransparent
-                  ? 'rgba(59, 130, 246, 0.15)'
+                e.currentTarget.style.borderColor = isTransparent
+                  ? 'rgba(96, 165, 250, 0.6)'
                   : themeName === 'light'
-                    ? 'rgba(59, 130, 246, 0.12)'
-                    : 'rgba(96, 165, 250, 0.15)';
+                    ? 'rgba(59, 130, 246, 0.5)'
+                    : 'rgba(96, 165, 250, 0.5)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0) scale(1)';
-                e.target.style.boxShadow = isTransparent
-                  ? '0 0 20px rgba(59, 130, 246, 0.15), 0 0 40px rgba(59, 130, 246, 0.1)'
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = isTransparent
+                  ? '0 0 20px rgba(96, 165, 250, 0.2)'
                   : '0 2px 8px rgba(59, 130, 246, 0.15)';
-                e.target.style.backgroundColor = isTransparent
-                  ? 'rgba(59, 130, 246, 0.1)'
+                e.currentTarget.style.borderColor = isTransparent
+                  ? 'rgba(96, 165, 250, 0.4)'
                   : themeName === 'light'
-                    ? 'rgba(59, 130, 246, 0.08)'
-                    : 'rgba(96, 165, 250, 0.1)';
+                    ? 'rgba(59, 130, 246, 0.3)'
+                    : 'rgba(96, 165, 250, 0.3)';
               }}
             >
               AnalyticaAI
