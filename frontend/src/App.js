@@ -13,6 +13,7 @@ import TBMM from './pages/Parlamento/TBMM';
 import KanunTeklifiDetay from './pages/Parlamento/KanunTeklifiDetay';
 import ScrollToTop from './components/ScrollToTop';
 import Packages from './pages/Packages/Packages';
+import AnalyticaAI from './pages/AnalyticaAI/AnalyticaAI';
 import AdminRoute from './components/Admin/AdminRoute';
 import Dashboard from './pages/Admin/Dashboard';
 import BlogCreate from './pages/Admin/BlogCreate';
@@ -60,6 +61,17 @@ function App() {
                 <Header />
                 <main style={{ flex: 1 }}>
                   <BlogDetail />
+                </main>
+                <Footer />
+              </>
+            } />
+
+            {/* AnalyticaAI Sayfası - YENİ EKLENEN */}
+            <Route path="/analytica-ai" element={
+              <>
+                <Header />
+                <main style={{ flex: 1 }}>
+                  <AnalyticaAI />
                 </main>
                 <Footer />
               </>
