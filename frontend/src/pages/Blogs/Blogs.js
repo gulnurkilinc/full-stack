@@ -343,17 +343,18 @@ const Blogs = () => {
       transition: 'transform 0.3s ease'
     },
     categoryBadge: {
-      position: 'absolute',
-      top: '15px',
-      right: '15px',
-      backgroundColor: accentColor,
-      color: 'white',
-      padding: '6px 14px',
-      borderRadius: '6px',
-      fontSize: '12px',
-      fontWeight: '600',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-    },
+  position: 'absolute',
+  top: '15px',
+  right: '15px',
+  background: 'linear-gradient(135deg, #1f2937 0%, #111827 45%, #0a0e18 100%)',  // ← Buton ile aynı gradient
+  color: 'white',
+  padding: '6px 14px',
+  borderRadius: '6px',
+  fontSize: '12px',
+  fontWeight: '600',
+  boxShadow: '0 4px 12px rgba(17, 24, 39, 0.4), 0 1px 3px rgba(0, 0, 0, 0.08)',  // ← Geliştirilmiş gölge
+  border: '1px solid rgba(255, 255, 255, 0.1)'  // ← Hafif border eklendi
+},
     cardContent: {
       padding: '24px',
       display: 'flex',
