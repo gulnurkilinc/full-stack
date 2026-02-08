@@ -88,7 +88,7 @@ const Contact = () => {
 
   const headingColor = themeName === 'light' ? '#1a1a1a' : themeName === 'dark' ? '#f1f5f9' : '#e5e5e5';
   const textColor = themeName === 'light' ? '#4a5568' : themeName === 'dark' ? '#cbd5e0' : '#a3a3a3';
-  const labelColor = themeName === 'light' ? '#2d3748' : themeName === 'dark' ? '#e2e8f0' : '#d4d4d4';
+  const labelColor = themeName === 'light' ? '#2d3748' : '#ffffff';
   
   const inputBg = themeName === 'light' ? 'white' : themeName === 'dark' ? '#1e293b' : '#1a1a1a';
   const inputBorder = themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#334155' : '#2a2a2a';
@@ -188,6 +188,27 @@ const Contact = () => {
     }
   ];
 
+  // Browser history yönetimi
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (selectedCategory && !submitSuccess) {
+        event.preventDefault();
+        handleBackToCategories();
+      }
+    };
+
+    // Kategori seçildiğinde history'ye state ekle
+    if (selectedCategory && !submitSuccess) {
+      window.history.pushState({ categorySelected: true }, '');
+    }
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [selectedCategory, submitSuccess]);
+
   const handleCategorySelect = (categoryId) => {
     setSelectedCategory(categoryId);
     // Form data'yı sıfırla
@@ -223,11 +244,49 @@ const Contact = () => {
     setSubmitSuccess(false);
   };
 
+  // Kategori seçimine geri dönme fonksiyonu
+  const handleBackToCategories = () => {
+    setSelectedCategory(null);
+    setSubmitSuccess(false);
+    // Formu da sıfırla
+    setFormData({
+      name: '',
+      email: '',
+      message: '',
+      company: '',
+      position: '',
+      researchTypes: [],
+      researchTopic: '',
+      targetAudience: '',
+      timeRange: '',
+      budgetRange: '',
+      collaborationType: '',
+      collaborationDescription: '',
+      website: '',
+      university: '',
+      department: '',
+      studyType: '',
+      expectation: '',
+      consultingArea: '',
+      duration: '',
+      mediaOrganization: '',
+      requestType: '',
+      publicationDate: '',
+      topic: '',
+      productPackage: '',
+      issueDescription: '',
+      kvkkConsent: false
+    });
+    setUploadedFile(null);
+  };
+
   // ESC tuşu ile geri dönme
   useEffect(() => {
     const handleEscKey = (e) => {
       if (e.key === 'Escape' && selectedCategory && !submitSuccess) {
-        setSelectedCategory(null);
+        handleBackToCategories();
+        // History'den bir adım geri git
+        window.history.back();
       }
     };
 
@@ -339,10 +398,11 @@ const Contact = () => {
         });
         setUploadedFile(null);
         
-        // 3 saniye sonra kategori seçimine geri dön
+        // 5 saniye sonra kategori seçimine geri dön
         setTimeout(() => {
-          setSubmitSuccess(false);
-          setSelectedCategory(null);
+          handleBackToCategories();
+          // History'den bir adım geri git
+          window.history.back();
         }, 5000);
       } else {
         alert('❌ Hata: ' + (data.message || 'Mesaj gönderilemedi'));
@@ -478,7 +538,7 @@ const Contact = () => {
                       padding: '28px 24px',
                       borderRadius: '12px',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                      border: `1px solid ${cardBorder}`,
+                      border: cardBorder,
                       cursor: 'pointer',
                       transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                       textAlign: 'left'
@@ -491,7 +551,7 @@ const Contact = () => {
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0)';
                       e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
-                      e.currentTarget.style.borderColor = cardBorder;
+                      e.currentTarget.style.borderColor = cardBorder.split(' ')[2];
                     }}
                   >
                     <div style={{ 
@@ -536,7 +596,7 @@ const Contact = () => {
               padding: '60px 40px',
               borderRadius: '16px',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
-              border: `1px solid ${cardBorder}`,
+              border: cardBorder,
               textAlign: 'center'
             }}>
               <div style={{ 
@@ -569,8 +629,8 @@ const Contact = () => {
               </p>
               <button
                 onClick={() => {
-                  setSubmitSuccess(false);
-                  setSelectedCategory(null);
+                  handleBackToCategories();
+                  window.history.back();
                 }}
                 className="emerald-btn"
                 style={{ padding: '14px 32px', fontSize: '15px' }}
@@ -588,7 +648,10 @@ const Contact = () => {
             }}>
               {/* Geri butonu */}
               <button
-                onClick={() => setSelectedCategory(null)}
+                onClick={() => {
+                  handleBackToCategories();
+                  window.history.back();
+                }}
                 style={{
                   marginBottom: '24px',
                   padding: '10px 18px',
@@ -661,7 +724,7 @@ const Contact = () => {
 
                 <form onSubmit={handleSubmit}>
                   {/* ORTAK ALANLAR - Ad Soyad, Email */}
-                  <FormField label="Ad Soyad *" required>
+                  <FormField label="Ad Soyad *" required labelColor={labelColor}>
                     <input
                       type="text"
                       name="name"
@@ -682,7 +745,7 @@ const Contact = () => {
                     />
                   </FormField>
 
-                  <FormField label="E-posta *" required>
+                  <FormField label="E-posta *" required labelColor={labelColor}>
                     <input
                       type="email"
                       name="email"
@@ -707,7 +770,7 @@ const Contact = () => {
                   {renderCategoryFields(selectedCategory, formData, handleChange, handleMultiSelect, handleFileUpload, uploadedFile, isSubmitting, getInputStyle, inputFocusBorder, inputFocusShadow, inputBorder, textColor, labelColor)}
 
                   {/* ORTAK MESAJ ALANI */}
-                  <FormField label="Mesajınız *" required>
+                  <FormField label="Mesajınız *" required labelColor={labelColor}>
                     <textarea
                       name="message"
                       value={formData.message}
@@ -819,7 +882,7 @@ const Contact = () => {
               backdropFilter: 'blur(10px)',
               padding: '24px 32px',
               borderRadius: '12px',
-              border: `1px solid ${cardBorder}`,
+              border: cardBorder,
               marginBottom: '24px',
               display: 'flex',
               alignItems: 'center',
@@ -871,7 +934,7 @@ const Contact = () => {
                     width: '48px',
                     height: '48px',
                     backgroundColor: cardBg,
-                    border: `1px solid ${cardBorder}`,
+                    border: cardBorder,
                     color: textColor,
                     display: 'flex',
                     alignItems: 'center',
@@ -886,7 +949,7 @@ const Contact = () => {
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.borderColor = cardBorder;
+                    e.currentTarget.style.borderColor = cardBorder.split(' ')[2];
                     e.currentTarget.style.color = textColor;
                   }}
                   title="Instagram"
@@ -916,7 +979,7 @@ const Contact = () => {
                     width: '48px',
                     height: '48px',
                     backgroundColor: cardBg,
-                    border: `1px solid ${cardBorder}`,
+                    border: cardBorder,
                     color: textColor,
                     display: 'flex',
                     alignItems: 'center',
@@ -933,7 +996,7 @@ const Contact = () => {
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.borderColor = cardBorder;
+                    e.currentTarget.style.borderColor = cardBorder.split(' ')[2];
                     e.currentTarget.style.color = textColor;
                   }}
                   title="X (Twitter)"
@@ -1026,13 +1089,14 @@ const Contact = () => {
 };
 
 // Helper component - Form Field
-const FormField = ({ label, required, children }) => (
+const FormField = ({ label, required, children, labelColor }) => (
   <div style={{ marginBottom: '20px' }}>
     <label style={{
       display: 'block',
       marginBottom: '8px',
       fontWeight: '600',
-      fontSize: '14px'
+      fontSize: '14px',
+      color: labelColor
     }}>
       {label}
     </label>
@@ -1040,14 +1104,14 @@ const FormField = ({ label, required, children }) => (
   </div>
 );
 
-// Kategori özel alanları render eden fonksiyon
+// Kategori özel alanları render eden fonksiyon (önceki gibi aynı kalacak - kod kısalığı için buraya eklemedim)
 const renderCategoryFields = (category, formData, handleChange, handleMultiSelect, handleFileUpload, uploadedFile, isSubmitting, getInputStyle, inputFocusBorder, inputFocusShadow, inputBorder, textColor, labelColor) => {
   
   // 1️⃣ ARAŞTIRMA / ANALİZ TALEBİ
   if (category === 'research') {
     return (
       <>
-        <FormField label="Kurum / Şirket Adı">
+        <FormField label="Kurum / Şirket Adı" labelColor={labelColor}>
           <input
             type="text"
             name="company"
@@ -1067,7 +1131,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Araştırma Türü (Çoklu Seçim Yapabilirsiniz)">
+        <FormField label="Araştırma Türü (Çoklu Seçim Yapabilirsiniz)" labelColor={labelColor}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {['Kamuoyu araştırması', 'Medya analizi', 'Sosyal medya analizi', 'Söylem / İçerik analizi', 'Özel çalışma'].map(type => (
               <label key={type} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: textColor }}>
@@ -1084,7 +1148,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           </div>
         </FormField>
 
-        <FormField label="Araştırma Konusu *" required>
+        <FormField label="Araştırma Konusu *" required labelColor={labelColor}>
           <textarea
             name="researchTopic"
             value={formData.researchTopic}
@@ -1105,7 +1169,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Hedef Kitle">
+        <FormField label="Hedef Kitle" labelColor={labelColor}>
           <input
             type="text"
             name="targetAudience"
@@ -1125,7 +1189,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Zaman Aralığı">
+        <FormField label="Zaman Aralığı" labelColor={labelColor}>
           <input
             type="text"
             name="timeRange"
@@ -1145,7 +1209,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Bütçe Aralığı">
+        <FormField label="Bütçe Aralığı" labelColor={labelColor}>
           <select
             name="budgetRange"
             value={formData.budgetRange}
@@ -1161,7 +1225,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           </select>
         </FormField>
 
-        <FormField label="Ek Dosya (Brief, Örnek Rapor vb.)">
+        <FormField label="Ek Dosya (Brief, Örnek Rapor vb.)" labelColor={labelColor}>
           <input
             type="file"
             onChange={handleFileUpload}
@@ -1179,7 +1243,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
   if (category === 'corporate') {
     return (
       <>
-        <FormField label="Kurum Adı *" required>
+        <FormField label="Kurum Adı *" required labelColor={labelColor}>
           <input
             type="text"
             name="company"
@@ -1200,7 +1264,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Pozisyonunuz">
+        <FormField label="Pozisyonunuz" labelColor={labelColor}>
           <input
             type="text"
             name="position"
@@ -1220,7 +1284,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="İş Birliği Türü">
+        <FormField label="İş Birliği Türü" labelColor={labelColor}>
           <select
             name="collaborationType"
             value={formData.collaborationType}
@@ -1236,7 +1300,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           </select>
         </FormField>
 
-        <FormField label="İş Birliği Açıklaması *" required>
+        <FormField label="İş Birliği Açıklaması *" required labelColor={labelColor}>
           <textarea
             name="collaborationDescription"
             value={formData.collaborationDescription}
@@ -1257,7 +1321,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Kurum Web Sitesi / LinkedIn">
+        <FormField label="Kurum Web Sitesi / LinkedIn" labelColor={labelColor}>
           <input
             type="url"
             name="website"
@@ -1284,7 +1348,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
   if (category === 'academic') {
     return (
       <>
-        <FormField label="Üniversite / Enstitü *" required>
+        <FormField label="Üniversite / Enstitü *" required labelColor={labelColor}>
           <input
             type="text"
             name="university"
@@ -1305,7 +1369,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Bölüm">
+        <FormField label="Bölüm" labelColor={labelColor}>
           <input
             type="text"
             name="department"
@@ -1325,7 +1389,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Çalışma Türü">
+        <FormField label="Çalışma Türü" labelColor={labelColor}>
           <select
             name="studyType"
             value={formData.studyType}
@@ -1341,7 +1405,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           </select>
         </FormField>
 
-        <FormField label="Araştırma Konusu *" required>
+        <FormField label="Araştırma Konusu *" required labelColor={labelColor}>
           <textarea
             name="researchTopic"
             value={formData.researchTopic}
@@ -1362,7 +1426,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="ANALYTICA'dan Beklentiniz">
+        <FormField label="ANALYTICA'dan Beklentiniz" labelColor={labelColor}>
           <select
             name="expectation"
             value={formData.expectation}
@@ -1377,7 +1441,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           </select>
         </FormField>
 
-        <FormField label="Dosya (Taslak, Proposal vb.)">
+        <FormField label="Dosya (Taslak, Proposal vb.)" labelColor={labelColor}>
           <input
             type="file"
             onChange={handleFileUpload}
@@ -1395,7 +1459,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
   if (category === 'consulting') {
     return (
       <>
-        <FormField label="Kurum">
+        <FormField label="Kurum" labelColor={labelColor}>
           <input
             type="text"
             name="company"
@@ -1415,7 +1479,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Danışmanlık Alanı">
+        <FormField label="Danışmanlık Alanı" labelColor={labelColor}>
           <select
             name="consultingArea"
             value={formData.consultingArea}
@@ -1431,7 +1495,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           </select>
         </FormField>
 
-        <FormField label="Süre">
+        <FormField label="Süre" labelColor={labelColor}>
           <select
             name="duration"
             value={formData.duration}
@@ -1453,7 +1517,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
   if (category === 'media') {
     return (
       <>
-        <FormField label="Medya Kuruluşu *" required>
+        <FormField label="Medya Kuruluşu *" required labelColor={labelColor}>
           <input
             type="text"
             name="mediaOrganization"
@@ -1474,7 +1538,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Pozisyon">
+        <FormField label="Pozisyon" labelColor={labelColor}>
           <input
             type="text"
             name="position"
@@ -1494,7 +1558,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Talep Türü">
+        <FormField label="Talep Türü" labelColor={labelColor}>
           <select
             name="requestType"
             value={formData.requestType}
@@ -1509,7 +1573,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           </select>
         </FormField>
 
-        <FormField label="Yayın Tarihi (varsa)">
+        <FormField label="Yayın Tarihi (varsa)" labelColor={labelColor}>
           <input
             type="date"
             name="publicationDate"
@@ -1520,7 +1584,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Konu *" required>
+        <FormField label="Konu *" required labelColor={labelColor}>
           <textarea
             name="topic"
             value={formData.topic}
@@ -1548,7 +1612,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
   if (category === 'product') {
     return (
       <>
-        <FormField label="Konu">
+        <FormField label="Konu" labelColor={labelColor}>
           <select
             name="topic"
             value={formData.topic}
@@ -1564,7 +1628,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           </select>
         </FormField>
 
-        <FormField label="Kullandığınız Paket (varsa)">
+        <FormField label="Kullandığınız Paket (varsa)" labelColor={labelColor}>
           <input
             type="text"
             name="productPackage"
@@ -1584,7 +1648,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Sorun / Talep Açıklaması *" required>
+        <FormField label="Sorun / Talep Açıklaması *" required labelColor={labelColor}>
           <textarea
             name="issueDescription"
             value={formData.issueDescription}
@@ -1605,7 +1669,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
           />
         </FormField>
 
-        <FormField label="Ekran Görüntüsü / Dosya">
+        <FormField label="Ekran Görüntüsü / Dosya" labelColor={labelColor}>
           <input
             type="file"
             onChange={handleFileUpload}
@@ -1620,7 +1684,7 @@ const renderCategoryFields = (category, formData, handleChange, handleMultiSelec
   }
 
   // 7️⃣ DİĞER - Basit form
-  return null; // "Diğer" için ek alan yok
+  return null;
 };
 
 export default Contact;
