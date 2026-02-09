@@ -369,6 +369,7 @@ app.get('/api/seed-blogs', async (req, res) => {
 const blogRoutes = require('./routes/blog.js');
 const userRoutes = require('./routes/user.js');
 const contactRoutes = require('./routes/contact.js');
+const kanunTeklifiRoutes = require('./routes/kanunTeklifi.js'); // YENİ
 
 // Import middlewares
 const { apiRateLimiter } = require('./middleware/rateLimiter');
@@ -380,6 +381,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 app.use('/api/blogs', apiRateLimiter);
 app.use('/api/login', apiRateLimiter);
 app.use('/api/register', apiRateLimiter);
+app.use('/api/kanun-teklifi', apiRateLimiter); // YENİ
 
 // ============================================
 // API ROUTES
@@ -387,6 +389,7 @@ app.use('/api/register', apiRateLimiter);
 app.use('/api', blogRoutes);
 app.use('/api', userRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api', kanunTeklifiRoutes); // YENİ: Kanun Teklifi Routes
 
 // ============================================
 // ANA SAYFA
@@ -402,7 +405,9 @@ app.get('/', (req, res) => {
       'Yeni analizler ekle': 'GET /api/seed-blogs',
       'Analizler': 'GET /api/blogs',
       'Login': 'POST /api/login',
-      'İletişim': 'POST /api/contact'
+      'İletişim': 'POST /api/contact',
+      'Kanun Teklifleri': 'GET /api/kanun-teklifleri', // YENİ
+      'Oy Kullan': 'POST /api/kanun-teklifi/:id/oy' // YENİ
     },
     status: 'running',
     environment: process.env.NODE_ENV || 'development'
@@ -432,11 +437,13 @@ const server = app.listen(PORT, () => {
   `);
   console.log('📋 Endpoints:');
   console.log('   - GET  /api/create-admin');
-  console.log('   - GET  /api/update-categories (YENİ)');
+  console.log('   - GET  /api/update-categories');
   console.log('   - GET  /api/seed-blogs');
   console.log('   - GET  /api/blogs');
   console.log('   - POST /api/login');
   console.log('   - POST /api/contact');
+  console.log('   - GET  /api/kanun-teklifleri (YENİ)');
+  console.log('   - POST /api/kanun-teklifi/:id/oy (YENİ)');
 });
 
 process.on('SIGTERM', () => {

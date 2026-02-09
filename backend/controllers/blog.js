@@ -1,4 +1,4 @@
-const Blog = require("../models/Blog.js");
+const Blog = require("../models/blog.js");
 const BlogFilter = require("../utils/blogFilter.js");
 
 // Tüm blog yazılarını getir (filtreleme, arama, sayfalama ile)
