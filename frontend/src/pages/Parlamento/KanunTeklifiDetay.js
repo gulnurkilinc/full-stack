@@ -1,78 +1,123 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import { kanunTeklifiAPI } from '../../services/kanunTeklifiAPI';
 
 const KanunTeklifiDetay = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const { theme } = useTheme();
+  
+  // State yönetimi
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [teklifDetay, setTeklifDetay] = useState(null);
+  const [partiOylari, setPartiOylari] = useState([]);
+  const [milletvekilleri, setMilletvekilleri] = useState([]);
+  const [toplumOylari, setToplumOylari] = useState({ kabul: 0, ret: 0, cekimser: 0 });
+  const [toplamToplumOyu, setToplamToplumOyu] = useState(0);
   
   const [hoveredSeat, setHoveredSeat] = useState(null);
   const [hoveredParty, setHoveredParty] = useState(null);
   const [userVote, setUserVote] = useState(null);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [votingLoading, setVotingLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('genel');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Sayfa yüklendiğinde verileri çek
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    fetchData();
+    checkVoteStatus();
+  }, [id]);
 
-  // Mock Data
-  const teklifDetay = {
-    id: 1,
-    title: 'Dijital Hizmet Vergisi Kanunu Teklifi',
-    teklifNo: '2026/142',
-    date: '2026-02-02',
-    status: 'KABUL EDİLDİ',
-    category: 'Vergi Mevzuatı',
-    description: 'Dijital platformların Türkiye\'de sağladıkları hizmetlerden elde ettikleri gelirlerin vergilendirilmesine ilişkin düzenleme. Bu kanun teklifi ile büyük teknoloji şirketlerinin yerel vergi yükümlülüklerinin netleştirilmesi ve dijital ekonominin vergilendirilmesine yönelik çerçevenin oluşturulması hedeflenmektedir.',
-    votingResults: {
-      kabul: 320,
-      ret: 180,
-      cekimser: 50,
-      katilmayan: 50
+  // Teklif verilerini çek
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await kanunTeklifiAPI.getProposalById(id);
+      
+      setTeklifDetay(data.teklif);
+      setPartiOylari(data.partiOylari || []);
+      setMilletvekilleri(data.mvOylari || []);
+      setToplumOylari(data.toplumOylari || { kabul: 0, ret: 0, cekimser: 0 });
+      setToplamToplumOyu(data.toplamToplumOyu || 0);
+      
+    } catch (err) {
+      console.error('Veri çekme hatası:', err);
+      setError(err.message || 'Veriler yüklenirken bir hata oluştu');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const parties = [
-    { code: 'AKP', name: 'AK Parti', color: '#F7941E', kabul: 180, ret: 10, cekimser: 5, toplam: 195 },
-    { code: 'CHP', name: 'CHP', color: '#ED1C24', kabul: 50, ret: 80, cekimser: 10, toplam: 140 },
-    { code: 'MHP', name: 'MHP', color: '#D90B0F', kabul: 40, ret: 5, cekimser: 5, toplam: 50 },
-    { code: 'İYİ', name: 'İYİ Parti', color: '#00AEEF', kabul: 20, ret: 30, cekimser: 5, toplam: 55 },
-    { code: 'HDP', name: 'HDP', color: '#7B3F99', kabul: 10, ret: 40, cekimser: 15, toplam: 65 },
-    { code: 'DEM', name: 'DEM Parti', color: '#6B4C9A', kabul: 10, ret: 10, cekimser: 5, toplam: 25 },
-    { code: 'BAĞ', name: 'Bağımsız', color: '#95A5A6', kabul: 10, ret: 5, cekimser: 5, toplam: 20 }
-  ];
-
-  const generateMilletvekilleri = () => {
-    const firstNames = ['Ahmet', 'Mehmet', 'Ayşe', 'Fatma', 'Ali', 'Zeynep', 'Mustafa', 'Elif', 'Hasan', 'Emine'];
-    const lastNames = ['Yılmaz', 'Demir', 'Kaya', 'Şahin', 'Özkan', 'Arslan', 'Çelik', 'Koç', 'Yıldız', 'Aydın'];
-    const cities = ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Diyarbakır', 'Antalya', 'Adana', 'Gaziantep', 'Konya', 'Mersin'];
-    
-    return Array.from({ length: 600 }, (_, i) => {
-      const partyIndex = i < 195 ? 0 : i < 335 ? 1 : i < 385 ? 2 : i < 440 ? 3 : i < 505 ? 4 : i < 530 ? 5 : 6;
-      const party = parties[partyIndex];
-      const voteRandom = Math.random();
-      let vote;
-      if (voteRandom < party.kabul / party.toplam) vote = 'kabul';
-      else if (voteRandom < (party.kabul + party.ret) / party.toplam) vote = 'ret';
-      else vote = 'cekimser';
+  // Kullanıcının oy durumunu kontrol et
+  const checkVoteStatus = async () => {
+    try {
+      const status = await kanunTeklifiAPI.checkUserVoteStatus(id);
       
-      return {
-        id: i + 1,
-        name: `${firstNames[i % firstNames.length]} ${lastNames[Math.floor(i / firstNames.length) % lastNames.length]}`,
-        party: party.code,
-        city: cities[i % cities.length],
-        vote: vote,
-        seatIndex: i
-      };
-    });
+      if (status.voted) {
+        setHasVoted(true);
+        setUserVote(status.voteType);
+      }
+    } catch (err) {
+      // Kullanıcı giriş yapmamışsa veya başka hata varsa sessizce geç
+      console.log('Oy durumu kontrol edilemedi (kullanıcı giriş yapmamış olabilir)');
+    }
   };
 
-  const milletvekilleri = generateMilletvekilleri();
+  // Oy kullan
+  const handleVote = async (oyTipi) => {
+    // Giriş kontrolü
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      alert('Oy kullanmak için giriş yapmalısınız!');
+      navigate('/login');
+      return;
+    }
 
+    if (hasVoted) {
+      alert('Bu teklife zaten oy kullandınız!');
+      return;
+    }
+    
+    try {
+      setVotingLoading(true);
+      const result = await kanunTeklifiAPI.submitUserVote(id, oyTipi);
+      
+      setUserVote(oyTipi);
+      setHasVoted(true);
+      setToplumOylari(result.toplumOylari);
+      setToplamToplumOyu(result.toplamToplumOyu);
+      
+      alert('✅ Oyunuz başarıyla kaydedildi!');
+      
+    } catch (err) {
+      console.error('Oy kaydetme hatası:', err);
+      
+      if (err.message?.includes('giriş') || err.message?.includes('token')) {
+        alert('Oy kullanmak için giriş yapmalısınız!');
+        navigate('/login');
+      } else if (err.message?.includes('zaten')) {
+        alert('Bu teklife zaten oy kullandınız!');
+        setHasVoted(true);
+      } else {
+        alert('❌ Oy kaydedilirken bir hata oluştu: ' + (err.message || 'Bilinmeyen hata'));
+      }
+    } finally {
+      setVotingLoading(false);
+    }
+  };
+
+  // Koltuk pozisyonlarını oluştur
   const generateSeats = () => {
+    if (!milletvekilleri || milletvekilleri.length === 0) return [];
+    
     const seats = [];
-    const totalSeats = 600;
+    const totalSeats = milletvekilleri.length;
     const rows = 12;
     const centerX = 400;
     const centerY = 380;
@@ -90,7 +135,19 @@ const KanunTeklifiDetay = () => {
         const y = centerY - radius * Math.sin(angle);
         
         const mv = milletvekilleri[seatIndex];
-        seats.push({ x, y, ...mv });
+        if (mv) {
+          seats.push({ 
+            x, 
+            y, 
+            ...mv,
+            name: mv.milletvekili?.adSoyad || 'Bilinmeyen',
+            party: mv.milletvekili?.parti?.kod || 'BAĞ',
+            partyName: mv.milletvekili?.parti?.ad || 'Bağımsız',
+            partyColor: mv.milletvekili?.parti?.renk || '#95A5A6',
+            city: mv.milletvekili?.il || 'Bilinmeyen',
+            vote: mv.oyTipi || 'katilmayan'
+          });
+        }
         seatIndex++;
       }
     }
@@ -110,30 +167,126 @@ const KanunTeklifiDetay = () => {
   };
 
   const getStatusConfig = () => {
-    switch(teklifDetay.status) {
-      case 'KABUL EDİLDİ': return { color: '#059669', bg: '#ecfdf5', border: '#a7f3d0' };
-      case 'REDDEDİLDİ': return { color: '#dc2626', bg: '#fef2f2', border: '#fecaca' };
-      case 'GÖRÜŞÜLÜYOR': return { color: '#d97706', bg: '#fffbeb', border: '#fde68a' };
+    if (!teklifDetay) return { color: '#6b7280', bg: '#f9fafb', border: '#e5e7eb' };
+    
+    switch(teklifDetay.durum) {
+      case 'KABUL_EDILDI': return { color: '#059669', bg: '#ecfdf5', border: '#a7f3d0' };
+      case 'REDDEDILDI': return { color: '#dc2626', bg: '#fef2f2', border: '#fecaca' };
+      case 'GORUSLULUYOR': return { color: '#d97706', bg: '#fffbeb', border: '#fde68a' };
       default: return { color: '#6b7280', bg: '#f9fafb', border: '#e5e7eb' };
     }
   };
 
-  const communityVotes = {
-    kabul: 2847,
-    ret: 1523,
-    cekimser: 456
-  };
-
-  const totalCommunityVotes = communityVotes.kabul + communityVotes.ret + communityVotes.cekimser;
-  const totalVotes = teklifDetay.votingResults.kabul + teklifDetay.votingResults.ret + teklifDetay.votingResults.cekimser + teklifDetay.votingResults.katilmayan;
-
-  const filteredMilletvekilleri = milletvekilleri.filter(mv => 
+  const filteredMilletvekilleri = seats.filter(mv => 
     mv.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     mv.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    parties.find(p => p.code === mv.party)?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    mv.partyName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const statusConfig = getStatusConfig();
+
+  // Loading state
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        background: theme.pageBackground
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ 
+            fontSize: '48px', 
+            marginBottom: '16px' 
+          }}>⏳</div>
+          <div style={{ 
+            fontSize: '18px', 
+            color: theme.textSecondary,
+            fontWeight: '300'
+          }}>
+            Yükleniyor...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        background: theme.pageBackground
+      }}>
+        <div style={{ 
+          textAlign: 'center',
+          maxWidth: '500px',
+          padding: '40px'
+        }}>
+          <div style={{ 
+            fontSize: '48px', 
+            marginBottom: '16px' 
+          }}>⚠️</div>
+          <h2 style={{ 
+            fontSize: '24px', 
+            color: theme.textPrimary,
+            marginBottom: '12px'
+          }}>
+            Bir Hata Oluştu
+          </h2>
+          <p style={{ 
+            fontSize: '16px', 
+            color: theme.textSecondary,
+            marginBottom: '24px'
+          }}>
+            {error}
+          </p>
+          <button
+            onClick={() => navigate('/category/tbmm')}
+            style={{
+              padding: '12px 24px',
+              background: '#059669',
+              color: '#ffffff',
+              border: 'none',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}
+          >
+            TBMM'ye Dön
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Veri yoksa
+  if (!teklifDetay) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        background: theme.pageBackground
+      }}>
+        <div style={{ fontSize: '18px', color: theme.textSecondary }}>
+          Teklif bulunamadı
+        </div>
+      </div>
+    );
+  }
+
+  const totalVotes = (teklifDetay.oySayilari?.kabul || 0) + 
+                     (teklifDetay.oySayilari?.ret || 0) + 
+                     (teklifDetay.oySayilari?.cekimser || 0) + 
+                     (teklifDetay.oySayilari?.katilmayan || 0);
 
   return (
     <div style={{ 
@@ -197,7 +350,7 @@ const KanunTeklifiDetay = () => {
               textTransform: 'uppercase',
               letterSpacing: '1px'
             }}>
-              {teklifDetay.status}
+              {teklifDetay.durum.replace('_', ' ')}
             </span>
             <span style={{
               color: theme.textSecondary,
@@ -206,7 +359,7 @@ const KanunTeklifiDetay = () => {
               textTransform: 'uppercase',
               letterSpacing: '0.5px'
             }}>
-              {teklifDetay.category}
+              {teklifDetay.kategori}
             </span>
           </div>
 
@@ -218,7 +371,7 @@ const KanunTeklifiDetay = () => {
             lineHeight: '1.3',
             letterSpacing: '-0.5px'
           }}>
-            {teklifDetay.title}
+            {teklifDetay.baslik}
           </h1>
 
           <div style={{ 
@@ -258,7 +411,7 @@ const KanunTeklifiDetay = () => {
                 Görüşülme Tarihi
               </div>
               <div style={{ fontSize: '16px', fontWeight: '400', color: theme.textPrimary }}>
-                {new Date(teklifDetay.date).toLocaleDateString('tr-TR', { 
+                {new Date(teklifDetay.gorusulmeTarihi).toLocaleDateString('tr-TR', { 
                   day: 'numeric', 
                   month: 'long', 
                   year: 'numeric' 
@@ -273,7 +426,7 @@ const KanunTeklifiDetay = () => {
             lineHeight: '1.8',
             fontWeight: '300'
           }}>
-            {teklifDetay.description}
+            {teklifDetay.aciklama}
           </p>
         </div>
 
@@ -285,10 +438,10 @@ const KanunTeklifiDetay = () => {
           marginBottom: '32px'
         }}>
           {[
-            { label: 'Kabul', value: teklifDetay.votingResults.kabul, color: '#059669' },
-            { label: 'Ret', value: teklifDetay.votingResults.ret, color: '#dc2626' },
-            { label: 'Çekimser', value: teklifDetay.votingResults.cekimser, color: '#d97706' },
-            { label: 'Katılmayan', value: teklifDetay.votingResults.katilmayan, color: '#6b7280' }
+            { label: 'Kabul', value: teklifDetay.oySayilari?.kabul || 0, color: '#059669' },
+            { label: 'Ret', value: teklifDetay.oySayilari?.ret || 0, color: '#dc2626' },
+            { label: 'Çekimser', value: teklifDetay.oySayilari?.cekimser || 0, color: '#d97706' },
+            { label: 'Katılmayan', value: teklifDetay.oySayilari?.katilmayan || 0, color: '#6b7280' }
           ].map((stat, idx) => (
             <div key={idx} style={{
               background: theme.cardBg,
@@ -319,7 +472,7 @@ const KanunTeklifiDetay = () => {
                 color: theme.textSecondary,
                 fontWeight: '400'
               }}>
-                %{Math.round((stat.value / totalVotes) * 100)}
+                %{totalVotes > 0 ? Math.round((stat.value / totalVotes) * 100) : 0}
               </div>
             </div>
           ))}
@@ -386,16 +539,13 @@ const KanunTeklifiDetay = () => {
               margin: '0 auto'
             }}>
               <svg viewBox="0 0 800 450" style={{ width: '100%', height: 'auto' }}>
-                {/* Podium */}
                 <rect x="360" y="390" width="80" height="50" fill={theme.textSecondary} opacity="0.1" />
                 <text x="400" y="420" textAnchor="middle" fill={theme.textSecondary} fontSize="10" fontWeight="600" letterSpacing="1">
                   BAŞKANLIK KÜRSÜSÜ
                 </text>
 
-                {/* Seats */}
                 {seats.map((seat, index) => {
                   const isHovered = hoveredSeat === index || hoveredParty === seat.party;
-                  const partyData = parties.find(p => p.code === seat.party);
                   
                   return (
                     <circle
@@ -415,7 +565,7 @@ const KanunTeklifiDetay = () => {
                       onMouseLeave={() => setHoveredSeat(null)}
                     >
                       <title>
-                        {seat.name} - {partyData?.name} - {seat.city}
+                        {seat.name} - {seat.partyName} - {seat.city}
                         {'\n'}Oy: {seat.vote === 'kabul' ? 'Kabul' : seat.vote === 'ret' ? 'Ret' : seat.vote === 'cekimser' ? 'Çekimser' : 'Katılmadı'}
                       </title>
                     </circle>
@@ -423,8 +573,7 @@ const KanunTeklifiDetay = () => {
                 })}
               </svg>
 
-              {/* Tooltip */}
-              {hoveredSeat !== null && (
+              {hoveredSeat !== null && seats[hoveredSeat] && (
                 <div style={{
                   position: 'absolute',
                   top: '10px',
@@ -444,7 +593,7 @@ const KanunTeklifiDetay = () => {
                     {seats[hoveredSeat].name}
                   </div>
                   <div style={{ fontSize: '12px', color: theme.textSecondary }}>
-                    {parties.find(p => p.code === seats[hoveredSeat].party)?.name} • {seats[hoveredSeat].city}
+                    {seats[hoveredSeat].partyName} • {seats[hoveredSeat].city}
                   </div>
                   <div style={{ 
                     marginTop: '6px', 
@@ -462,7 +611,6 @@ const KanunTeklifiDetay = () => {
               )}
             </div>
 
-            {/* Legend */}
             <div style={{
               display: 'flex',
               justifyContent: 'center',
@@ -566,7 +714,7 @@ const KanunTeklifiDetay = () => {
                 </tr>
               </thead>
               <tbody>
-                {parties.map((party, index) => (
+                {partiOylari.map((party, index) => (
                   <tr
                     key={index}
                     style={{
@@ -576,7 +724,7 @@ const KanunTeklifiDetay = () => {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = theme.categoryBg;
-                      setHoveredParty(party.code);
+                      setHoveredParty(party.kod);
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = 'transparent';
@@ -588,7 +736,7 @@ const KanunTeklifiDetay = () => {
                         <span style={{
                           width: '4px',
                           height: '24px',
-                          background: party.color,
+                          background: party.renk,
                           display: 'inline-block'
                         }}></span>
                         <span style={{ 
@@ -596,7 +744,7 @@ const KanunTeklifiDetay = () => {
                           fontWeight: '500', 
                           color: theme.textPrimary 
                         }}>
-                          {party.name}
+                          {party.ad}
                         </span>
                       </div>
                     </td>
@@ -607,7 +755,7 @@ const KanunTeklifiDetay = () => {
                       fontWeight: '400', 
                       color: '#059669' 
                     }}>
-                      {party.kabul}
+                      {party.kabul || 0}
                     </td>
                     <td style={{ 
                       padding: '20px 32px', 
@@ -616,7 +764,7 @@ const KanunTeklifiDetay = () => {
                       fontWeight: '400', 
                       color: '#dc2626' 
                     }}>
-                      {party.ret}
+                      {party.ret || 0}
                     </td>
                     <td style={{ 
                       padding: '20px 32px', 
@@ -625,7 +773,7 @@ const KanunTeklifiDetay = () => {
                       fontWeight: '400', 
                       color: '#d97706' 
                     }}>
-                      {party.cekimser}
+                      {party.cekimser || 0}
                     </td>
                     <td style={{ 
                       padding: '20px 32px', 
@@ -634,7 +782,7 @@ const KanunTeklifiDetay = () => {
                       fontWeight: '600', 
                       color: theme.textPrimary 
                     }}>
-                      {party.toplam}
+                      {party.toplam || 0}
                     </td>
                   </tr>
                 ))}
@@ -736,66 +884,63 @@ const KanunTeklifiDetay = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMilletvekilleri.slice(0, 100).map((mv) => {
-                    const partyData = parties.find(p => p.code === mv.party);
-                    return (
-                      <tr
-                        key={mv.id}
-                        style={{
-                          borderBottom: `1px solid ${theme.cardBorder}`,
-                          transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = theme.categoryBg}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <td style={{ 
-                          padding: '16px 32px', 
-                          fontSize: '14px', 
-                          fontWeight: '400', 
-                          color: theme.textPrimary 
-                        }}>
-                          {mv.name}
-                        </td>
-                        <td style={{ padding: '16px 32px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{
-                              width: '3px',
-                              height: '16px',
-                              background: partyData?.color,
-                              display: 'inline-block'
-                            }}></span>
-                            <span style={{ 
-                              fontSize: '13px', 
-                              fontWeight: '400', 
-                              color: theme.textSecondary 
-                            }}>
-                              {partyData?.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td style={{ 
-                          padding: '16px 32px', 
-                          fontSize: '13px', 
-                          color: theme.textSecondary 
-                        }}>
-                          {mv.city}
-                        </td>
-                        <td style={{ padding: '16px 32px', textAlign: 'right' }}>
+                  {filteredMilletvekilleri.slice(0, 100).map((mv, idx) => (
+                    <tr
+                      key={idx}
+                      style={{
+                        borderBottom: `1px solid ${theme.cardBorder}`,
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = theme.categoryBg}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ 
+                        padding: '16px 32px', 
+                        fontSize: '14px', 
+                        fontWeight: '400', 
+                        color: theme.textPrimary 
+                      }}>
+                        {mv.name}
+                      </td>
+                      <td style={{ padding: '16px 32px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            color: getVoteColor(mv.vote),
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
+                            width: '3px',
+                            height: '16px',
+                            background: mv.partyColor,
+                            display: 'inline-block'
+                          }}></span>
+                          <span style={{ 
+                            fontSize: '13px', 
+                            fontWeight: '400', 
+                            color: theme.textSecondary 
                           }}>
-                            {mv.vote === 'kabul' ? 'Kabul' : 
-                             mv.vote === 'ret' ? 'Ret' : 
-                             mv.vote === 'cekimser' ? 'Çekimser' : 'Katılmadı'}
+                            {mv.partyName}
                           </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                        </div>
+                      </td>
+                      <td style={{ 
+                        padding: '16px 32px', 
+                        fontSize: '13px', 
+                        color: theme.textSecondary 
+                      }}>
+                        {mv.city}
+                      </td>
+                      <td style={{ padding: '16px 32px', textAlign: 'right' }}>
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: getVoteColor(mv.vote),
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          {mv.vote === 'kabul' ? 'Kabul' : 
+                           mv.vote === 'ret' ? 'Ret' : 
+                           mv.vote === 'cekimser' ? 'Çekimser' : 'Katılmadı'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -857,7 +1002,8 @@ const KanunTeklifiDetay = () => {
             ].map(option => (
               <button
                 key={option.value}
-                onClick={() => setUserVote(option.value)}
+                onClick={() => handleVote(option.value)}
+                disabled={hasVoted || votingLoading}
                 style={{
                   padding: '20px',
                   background: userVote === option.value ? option.color : 'transparent',
@@ -865,28 +1011,45 @@ const KanunTeklifiDetay = () => {
                   color: userVote === option.value ? '#ffffff' : theme.textPrimary,
                   fontSize: '13px',
                   fontWeight: '600',
-                  cursor: 'pointer',
+                  cursor: hasVoted ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px'
+                  letterSpacing: '1px',
+                  opacity: hasVoted && userVote !== option.value ? 0.5 : 1
                 }}
                 onMouseEnter={(e) => {
-                  if (userVote !== option.value) {
+                  if (!hasVoted && userVote !== option.value) {
                     e.currentTarget.style.borderColor = option.color;
                     e.currentTarget.style.color = option.color;
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (userVote !== option.value) {
+                  if (!hasVoted && userVote !== option.value) {
                     e.currentTarget.style.borderColor = theme.cardBorder;
                     e.currentTarget.style.color = theme.textPrimary;
                   }
                 }}
               >
-                {option.label}
+                {votingLoading ? 'Kaydediliyor...' : option.label}
               </button>
             ))}
           </div>
+
+          {hasVoted && (
+            <div style={{
+              textAlign: 'center',
+              fontSize: '13px',
+              color: theme.textSecondary,
+              marginBottom: '24px',
+              padding: '12px',
+              background: theme.categoryBg,
+              borderRadius: '4px'
+            }}>
+              Bu teklife daha önce oy kullandınız: <strong style={{ color: getVoteColor(userVote) }}>
+                {userVote === 'kabul' ? 'KABUL' : userVote === 'ret' ? 'RET' : 'ÇEKİMSER'}
+              </strong>
+            </div>
+          )}
 
           {userVote && (
             <div style={{
@@ -919,16 +1082,16 @@ const KanunTeklifiDetay = () => {
                     letterSpacing: '0.5px'
                   }}>
                     <span>Toplum Oyları</span>
-                    <span>{totalCommunityVotes.toLocaleString('tr-TR')}</span>
+                    <span>{toplamToplumOyu.toLocaleString('tr-TR')}</span>
                   </div>
                   <div style={{ 
                     display: 'flex', 
                     height: '8px', 
                     overflow: 'hidden'
                   }}>
-                    <div style={{ flex: communityVotes.kabul, background: '#059669' }}></div>
-                    <div style={{ flex: communityVotes.ret, background: '#dc2626' }}></div>
-                    <div style={{ flex: communityVotes.cekimser, background: '#d97706' }}></div>
+                    <div style={{ flex: toplumOylari.kabul, background: '#059669' }}></div>
+                    <div style={{ flex: toplumOylari.ret, background: '#dc2626' }}></div>
+                    <div style={{ flex: toplumOylari.cekimser, background: '#d97706' }}></div>
                   </div>
                   <div style={{
                     display: 'flex',
@@ -937,9 +1100,9 @@ const KanunTeklifiDetay = () => {
                     fontSize: '11px',
                     color: theme.textSecondary
                   }}>
-                    <span>%{Math.round((communityVotes.kabul / totalCommunityVotes) * 100)}</span>
-                    <span>%{Math.round((communityVotes.ret / totalCommunityVotes) * 100)}</span>
-                    <span>%{Math.round((communityVotes.cekimser / totalCommunityVotes) * 100)}</span>
+                    <span>%{toplamToplumOyu > 0 ? Math.round((toplumOylari.kabul / toplamToplumOyu) * 100) : 0}</span>
+                    <span>%{toplamToplumOyu > 0 ? Math.round((toplumOylari.ret / toplamToplumOyu) * 100) : 0}</span>
+                    <span>%{toplamToplumOyu > 0 ? Math.round((toplumOylari.cekimser / toplamToplumOyu) * 100) : 0}</span>
                   </div>
                 </div>
 
@@ -962,9 +1125,9 @@ const KanunTeklifiDetay = () => {
                     height: '8px', 
                     overflow: 'hidden'
                   }}>
-                    <div style={{ flex: teklifDetay.votingResults.kabul, background: '#059669' }}></div>
-                    <div style={{ flex: teklifDetay.votingResults.ret, background: '#dc2626' }}></div>
-                    <div style={{ flex: teklifDetay.votingResults.cekimser, background: '#d97706' }}></div>
+                    <div style={{ flex: teklifDetay.oySayilari?.kabul || 0, background: '#059669' }}></div>
+                    <div style={{ flex: teklifDetay.oySayilari?.ret || 0, background: '#dc2626' }}></div>
+                    <div style={{ flex: teklifDetay.oySayilari?.cekimser || 0, background: '#d97706' }}></div>
                   </div>
                   <div style={{
                     display: 'flex',
@@ -973,9 +1136,9 @@ const KanunTeklifiDetay = () => {
                     fontSize: '11px',
                     color: theme.textSecondary
                   }}>
-                    <span>%{Math.round((teklifDetay.votingResults.kabul / 600) * 100)}</span>
-                    <span>%{Math.round((teklifDetay.votingResults.ret / 600) * 100)}</span>
-                    <span>%{Math.round((teklifDetay.votingResults.cekimser / 600) * 100)}</span>
+                    <span>%{Math.round(((teklifDetay.oySayilari?.kabul || 0) / 600) * 100)}</span>
+                    <span>%{Math.round(((teklifDetay.oySayilari?.ret || 0) / 600) * 100)}</span>
+                    <span>%{Math.round(((teklifDetay.oySayilari?.cekimser || 0) / 600) * 100)}</span>
                   </div>
                 </div>
               </div>
