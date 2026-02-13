@@ -48,8 +48,9 @@ kullaniciOySchema.statics.findByProposal = function(teklifId) {
 };
 
 kullaniciOySchema.statics.countByProposal = async function(teklifId) {
+    // ✅ DÜZELTME: new mongoose.Types.ObjectId(teklifId) kullan
     const votes = await this.aggregate([
-        { $match: { teklif: mongoose.Types.ObjectId(teklifId) } },
+        { $match: { teklif: new mongoose.Types.ObjectId(teklifId) } },
         { $group: { _id: '$oyTipi', count: { $sum: 1 } } }
     ]);
     

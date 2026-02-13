@@ -44,8 +44,9 @@ mvOySchema.statics.findByProposal = function(teklifId) {
 };
 
 mvOySchema.statics.getPartyVotingStats = async function(teklifId) {
+    // ✅ DÜZELTME: new mongoose.Types.ObjectId(teklifId) kullan
     return this.aggregate([
-        { $match: { teklif: mongoose.Types.ObjectId(teklifId) } },
+        { $match: { teklif: new mongoose.Types.ObjectId(teklifId) } },
         {
             $lookup: {
                 from: 'milletvekilleri',

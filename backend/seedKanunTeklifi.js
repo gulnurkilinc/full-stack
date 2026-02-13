@@ -1,20 +1,3 @@
-/*
- * SEED KANUN TEKLIFI SCRIPT
- * 
- * Bu script, veritabanına örnek kanun teklifi, parti, milletvekili ve oy verilerini ekler.
- * 
- * NASIL ÇALIŞTIRILIR:
- * Terminal'de: node seedKanunTeklifi.js
- * 
- * NE YAPAR:
- * 1. Eski verileri temizler (kanun teklifleri, partiler, milletvekilleri, oylar)
- * 2. 7 parti oluşturur (AKP, CHP, MHP, İYİ, HDP, DEM, BAĞ)
- * 3. 600 milletvekili oluşturur
- * 4. 1 örnek kanun teklifi oluşturur (Dijital Hizmet Vergisi)
- * 5. Her milletvekili için oy oluşturur
- * 6. Oy sayılarını günceller
- */
-
 require('dotenv').config();
 const mongoose = require('mongoose');
 const KanunTeklifi = require('./models/KanunTeklifi');
@@ -23,10 +6,15 @@ const Milletvekili = require('./models/Milletvekili');
 const MvOy = require('./models/MvOy');
 
 // Database bağlantısı
-mongoose.connect(process.env.MONGO_URI);
-
-.then(() => console.log('✅ MongoDB bağlandı'))
-.catch(err => console.error('❌ MongoDB bağlantı hatası:', err));
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('✅ MongoDB bağlandı');
+  } catch (err) {
+    console.error('❌ MongoDB bağlantı hatası:', err);
+    process.exit(1);
+  }
+};
 
 const seedData = async () => {
   try {
@@ -142,7 +130,9 @@ const seedData = async () => {
     console.log(`✅ Kanun Teklifleri: 1`);
     console.log(`✅ MV Oyları: ${mvOylari.length}`);
     console.log('\n🎉 Seed işlemi başarıyla tamamlandı!');
-    console.log('\n💡 Şimdi serveri başlatabilirsiniz: npm run dev');
+    console.log(`\n🔗 Teklif ID: ${teklif._id}`);
+    console.log(`\n💡 Frontend URL'de kullan:`);
+    console.log(`   http://localhost:3000/category/tbmm/kanun-teklifi/${teklif._id}`);
 
     process.exit(0);
   } catch (error) {
@@ -151,4 +141,8 @@ const seedData = async () => {
   }
 };
 
-seedData();
+// Ana fonksiyon
+(async () => {
+  await connectDB();
+  await seedData();
+})();
