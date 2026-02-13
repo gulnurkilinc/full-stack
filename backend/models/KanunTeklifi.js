@@ -63,7 +63,8 @@ const kanunTeklifiSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-kanunTeklifiSchema.pre('save', function(next) {
+// ✅ DÜZELTME: async function kullan, next() kaldır
+kanunTeklifiSchema.pre('save', async function() {
     if (this.isModified('baslik') || !this.slug) {
         const turkishMap = {
             'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
@@ -78,7 +79,6 @@ kanunTeklifiSchema.pre('save', function(next) {
         slug = slug.replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
         this.slug = slug + '-' + this.teklifNo.replace('/', '-');
     }
-    next();
 });
 
 kanunTeklifiSchema.virtual('mvOylari', {

@@ -43,74 +43,58 @@ mvOySchema.statics.findByProposal = function(teklifId) {
         });
 };
 
+// ✅ DÜZELTME: Basitleştirilmiş aggregate query
 mvOySchema.statics.getPartyVotingStats = async function(teklifId) {
-    // ✅ DÜZELTME: new mongoose.Types.ObjectId(teklifId) kullan
-    return this.aggregate([
-        { $match: { teklif: new mongoose.Types.ObjectId(teklifId) } },
-        {
-            $lookup: {
-                from: 'milletvekilleri',
-                localField: 'milletvekili',
-                foreignField: '_id',
-                as: 'mvData'
-            }
-        },
-        { $unwind: '$mvData' },
-        {
-            $lookup: {
-                from: 'partiler',
-                localField: 'mvData.parti',
-                foreignField: '_id',
-                as: 'partiData'
-            }
-        },
-        { $unwind: '$partiData' },
-        {
-            $group: {
-                _id: '$partiData._id',
-                kod: { $first: '$partiData.kod' },
-                ad: { $first: '$partiData.ad' },
-                renk: { $first: '$partiData.renk' },
-                toplam: { $first: '$partiData.toplamMV' },
-                oylar: {
-                    $push: { oyTipi: '$oyTipi' }
+    try {
+        console.log('🔍 getPartyVotingStats çağrıldı, ID:', teklifId);
+        
+        // İlk önce basit sorgu ile test et
+        const allVotes = await this.find({ teklif: new mongoose.Types.ObjectId(teklifId) })
+            .populate({
+                path: 'milletvekili',
+                populate: {
+                    path: 'parti'
                 }
+            });
+        
+        console.log('✅ Toplam oy sayısı:', allVotes.length);
+        
+        // Manuel gruplama
+        const partyStats = {};
+        
+        allVotes.forEach(vote => {
+            if (!vote.milletvekili || !vote.milletvekili.parti) return;
+            
+            const party = vote.milletvekili.parti;
+            const partyId = party._id.toString();
+            
+            if (!partyStats[partyId]) {
+                partyStats[partyId] = {
+                    _id: party._id,
+                    kod: party.kod,
+                    ad: party.ad,
+                    renk: party.renk,
+                    toplam: party.toplamMV,
+                    kabul: 0,
+                    ret: 0,
+                    cekimser: 0
+                };
             }
-        },
-        {
-            $project: {
-                kod: 1,
-                ad: 1,
-                renk: 1,
-                toplam: 1,
-                kabul: {
-                    $size: {
-                        $filter: {
-                            input: '$oylar',
-                            cond: { $eq: ['$$this.oyTipi', 'kabul'] }
-                        }
-                    }
-                },
-                ret: {
-                    $size: {
-                        $filter: {
-                            input: '$oylar',
-                            cond: { $eq: ['$$this.oyTipi', 'ret'] }
-                        }
-                    }
-                },
-                cekimser: {
-                    $size: {
-                        $filter: {
-                            input: '$oylar',
-                            cond: { $eq: ['$$this.oyTipi', 'cekimser'] }
-                        }
-                    }
-                }
-            }
-        },
-        { $sort: { toplam: -1 } }
-    ]);
+            
+            if (vote.oyTipi === 'kabul') partyStats[partyId].kabul++;
+            else if (vote.oyTipi === 'ret') partyStats[partyId].ret++;
+            else if (vote.oyTipi === 'cekimser') partyStats[partyId].cekimser++;
+        });
+        
+        const result = Object.values(partyStats).sort((a, b) => b.toplam - a.toplam);
+        
+        console.log('✅ Parti istatistikleri hazır:', result.length);
+        return result;
+        
+    } catch (error) {
+        console.error('❌ getPartyVotingStats hatası:', error);
+        throw error;
+    }
 };
 
 mvOySchema.post('save', async function() {
