@@ -37,6 +37,7 @@ const getAllProposals = async (req, res) => {
             proposals
         });
     } catch (error) {
+        console.error('❌ getAllProposals hatası:', error); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
@@ -49,24 +50,47 @@ const getProposalById = async (req, res) => {
     try {
         const { id } = req.params;
         
+        console.log('📝 getProposalById çağrıldı'); // LOG EKLENDI
+        console.log('🆔 Teklif ID:', id); // LOG EKLENDI
+        
+        // ID formatı kontrolü EKLENDI
+        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+            console.log('❌ Geçersiz ID formatı'); // LOG EKLENDI
+            return res.status(400).json({
+                success: false,
+                message: "Geçersiz ID formatı"
+            });
+        }
+        
+        console.log('🔍 Teklif aranıyor...'); // LOG EKLENDI
         const teklif = await KanunTeklifi.findById(id);
         
         if (!teklif) {
+            console.log('❌ Teklif bulunamadı'); // LOG EKLENDI
             return res.status(404).json({
                 success: false,
                 message: "Kanun teklifi bulunamadı"
             });
         }
         
+        console.log('✅ Teklif bulundu:', teklif.baslik); // LOG EKLENDI
+        
         // Parti bazlı oy dağılımı
+        console.log('🎨 Parti oyları getiriliyor...'); // LOG EKLENDI
         const partiOylari = await MvOy.getPartyVotingStats(id);
+        console.log('✅ Parti oyları:', partiOylari.length, 'parti'); // LOG EKLENDI
         
         // Milletvekili oyları
+        console.log('👥 MV oyları getiriliyor...'); // LOG EKLENDI
         const mvOylari = await MvOy.findByProposal(id);
+        console.log('✅ MV oyları:', mvOylari.length, 'oy'); // LOG EKLENDI
         
         // Toplum oyları istatistikleri
+        console.log('📊 Toplum oyları getiriliyor...'); // LOG EKLENDI
         const toplumOyStats = await KullaniciOy.getVotingStats(id);
+        console.log('✅ Toplum oyları:', toplumOyStats.totalVotes, 'oy'); // LOG EKLENDI
         
+        console.log('🎉 Response hazırlanıyor...'); // LOG EKLENDI
         res.status(200).json({
             success: true,
             teklif,
@@ -76,7 +100,10 @@ const getProposalById = async (req, res) => {
             toplumOyYuzdeleri: toplumOyStats.percentages,
             toplamToplumOyu: toplumOyStats.totalVotes
         });
+        console.log('✅ Response gönderildi!'); // LOG EKLENDI
     } catch (error) {
+        console.error('❌ getProposalById hatası:', error.message); // LOG EKLENDI
+        console.error('Stack:', error.stack); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
@@ -89,14 +116,19 @@ const getProposalBySlug = async (req, res) => {
     try {
         const { slug } = req.params;
         
+        console.log('📝 getProposalBySlug çağrıldı, slug:', slug); // LOG EKLENDI
+        
         const teklif = await KanunTeklifi.findBySlug(slug);
         
         if (!teklif) {
+            console.log('❌ Teklif bulunamadı (slug)'); // LOG EKLENDI
             return res.status(404).json({
                 success: false,
                 message: "Kanun teklifi bulunamadı"
             });
         }
+        
+        console.log('✅ Teklif bulundu (slug):', teklif.baslik); // LOG EKLENDI
         
         // Parti bazlı oy dağılımı
         const partiOylari = await MvOy.getPartyVotingStats(teklif._id);
@@ -117,6 +149,7 @@ const getProposalBySlug = async (req, res) => {
             toplamToplumOyu: toplumOyStats.totalVotes
         });
     } catch (error) {
+        console.error('❌ getProposalBySlug hatası:', error); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
@@ -129,7 +162,12 @@ const getProposalsByCategory = async (req, res) => {
     try {
         const { kategori } = req.params;
         
-        const proposals = await KanunTeklifi.findByCategory(kategori);
+        console.log('📝 getProposalsByCategory çağrıldı, kategori:', kategori); // LOG EKLENDI
+        
+        const proposals = await KanunTeklifi.find({ 
+            kategori, 
+            aktif: true 
+        }).sort({ gorusulmeTarihi: -1 }); // DÜZELTME: findByCategory yerine find kullanıldı
         
         res.status(200).json({
             success: true,
@@ -138,6 +176,7 @@ const getProposalsByCategory = async (req, res) => {
             proposals
         });
     } catch (error) {
+        console.error('❌ getProposalsByCategory hatası:', error); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
@@ -150,7 +189,12 @@ const getProposalsByStatus = async (req, res) => {
     try {
         const { durum } = req.params;
         
-        const proposals = await KanunTeklifi.findByStatus(durum);
+        console.log('📝 getProposalsByStatus çağrıldı, durum:', durum); // LOG EKLENDI
+        
+        const proposals = await KanunTeklifi.find({ 
+            durum, 
+            aktif: true 
+        }).sort({ gorusulmeTarihi: -1 }); // DÜZELTME: findByStatus yerine find kullanıldı
         
         res.status(200).json({
             success: true,
@@ -159,6 +203,7 @@ const getProposalsByStatus = async (req, res) => {
             proposals
         });
     } catch (error) {
+        console.error('❌ getProposalsByStatus hatası:', error); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
@@ -176,9 +221,12 @@ const checkUserVoteStatus = async (req, res) => {
         const { id } = req.params;
         const kullaniciId = req.user._id;
         
+        console.log('📝 checkUserVoteStatus çağrıldı, teklif:', id, 'kullanıcı:', kullaniciId); // LOG EKLENDI
+        
         const oy = await KullaniciOy.getUserVote(id, kullaniciId);
         
         if (oy) {
+            console.log('✅ Kullanıcı daha önce oy kullanmış:', oy.oyTipi); // LOG EKLENDI
             return res.status(200).json({
                 success: true,
                 voted: true,
@@ -187,11 +235,13 @@ const checkUserVoteStatus = async (req, res) => {
             });
         }
         
+        console.log('✅ Kullanıcı henüz oy kullanmamış'); // LOG EKLENDI
         res.status(200).json({
             success: true,
             voted: false
         });
     } catch (error) {
+        console.error('❌ checkUserVoteStatus hatası:', error); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
@@ -206,8 +256,12 @@ const submitUserVote = async (req, res) => {
         const kullaniciId = req.user._id;
         const { oyTipi } = req.body;
         
+        console.log('📝 submitUserVote çağrıldı'); // LOG EKLENDI
+        console.log('Teklif:', id, 'Kullanıcı:', kullaniciId, 'Oy:', oyTipi); // LOG EKLENDI
+        
         // Validasyon
         if (!['kabul', 'ret', 'cekimser'].includes(oyTipi)) {
+            console.log('❌ Geçersiz oy tipi'); // LOG EKLENDI
             return res.status(400).json({
                 success: false,
                 message: 'Geçersiz oy tipi. Kabul edilenler: kabul, ret, cekimser'
@@ -217,6 +271,7 @@ const submitUserVote = async (req, res) => {
         // Teklif var mı kontrol et
         const teklif = await KanunTeklifi.findById(id);
         if (!teklif) {
+            console.log('❌ Teklif bulunamadı'); // LOG EKLENDI
             return res.status(404).json({
                 success: false,
                 message: "Kanun teklifi bulunamadı"
@@ -227,6 +282,7 @@ const submitUserVote = async (req, res) => {
         const mevcutOy = await KullaniciOy.getUserVote(id, kullaniciId);
         
         if (mevcutOy) {
+            console.log('❌ Kullanıcı zaten oy kullanmış'); // LOG EKLENDI
             return res.status(403).json({
                 success: false,
                 message: 'Bu teklife zaten oy kullandınız',
@@ -240,6 +296,7 @@ const submitUserVote = async (req, res) => {
         const ipVoted = await KullaniciOy.hasIPVoted(id, ipAdresi);
         
         if (ipVoted) {
+            console.log('❌ Bu IP son 24 saatte oy kullanmış'); // LOG EKLENDI
             return res.status(403).json({
                 success: false,
                 message: 'Bu IP adresinden son 24 saat içinde oy kullanıldı',
@@ -248,6 +305,7 @@ const submitUserVote = async (req, res) => {
         }
         
         // Yeni oy oluştur
+        console.log('✅ Oy kaydediliyor...'); // LOG EKLENDI
         const yeniOy = await KullaniciOy.create({
             teklif: id,
             kullanici: kullaniciId,
@@ -255,6 +313,8 @@ const submitUserVote = async (req, res) => {
             ipAdresi,
             userAgent: req.headers['user-agent']
         });
+        
+        console.log('✅ Oy kaydedildi!'); // LOG EKLENDI
         
         // Güncel istatistikleri getir
         const toplumOyStats = await KullaniciOy.getVotingStats(id);
@@ -270,6 +330,7 @@ const submitUserVote = async (req, res) => {
     } catch (error) {
         // Duplicate key error (zaten oy kullanmış)
         if (error.code === 11000) {
+            console.log('❌ Duplicate key error (zaten oy kullanmış)'); // LOG EKLENDI
             return res.status(403).json({
                 success: false,
                 message: 'Bu teklife zaten oy kullandınız',
@@ -277,6 +338,7 @@ const submitUserVote = async (req, res) => {
             });
         }
         
+        console.error('❌ submitUserVote hatası:', error); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
@@ -289,7 +351,11 @@ const getUserVotingHistory = async (req, res) => {
     try {
         const kullaniciId = req.user._id;
         
+        console.log('📝 getUserVotingHistory çağrıldı, kullanıcı:', kullaniciId); // LOG EKLENDI
+        
         const votingHistory = await KullaniciOy.getUserVotingHistory(kullaniciId);
+        
+        console.log('✅ Oy geçmişi bulundu:', votingHistory.length, 'oy'); // LOG EKLENDI
         
         res.status(200).json({
             success: true,
@@ -297,6 +363,7 @@ const getUserVotingHistory = async (req, res) => {
             votingHistory
         });
     } catch (error) {
+        console.error('❌ getUserVotingHistory hatası:', error); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
@@ -311,7 +378,11 @@ const getUserVotingHistory = async (req, res) => {
 // Kanun teklifi oluştur
 const createProposal = async (req, res) => {
     try {
+        console.log('📝 createProposal çağrıldı'); // LOG EKLENDI
+        
         const proposal = await KanunTeklifi.create(req.body);
+        
+        console.log('✅ Teklif oluşturuldu:', proposal.baslik); // LOG EKLENDI
         
         res.status(201).json({
             success: true,
@@ -319,6 +390,7 @@ const createProposal = async (req, res) => {
             proposal
         });
     } catch (error) {
+        console.error('❌ createProposal hatası:', error); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
@@ -331,6 +403,8 @@ const updateProposal = async (req, res) => {
     try {
         const { id } = req.params;
         
+        console.log('📝 updateProposal çağrıldı, ID:', id); // LOG EKLENDI
+        
         const proposal = await KanunTeklifi.findByIdAndUpdate(
             id,
             req.body,
@@ -338,11 +412,14 @@ const updateProposal = async (req, res) => {
         );
         
         if (!proposal) {
+            console.log('❌ Teklif bulunamadı'); // LOG EKLENDI
             return res.status(404).json({
                 success: false,
                 message: "Kanun teklifi bulunamadı"
             });
         }
+        
+        console.log('✅ Teklif güncellendi:', proposal.baslik); // LOG EKLENDI
         
         res.status(200).json({
             success: true,
@@ -350,6 +427,7 @@ const updateProposal = async (req, res) => {
             proposal
         });
     } catch (error) {
+        console.error('❌ updateProposal hatası:', error); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
@@ -362,6 +440,8 @@ const deleteProposal = async (req, res) => {
     try {
         const { id } = req.params;
         
+        console.log('📝 deleteProposal çağrıldı, ID:', id); // LOG EKLENDI
+        
         const proposal = await KanunTeklifi.findByIdAndUpdate(
             id,
             { aktif: false },
@@ -369,17 +449,21 @@ const deleteProposal = async (req, res) => {
         );
         
         if (!proposal) {
+            console.log('❌ Teklif bulunamadı'); // LOG EKLENDI
             return res.status(404).json({
                 success: false,
                 message: "Kanun teklifi bulunamadı"
             });
         }
         
+        console.log('✅ Teklif silindi (soft delete):', proposal.baslik); // LOG EKLENDI
+        
         res.status(200).json({
             success: true,
             message: 'Kanun teklifi başarıyla silindi'
         });
     } catch (error) {
+        console.error('❌ deleteProposal hatası:', error); // LOG EKLENDI
         res.status(500).json({
             success: false,
             message: error.message
