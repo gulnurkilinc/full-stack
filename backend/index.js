@@ -33,14 +33,12 @@ app.use(cookieParser());
 app.use(xss());
 
 // ============================================
-// REQUEST LOGGING (Development)
+// REQUEST LOGGING - DÜZELTME: HER ZAMAN ÇALIŞSIN
 // ============================================
-if (process.env.NODE_ENV === 'development') {
-  app.use((req, res, next) => {
-    console.log(`📝 ${req.method} ${req.path}`);
-    next();
-  });
-}
+app.use((req, res, next) => {
+  console.log(`📝 ${req.method} ${req.path}`);
+  next();
+});
 
 // ============================================
 // DATABASE CONNECTION
@@ -66,7 +64,7 @@ app.get('/api/health', (req, res) => {
 // TEST ROUTE - Admin kullanıcı oluştur
 app.get('/api/create-admin', async (req, res) => {
   try {
-    const User = require('./models/User.js');
+    const User = require('./models/user.js');
     const bcrypt = require('bcryptjs');
     
     // ÖNCEKİ ADMINI SİL
