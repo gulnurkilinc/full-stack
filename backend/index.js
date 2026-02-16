@@ -381,9 +381,9 @@ app.use('/api/login', apiRateLimiter);
 app.use('/api/register', apiRateLimiter);
 app.use('/api/kanun-teklifi', apiRateLimiter); // YENİ
 
-// ============================================
-// API ROUTES
-// ============================================
+console.log('🔗 Kanun teklifi routes yüklendi!');
+app.use('/api', kanunTeklifiRoutes);
+
 app.use('/api', blogRoutes);
 app.use('/api', userRoutes);
 app.use('/api/contact', contactRoutes);

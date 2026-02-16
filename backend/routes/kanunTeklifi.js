@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
+console.log('🚀 kanunTeklifi.js routes dosyası yüklendi!');
+
 // Controllers
 const {
     getAllProposals,
@@ -20,7 +22,7 @@ const {
 const { authMiddleware, isAdmin } = require('../middleware/authMiddleware');
 
 // ============================================
-// PUBLIC ROUTES
+// PUBLIC ROUTES (AUTH YOK!)
 // ============================================
 
 // Tüm kanun tekliflerini listele

@@ -55,19 +55,26 @@ const KanunTeklifiDetay = () => {
   };
 
   // Kullanıcının oy durumunu kontrol et
-  const checkVoteStatus = async () => {
-    try {
-      const status = await kanunTeklifiAPI.checkUserVoteStatus(id);
-      
-      if (status.voted) {
-        setHasVoted(true);
-        setUserVote(status.voteType);
-      }
-    } catch (err) {
-      // Kullanıcı giriş yapmamışsa veya başka hata varsa sessizce geç
-      console.log('Oy durumu kontrol edilemedi (kullanıcı giriş yapmamış olabilir)');
+ const checkVoteStatus = async () => {
+  // ✅ DÜZELTME: Token yoksa sessizce geç, redirect yapma!
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    console.log('Kullanıcı giriş yapmamış, oy durumu kontrol edilemiyor');
+    return; // Sessizce çık, redirect YOK!
+  }
+
+  try {
+    const status = await kanunTeklifiAPI.checkUserVoteStatus(id);
+    
+    if (status.voted) {
+      setHasVoted(true);
+      setUserVote(status.voteType);
     }
-  };
+  } catch (err) {
+    // Hata varsa sessizce geç
+    console.log('Oy durumu kontrol edilemedi:', err);
+  }
+};
 
   // Oy kullan
   const handleVote = async (oyTipi) => {
