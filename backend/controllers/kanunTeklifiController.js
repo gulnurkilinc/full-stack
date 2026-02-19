@@ -319,6 +319,18 @@ const submitUserVote = async (req, res) => {
         // Güncel istatistikleri getir
         const toplumOyStats = await KullaniciOy.getVotingStats(id);
         
+        // ✅ YENİ: Socket.io ile tüm bağlı kullanıcılara bildir
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('voteUpdate', {
+                teklifId: id,
+                toplumOylari: toplumOyStats.voteCounts,
+                toplamToplumOyu: toplumOyStats.totalVotes,
+                yeniOy: oyTipi
+            });
+            console.log('📡 Socket.io: Oy güncellemesi yayınlandı');
+        }
+        
         res.status(201).json({
             success: true,
             message: 'Oyunuz başarıyla kaydedildi',
