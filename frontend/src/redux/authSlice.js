@@ -1,44 +1,33 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import axiosInstance from '../api/axiosInstance';
 
-const API_URL = 'http://localhost:4000/api';
+// ============================================
+// ASYNC THUNKS
+// ============================================
 
-// Login action
+// Login
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      console.log('🔐 Attempting login:', credentials.email);
-
-      const response = await axios.post(`${API_URL}/login`, credentials);
-
-      console.log('✅ Login successful:', response.data);
-
-      // Token ve user'ı localStorage'a kaydet
+      const response = await axiosInstance.post('/login', credentials);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-
-      console.log('💾 Data saved to localStorage');
-
       return response.data;
     } catch (error) {
-      console.error('❌ Login error:', error);
       return rejectWithValue(error.response?.data?.message || 'Giriş başarısız');
     }
   }
 );
 
-// Register action
+// Register
 export const register = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/register`, userData);
-      
-      // Token ve user'ı localStorage'a kaydet
+      const response = await axiosInstance.post('/register', userData);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Kayıt başarısız');
@@ -46,17 +35,69 @@ export const register = createAsyncThunk(
   }
 );
 
-// Logout action
+// Logout - backend cookie'yi de temizler
 export const logout = createAsyncThunk(
   'auth/logout',
-  async () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+  async (_, { rejectWithValue }) => {
+    try {
+      await axiosInstance.post('/logout');
+    } catch {
+      // Hata olsa bile localStorage temizle
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
     return null;
   }
 );
 
-// Initial state - localStorage'dan yükle
+// Get current user (token yenileme / sayfa yenileme sonrası)
+export const getMe = createAsyncThunk(
+  'auth/getMe',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get('/me');
+      return response.data.user;
+    } catch (error) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return rejectWithValue(error.response?.data?.message || 'Oturum sona erdi');
+    }
+  }
+);
+
+// Forgot Password
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/password/forgot', { email });
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Email gönderilemedi');
+    }
+  }
+);
+
+// Reset Password
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ token, password, confirmPassword }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/password/reset/${token}`, {
+        password,
+        confirmPassword
+      });
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Şifre sıfırlanamadı');
+    }
+  }
+);
+
+// ============================================
+// INITIAL STATE
+// ============================================
 const token = localStorage.getItem('token');
 const user = localStorage.getItem('user');
 
@@ -65,9 +106,13 @@ const initialState = {
   token: token || null,
   isAuthenticated: !!token,
   loading: false,
-  error: null
+  error: null,
+  message: null  // Başarı mesajları için (forgotPassword gibi)
 };
 
+// ============================================
+// SLICE
+// ============================================
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -75,13 +120,17 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    clearMessage: (state) => {
+      state.message = null;
+    },
     setUser: (state, action) => {
       state.user = action.payload;
       state.isAuthenticated = true;
     }
   },
   extraReducers: (builder) => {
-    // Login
+
+    // ─── LOGIN ──────────────────────────────
     builder
       .addCase(login.pending, (state) => {
         state.loading = true;
@@ -93,20 +142,7 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.error = null;
-
-        console.log('🎯 Redux state updated:', {
-          user: action.payload.user,
-          role: action.payload.user.role
-        });
-
-        // Admin kontrolü ve yönlendirme
-        if (action.payload.user.role === 'admin') {
-          console.log('🚀 Redirecting admin to dashboard...');
-          window.location.href = '/dashboard/blogs/create';
-        } else {
-          console.log('🏠 Redirecting user to home...');
-          window.location.href = '/';
-        }
+        // ✅ Yönlendirme Redux'ta değil, component'te yapılır (Login.jsx'te useEffect ile)
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -116,7 +152,7 @@ const authSlice = createSlice({
         state.token = null;
       });
 
-    // Register
+    // ─── REGISTER ───────────────────────────
     builder
       .addCase(register.pending, (state) => {
         state.loading = true;
@@ -128,28 +164,71 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.error = null;
-        
-        // Kayıt sonrası ana sayfaya yönlendir
-        window.location.href = '/';
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
 
-    // Logout
+    // ─── LOGOUT ─────────────────────────────
     builder
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
         state.error = null;
-        
-        // Logout sonrası login sayfasına yönlendir
-        window.location.href = '/login';
+        // ✅ Yönlendirme component'te yapılır
+      });
+
+    // ─── GET ME ─────────────────────────────
+    builder
+      .addCase(getMe.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getMe.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+      })
+      .addCase(getMe.rejected, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+      });
+
+    // ─── FORGOT PASSWORD ─────────────────────
+    builder
+      .addCase(forgotPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.message = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload;
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+
+    // ─── RESET PASSWORD ──────────────────────
+    builder
+      .addCase(resetPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   }
 });
 
-export const { clearError, setUser } = authSlice.actions;
+export const { clearError, clearMessage, setUser } = authSlice.actions;
 export default authSlice.reducer;
