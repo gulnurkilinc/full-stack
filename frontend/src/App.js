@@ -14,7 +14,7 @@ import KanunTeklifiDetay from './pages/Parlamento/KanunTeklifiDetay';
 import ScrollToTop from './components/ScrollToTop';
 import Packages from './pages/Packages/Packages';
 import AnalyticaAI from './pages/AnalyticaAI/AnalyticaAI';
-import AdminRoute from './components/Admin/AdminRoute';
+import { AdminRoute } from './components/PrivateRoute';
 import Dashboard from './pages/Admin/Dashboard';
 import BlogCreate from './pages/Admin/BlogCreate';
 import BlogManagement from './pages/Admin/BlogManagement';

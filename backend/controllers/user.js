@@ -109,19 +109,26 @@ const login = async (req, res) => {
     }
 };
 
-// Çıkış
+// Çıkış - Cookie'yi temizle
 const logout = async (req, res) => {
-    try {
-        res.status(200).json({
-            success: true,
-            message: "Başarıyla çıkış yapıldı"
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
+  try {
+    res.cookie('token', '', {
+      httpOnly: true,
+      expires: new Date(0), // Geçmiş tarih = cookie sil
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Başarıyla çıkış yapıldı'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 };
 
 // Kullanıcı profili
