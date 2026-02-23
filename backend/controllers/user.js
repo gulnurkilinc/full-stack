@@ -5,6 +5,7 @@ const sendEmail = require("../utils/sendEmail.js");
 // Kullanıcı kaydı
 const register = async (req, res) => {
     try {
+        console.log('📝 Register isteği geldi:', req.body);
         const { name, email, password } = req.body;
 
         // Email kontrolü
@@ -15,6 +16,7 @@ const register = async (req, res) => {
                 message: "Bu email adresi zaten kayıtlı"
             });
         }
+         console.log('👤 Kullanıcı oluşturuluyor...');
 
         // Kullanıcı oluştur
         user = await User.create({
@@ -26,6 +28,7 @@ const register = async (req, res) => {
                 url: "https://via.placeholder.com/150"
             }
         });
+        console.log('✅ Kullanıcı oluşturuldu:', user._id);
 
         // Token oluştur
         const token = user.generateToken();
@@ -43,6 +46,8 @@ const register = async (req, res) => {
             token
         });
     } catch (error) {
+        console.error('❌ Register HATA:', error.message); // ← EKLE
+        console.error('❌ Stack:', error.stack);          
         res.status(500).json({
             success: false,
             message: error.message

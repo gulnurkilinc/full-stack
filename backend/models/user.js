@@ -72,51 +72,46 @@ const userSchema = new mongoose.Schema({
         github: { type: String, default: "" },
         website: { type: String, default: "" }
     }
-}, { 
+}, {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 });
 
-// Şifreyi hashle
-userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) {
-        return next();
-    }
-    
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
-});
-
-// Email değiştiğinde doğrulama sıfırla
-userSchema.pre('save', function(next) {
+// ============================================
+// MIDDLEWARE: Tek hook - email + şifre
+// ============================================
+userSchema.pre('save', async function() {
     if (this.isModified('email') && !this.isNew) {
         this.isVerified = false;
     }
-    next();
+    if (!this.isModified('password')) {
+        return;
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
 });
 
-// JWT Token oluştur
+// ============================================
+// METHODS: JWT Token oluştur
+// ============================================
 userSchema.methods.generateToken = function() {
     return jwt.sign(
-        { 
+        {
             id: this._id,
             email: this.email,
             role: this.role
-        }, 
-        process.env.JWT_SECRET, 
+        },
+        process.env.JWT_SECRET,
         {
             expiresIn: process.env.JWT_EXPIRE || '7d'
         }
     );
 };
 
-// Şifre kontrolü
+// ============================================
+// METHODS: Şifre kontrolü
+// ============================================
 userSchema.methods.comparePassword = async function(enteredPassword) {
     try {
         return await bcrypt.compare(enteredPassword, this.password);
@@ -125,35 +120,43 @@ userSchema.methods.comparePassword = async function(enteredPassword) {
     }
 };
 
-// Şifre sıfırlama token'ı
+// ============================================
+// METHODS: Şifre sıfırlama token'ı
+// ============================================
 userSchema.methods.getResetPasswordToken = function() {
     const resetToken = crypto.randomBytes(32).toString('hex');
     this.resetPasswordToken = crypto
         .createHash('sha256')
         .update(resetToken)
         .digest('hex');
-    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 dakika
     return resetToken;
 };
 
-// Email doğrulama token'ı
+// ============================================
+// METHODS: Email doğrulama token'ı
+// ============================================
 userSchema.methods.getEmailVerificationToken = function() {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     this.emailVerificationToken = crypto
         .createHash('sha256')
         .update(verificationToken)
         .digest('hex');
-    this.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000;
+    this.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 saat
     return verificationToken;
 };
 
-// Son giriş güncelle
+// ============================================
+// METHODS: Son giriş güncelle
+// ============================================
 userSchema.methods.updateLastLogin = function() {
     this.lastLogin = new Date();
     return this.save({ validateBeforeSave: false });
 };
 
-// Static methods
+// ============================================
+// STATIC METHODS
+// ============================================
 userSchema.statics.findByEmailWithPassword = function(email) {
     return this.findOne({ email }).select('+password');
 };
@@ -166,7 +169,9 @@ userSchema.statics.findAdmins = function() {
     return this.find({ role: 'admin', isActive: true });
 };
 
-// Virtuals
+// ============================================
+// VIRTUALS
+// ============================================
 userSchema.virtual('blogCount', {
     ref: 'Blog',
     localField: '_id',
@@ -174,11 +179,14 @@ userSchema.virtual('blogCount', {
     count: true
 });
 
-// Indexes
-
+// ============================================
+// INDEXES - email unique zaten index yaratıyor, tekrar ekleme
+// ============================================
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1, isVerified: 1 });
 userSchema.index({ createdAt: -1 });
 
-// ÖNEMLİ: Model cache kontrolü
+// ============================================
+// EXPORT
+// ============================================
 module.exports = mongoose.models.User || mongoose.model("User", userSchema);
