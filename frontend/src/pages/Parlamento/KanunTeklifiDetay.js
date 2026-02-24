@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { kanunTeklifiAPI } from '../../services/kanunTeklifiAPI';
+import io from 'socket.io-client'; // ← YENİ
 
 const KanunTeklifiDetay = () => {
   const { id } = useParams();
@@ -24,6 +25,38 @@ const KanunTeklifiDetay = () => {
   const [votingLoading, setVotingLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('genel');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLive, setIsLive] = useState(false); // ← YENİ
+
+  // ✅ YENİ: Socket.io bağlantısı
+  useEffect(() => {
+    const socket = io(process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:4000');
+
+    socket.on('connect', () => {
+      console.log('🔴 Socket.io bağlandı:', socket.id);
+      setIsLive(true);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Socket.io bağlantısı kesildi');
+      setIsLive(false);
+    });
+
+    // Oy güncellemelerini dinle
+    socket.on('voteUpdate', (data) => {
+      console.log('📡 Oy güncellemesi alındı:', data);
+      
+      // Sadece bu teklifin güncellemesini işle
+      if (data.teklifId === id) {
+        setToplumOylari(data.toplumOylari);
+        setToplamToplumOyu(data.toplamToplumOyu);
+      }
+    });
+
+    // Cleanup
+    return () => {
+      socket.disconnect();
+    };
+  }, [id]);
 
   // Sayfa yüklendiğinde verileri çek
   useEffect(() => {
@@ -55,30 +88,27 @@ const KanunTeklifiDetay = () => {
   };
 
   // Kullanıcının oy durumunu kontrol et
- const checkVoteStatus = async () => {
-  // ✅ DÜZELTME: Token yoksa sessizce geç, redirect yapma!
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    console.log('Kullanıcı giriş yapmamış, oy durumu kontrol edilemiyor');
-    return; // Sessizce çık, redirect YOK!
-  }
-
-  try {
-    const status = await kanunTeklifiAPI.checkUserVoteStatus(id);
-    
-    if (status.voted) {
-      setHasVoted(true);
-      setUserVote(status.voteType);
+  const checkVoteStatus = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      console.log('Kullanıcı giriş yapmamış, oy durumu kontrol edilemiyor');
+      return;
     }
-  } catch (err) {
-    // Hata varsa sessizce geç
-    console.log('Oy durumu kontrol edilemedi:', err);
-  }
-};
+
+    try {
+      const status = await kanunTeklifiAPI.checkUserVoteStatus(id);
+      
+      if (status.voted) {
+        setHasVoted(true);
+        setUserVote(status.voteType);
+      }
+    } catch (err) {
+      console.log('Oy durumu kontrol edilemedi:', err);
+    }
+  };
 
   // Oy kullan
   const handleVote = async (oyTipi) => {
-    // Giriş kontrolü
     const token = localStorage.getItem('authToken');
     if (!token) {
       alert('Oy kullanmak için giriş yapmalısınız!');
@@ -97,6 +127,8 @@ const KanunTeklifiDetay = () => {
       
       setUserVote(oyTipi);
       setHasVoted(true);
+      
+      // Socket.io otomatik güncelleyecek ama local'i de güncelle
       setToplumOylari(result.toplumOylari);
       setToplamToplumOyu(result.toplamToplumOyu);
       
@@ -303,6 +335,36 @@ const KanunTeklifiDetay = () => {
       paddingBottom: '60px'
     }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 32px' }}>
+        
+        {/* ✅ YENİ: Canlı Badge */}
+        {isLive && (
+          <div style={{
+            position: 'fixed',
+            top: '90px',
+            right: '32px',
+            background: '#dc2626',
+            color: '#ffffff',
+            padding: '8px 16px',
+            fontSize: '11px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)'
+          }}>
+            <span style={{
+              width: '8px',
+              height: '8px',
+              background: '#ffffff',
+              borderRadius: '50%',
+              animation: 'pulse 1.5s ease-in-out infinite'
+            }}></span>
+            CANLI
+          </div>
+        )}
         
         {/* Breadcrumb */}
         <div style={{ 
@@ -994,18 +1056,20 @@ const KanunTeklifiDetay = () => {
             Bu kanun teklifine sen olsaydın ne oy verirdin?
           </p>
 
+          {/* ✅ YENİ: Canlı güncelleme ile oy butonları */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
             gap: '16px',
             marginBottom: '32px',
             maxWidth: '800px',
-            margin: '0 auto 32px'
+            margin: '0 auto 32px',
+            transition: 'transform 0.3s ease'
           }}>
             {[
-              { value: 'kabul', label: 'Kabul', color: '#059669' },
-              { value: 'ret', label: 'Ret', color: '#dc2626' },
-              { value: 'cekimser', label: 'Çekimser', color: '#d97706' }
+              { value: 'kabul', label: 'Kabul', color: '#059669', count: toplumOylari.kabul },
+              { value: 'ret', label: 'Ret', color: '#dc2626', count: toplumOylari.ret },
+              { value: 'cekimser', label: 'Çekimser', color: '#d97706', count: toplumOylari.cekimser }
             ].map(option => (
               <button
                 key={option.value}
@@ -1022,7 +1086,8 @@ const KanunTeklifiDetay = () => {
                   transition: 'all 0.2s',
                   textTransform: 'uppercase',
                   letterSpacing: '1px',
-                  opacity: hasVoted && userVote !== option.value ? 0.5 : 1
+                  opacity: hasVoted && userVote !== option.value ? 0.5 : 1,
+                  position: 'relative'
                 }}
                 onMouseEnter={(e) => {
                   if (!hasVoted && userVote !== option.value) {
@@ -1037,7 +1102,14 @@ const KanunTeklifiDetay = () => {
                   }
                 }}
               >
-                {votingLoading ? 'Kaydediliyor...' : option.label}
+                <div>{votingLoading ? 'Kaydediliyor...' : option.label}</div>
+                <div style={{
+                  marginTop: '8px',
+                  fontSize: '24px',
+                  fontWeight: '300'
+                }}>
+                  {option.count}
+                </div>
               </button>
             ))}
           </div>
@@ -1058,12 +1130,23 @@ const KanunTeklifiDetay = () => {
             </div>
           )}
 
+          {/* Toplam oy sayısı - Canlı güncelleniyor */}
+          <div style={{
+            textAlign: 'center',
+            fontSize: '14px',
+            color: theme.textSecondary,
+            marginTop: '24px'
+          }}>
+            <strong style={{ color: theme.textPrimary }}>{toplamToplumOyu.toLocaleString('tr-TR')}</strong> kişi oy kullandı
+          </div>
+
           {userVote && (
             <div style={{
               maxWidth: '800px',
               margin: '0 auto',
               paddingTop: '32px',
-              borderTop: `1px solid ${theme.cardBorder}`
+              borderTop: `1px solid ${theme.cardBorder}`,
+              marginTop: '32px'
             }}>
               <div style={{ 
                 fontSize: '12px', 
@@ -1154,6 +1237,14 @@ const KanunTeklifiDetay = () => {
         </div>
 
       </div>
+
+      {/* ✅ YENİ: Pulse animation CSS */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
     </div>
   );
 };
