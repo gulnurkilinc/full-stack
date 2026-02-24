@@ -2,35 +2,102 @@ const User = require("../models/user.js");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail.js");
 
+// ============================================
+// YARDIMCI: Şifre kural kontrolü
+// ============================================
+const validatePassword = (password) => {
+    if (!password || password.length < 8) {
+        return "Şifre en az 8 karakter olmalıdır";
+    }
+    if (!/[A-Z]/.test(password)) {
+        return "Şifre en az 1 büyük harf içermelidir";
+    }
+    if (!/[a-z]/.test(password)) {
+        return "Şifre en az 1 küçük harf içermelidir";
+    }
+    if (!/[0-9]/.test(password)) {
+        return "Şifre en az 1 rakam içermelidir";
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+        return "Şifre en az 1 özel karakter içermelidir (!@#$%^&*)";
+    }
+    return null; // null = geçerli
+};
+
+// ============================================
+// YARDIMCI: Geçici email engeli
+// ============================================
+const BLOCKED_EMAIL_DOMAINS = [
+    'tempmail.com', 'guerrillamail.com', 'mailinator.com',
+    'yopmail.com', 'throwaway.email', 'sharklasers.com',
+    'trashmail.com', 'maildrop.cc'
+];
+
+const isBlockedEmail = (email) => {
+    const domain = email.split('@')[1]?.toLowerCase();
+    return BLOCKED_EMAIL_DOMAINS.includes(domain);
+};
+
+// ============================================
 // Kullanıcı kaydı
+// ============================================
 const register = async (req, res) => {
     try {
-        console.log('📝 Register isteği geldi:', req.body);
         const { name, email, password } = req.body;
 
-        // Email kontrolü
-        let user = await User.findOne({ email });
-        if (user) {
+        // ── Alan kontrolü ──────────────────────────
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Lütfen tüm alanları doldurun"
+            });
+        }
+
+        // ── İsim kontrolü ──────────────────────────
+        if (name.trim().length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: "İsim en az 2 karakter olmalıdır"
+            });
+        }
+
+        // ── Geçici email kontrolü ───────────────────
+        if (isBlockedEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "Geçici email adresleri kabul edilmemektedir"
+            });
+        }
+
+        // ── Şifre kural kontrolü ────────────────────
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            return res.status(400).json({
+                success: false,
+                message: passwordError
+            });
+        }
+
+        // ── Email tekrar kontrolü ───────────────────
+        const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+        if (existingUser) {
             return res.status(400).json({
                 success: false,
                 message: "Bu email adresi zaten kayıtlı"
             });
         }
-         console.log('👤 Kullanıcı oluşturuluyor...');
 
-        // Kullanıcı oluştur
-        user = await User.create({
-            name,
-            email,
+        // ── Kullanıcı oluştur ───────────────────────
+        const user = await User.create({
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
             password,
             avatar: {
                 public_id: "default_avatar",
-                url: "https://via.placeholder.com/150"
+                url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name.trim())}&background=007bff&color=fff&size=200`
             }
         });
-        console.log('✅ Kullanıcı oluşturuldu:', user._id);
 
-        // Token oluştur
         const token = user.generateToken();
 
         res.status(201).json({
@@ -45,9 +112,9 @@ const register = async (req, res) => {
             },
             token
         });
+
     } catch (error) {
-        console.error('❌ Register HATA:', error.message); // ← EKLE
-        console.error('❌ Stack:', error.stack);          
+        console.error('❌ Register HATA:', error.message);
         res.status(500).json({
             success: false,
             message: error.message
@@ -55,7 +122,9 @@ const register = async (req, res) => {
     }
 };
 
-// Kullanıcı girişi (güncellenmiş)
+// ============================================
+// Kullanıcı girişi - Brute Force Korumalı
+// ============================================
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -67,7 +136,9 @@ const login = async (req, res) => {
             });
         }
 
-        const user = await User.findOne({ email }).select('+password');
+        // loginAttempts ve lockUntil'i de getir
+        const user = await User.findOne({ email })
+            .select('+password +loginAttempts +lockUntil');
 
         if (!user) {
             return res.status(401).json({
@@ -76,22 +147,52 @@ const login = async (req, res) => {
             });
         }
 
-        const isPasswordMatched = await user.comparePassword(password);
-
-        if (!isPasswordMatched) {
-            return res.status(401).json({
+        // ── Hesap aktif mi? ─────────────────────────
+        if (!user.isActive) {
+            return res.status(403).json({
                 success: false,
-                message: "Geçersiz email veya şifre"
+                message: "Hesabınız devre dışı bırakılmıştır. Destek ile iletişime geçin."
             });
         }
 
+        // ── Hesap kilitli mi? ───────────────────────
+        if (user.isLocked()) {
+            const remainingMs = user.lockUntil - Date.now();
+            const remainingMin = Math.ceil(remainingMs / 60000);
+            return res.status(423).json({
+                success: false,
+                message: `Çok fazla hatalı deneme. ${remainingMin} dakika sonra tekrar deneyin.`
+            });
+        }
+
+        // ── Şifre kontrolü ─────────────────────────
+        const isPasswordMatched = await user.comparePassword(password);
+
+        if (!isPasswordMatched) {
+            // Başarısız denemeyi kaydet
+            await user.incrementLoginAttempts();
+
+            const attemptsLeft = 5 - user.loginAttempts;
+            const message = attemptsLeft > 0
+                ? `Geçersiz email veya şifre. ${attemptsLeft} deneme hakkınız kaldı.`
+                : "Çok fazla hatalı deneme. Hesabınız 15 dakika kilitlendi.";
+
+            return res.status(401).json({
+                success: false,
+                message
+            });
+        }
+
+        // ── Başarılı giriş → sıfırla ────────────────
+        await user.resetLoginAttempts();
+
         const token = user.generateToken();
 
-        // Cookie'ye token ekle
         res.cookie('token', token, {
             httpOnly: true,
-            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 gün
-            secure: process.env.NODE_ENV === 'production'
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
         });
 
         res.status(200).json({
@@ -106,7 +207,9 @@ const login = async (req, res) => {
             },
             token
         });
+
     } catch (error) {
+        console.error('❌ Login HATA:', error.message);
         res.status(500).json({
             success: false,
             message: error.message
@@ -114,126 +217,97 @@ const login = async (req, res) => {
     }
 };
 
-// Çıkış - Cookie'yi temizle
+// ============================================
+// Çıkış - Cookie temizle
+// ============================================
 const logout = async (req, res) => {
-  try {
-    res.cookie('token', '', {
-      httpOnly: true,
-      expires: new Date(0), // Geçmiş tarih = cookie sil
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Başarıyla çıkış yapıldı'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
+    try {
+        res.cookie('token', '', {
+            httpOnly: true,
+            expires: new Date(0),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+        res.status(200).json({ success: true, message: 'Başarıyla çıkış yapıldı' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
+// ============================================
 // Kullanıcı profili
+// ============================================
 const getProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-
-        res.status(200).json({
-            success: true,
-            user
-        });
+        res.status(200).json({ success: true, user });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
+// ============================================
 // Profil güncelle
+// ============================================
 const updateProfile = async (req, res) => {
     try {
         const { name, email, bio } = req.body;
-
         const user = await User.findById(req.user.id);
 
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "Kullanıcı bulunamadı"
-            });
+            return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
         }
 
-        if (name) user.name = name;
-        if (email) user.email = email;
-        if (bio) user.bio = bio;
+        if (name) user.name = name.trim();
+        if (email) user.email = email.toLowerCase().trim();
+        if (bio !== undefined) user.bio = bio;
 
         await user.save();
 
-        res.status(200).json({
-            success: true,
-            message: "Profil güncellendi",
-            user
-        });
+        res.status(200).json({ success: true, message: "Profil güncellendi", user });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
+// ============================================
 // Şifre değiştir
+// ============================================
 const changePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
-
         const user = await User.findById(req.user.id).select('+password');
 
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "Kullanıcı bulunamadı"
-            });
+            return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
         }
 
-        // Eski şifre kontrolü
         const isPasswordMatched = await user.comparePassword(oldPassword);
-
         if (!isPasswordMatched) {
-            return res.status(400).json({
-                success: false,
-                message: "Eski şifreniz yanlış"
-            });
+            return res.status(400).json({ success: false, message: "Eski şifreniz yanlış" });
+        }
+
+        // Yeni şifre kural kontrolü
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) {
+            return res.status(400).json({ success: false, message: passwordError });
         }
 
         user.password = newPassword;
         await user.save();
 
-        res.status(200).json({
-            success: true,
-            message: "Şifreniz başarıyla değiştirildi"
-        });
+        res.status(200).json({ success: true, message: "Şifreniz başarıyla değiştirildi" });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-
-
-
-
-// Şifre sıfırlama isteği (email gönder)
+// ============================================
+// Şifre sıfırlama isteği
+// ============================================
 const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -243,16 +317,10 @@ const forgotPassword = async (req, res) => {
             });
         }
 
-        // Reset token oluştur
         const resetToken = user.getResetPasswordToken();
-
         await user.save({ validateBeforeSave: false });
 
-        // Reset URL oluştur
-        const resetUrl = `${req.protocol}://${req.get('host')}/api/password/reset/${resetToken}`;
-        
-        // Frontend kullanıyorsanız:
-        // const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
         const message = `
             Merhaba ${user.name},
@@ -262,28 +330,25 @@ const forgotPassword = async (req, res) => {
             ${resetUrl}
             
             Bu linki talep etmediyseniz, bu e-postayı görmezden gelebilirsiniz.
-            
             Bu link 15 dakika geçerlidir.
             
-            İyi günler,
-            Blog Ekibi
+            İyi günler
         `;
 
         try {
             await sendEmail({
-                email: user.email,
+                to: user.email,
                 subject: 'Şifre Sıfırlama Talebi',
-                message
+                html: `<p>${message.replace(/\n/g, '<br>')}</p>`
             });
 
             res.status(200).json({
                 success: true,
                 message: `Şifre sıfırlama linki ${user.email} adresine gönderildi`
             });
-        } catch (error) {
+        } catch (emailError) {
             user.resetPasswordToken = undefined;
             user.resetPasswordExpire = undefined;
-
             await user.save({ validateBeforeSave: false });
 
             return res.status(500).json({
@@ -292,228 +357,145 @@ const forgotPassword = async (req, res) => {
             });
         }
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
+// ============================================
 // Şifreyi sıfırla
+// ============================================
 const resetPassword = async (req, res) => {
     try {
         const { token } = req.params;
         const { password, confirmPassword } = req.body;
 
-        // Şifreleri kontrol et
         if (!password || !confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: "Lütfen tüm alanları doldurun"
-            });
+            return res.status(400).json({ success: false, message: "Lütfen tüm alanları doldurun" });
         }
-
         if (password !== confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: "Şifreler eşleşmiyor"
-            });
+            return res.status(400).json({ success: false, message: "Şifreler eşleşmiyor" });
         }
 
-        if (password.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: "Şifre en az 6 karakter olmalıdır"
-            });
+        // Şifre kural kontrolü
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            return res.status(400).json({ success: false, message: passwordError });
         }
 
-        // Token'ı hashle
-        const resetPasswordToken = crypto
-            .createHash('sha256')
-            .update(token)
-            .digest('hex');
-
-        // Kullanıcıyı bul
+        const resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
         const user = await User.findOne({
             resetPasswordToken,
             resetPasswordExpire: { $gt: Date.now() }
         });
 
         if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: "Geçersiz veya süresi dolmuş token"
-            });
+            return res.status(400).json({ success: false, message: "Geçersiz veya süresi dolmuş token" });
         }
 
-        // Yeni şifreyi kaydet
         user.password = password;
         user.resetPasswordToken = undefined;
         user.resetPasswordExpire = undefined;
-
         await user.save();
 
-        // Token oluştur ve giriş yap
         const authToken = user.generateToken();
 
         res.cookie('token', authToken, {
             httpOnly: true,
             expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            secure: process.env.NODE_ENV === 'production'
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
         });
 
         res.status(200).json({
             success: true,
             message: "Şifreniz başarıyla değiştirildi",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role
-            },
+            user: { id: user._id, name: user.name, email: user.email, role: user.role },
             token: authToken
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-
-
-
-
-
+// ============================================
 // Yazar olma başvurusu
+// ============================================
 const applyForAuthor = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "Kullanıcı bulunamadı"
-            });
+            return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
         }
-
         if (user.role === 'author' || user.role === 'admin') {
-            return res.status(400).json({
-                success: false,
-                message: "Zaten yazar yetkisine sahipsiniz"
-            });
+            return res.status(400).json({ success: false, message: "Zaten yazar yetkisine sahipsiniz" });
         }
-
         res.status(200).json({
             success: true,
             message: "Yazar başvurunuz alındı. En kısa sürede değerlendirilecektir."
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// ============= ADMIN İŞLEMLERİ =============
-
-// Tüm kullanıcıları getir
+// ============================================
+// ADMIN: Tüm kullanıcıları getir
+// ============================================
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find();
-
-        res.status(200).json({
-            success: true,
-            count: users.length,
-            users
-        });
+        const users = await User.find().select('-password');
+        res.status(200).json({ success: true, count: users.length, users });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Tek kullanıcı detayı
+// ============================================
+// ADMIN: Tek kullanıcı detayı
+// ============================================
 const getUserDetail = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
-
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "Kullanıcı bulunamadı"
-            });
+            return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
         }
-
-        res.status(200).json({
-            success: true,
-            user
-        });
+        res.status(200).json({ success: true, user });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Kullanıcı rolü güncelle (Admin)
+// ============================================
+// ADMIN: Kullanıcı rolü güncelle
+// ============================================
 const updateUserRole = async (req, res) => {
     try {
         const { role } = req.body;
-
         const user = await User.findById(req.params.id);
-
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "Kullanıcı bulunamadı"
-            });
+            return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
         }
-
         user.role = role;
         await user.save();
-
-        res.status(200).json({
-            success: true,
-            message: "Kullanıcı rolü güncellendi",
-            user
-        });
+        res.status(200).json({ success: true, message: "Kullanıcı rolü güncellendi", user });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Kullanıcı sil (Admin)
+// ============================================
+// ADMIN: Kullanıcı sil
+// ============================================
 const deleteUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
-
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "Kullanıcı bulunamadı"
-            });
+            return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
         }
-
         await user.deleteOne();
-
-        res.status(200).json({
-            success: true,
-            message: "Kullanıcı silindi"
-        });
+        res.status(200).json({ success: true, message: "Kullanıcı silindi" });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -525,10 +507,8 @@ module.exports = {
     updateProfile,
     changePassword,
     applyForAuthor,
-    forgotPassword,      
-    resetPassword, 
-    
-    // Admin
+    forgotPassword,
+    resetPassword,
     getAllUsers,
     getUserDetail,
     updateUserRole,

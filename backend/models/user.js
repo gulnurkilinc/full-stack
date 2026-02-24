@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Lütfen isminizi girin"],
         trim: true,
+        minLength: [2, "İsim en az 2 karakter olmalıdır"],
         maxLength: [50, "İsim en fazla 50 karakter olabilir"]
     },
     email: {
@@ -17,21 +18,18 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
         trim: true,
         match: [
-            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,})+$/,
             "Lütfen geçerli bir email adresi girin"
         ]
     },
     password: {
         type: String,
         required: [true, "Lütfen şifrenizi girin"],
-        minLength: [6, "Şifreniz en az 6 karakter olmalıdır"],
+        minLength: [8, "Şifreniz en az 8 karakter olmalıdır"],
         select: false
     },
     avatar: {
-        public_id: {
-            type: String,
-            default: "default_avatar"
-        },
+        public_id: { type: String, default: "default_avatar" },
         url: {
             type: String,
             default: "https://ui-avatars.com/api/?name=User&background=007bff&color=fff&size=200"
@@ -50,27 +48,24 @@ const userSchema = new mongoose.Schema({
         maxLength: [500, "Bio en fazla 500 karakter olabilir"],
         default: ""
     },
-    isVerified: {
-        type: Boolean,
-        default: false
-    },
+    isVerified: { type: Boolean, default: false },
     emailVerificationToken: String,
     emailVerificationExpire: Date,
     resetPasswordToken: String,
     resetPasswordExpire: Date,
-    isActive: {
-        type: Boolean,
-        default: true
-    },
-    lastLogin: {
-        type: Date,
-        default: null
-    },
+    isActive: { type: Boolean, default: true },
+    lastLogin: { type: Date, default: null },
+
+    // ── Brute Force Koruması ──────────────────
+    loginAttempts: { type: Number, default: 0 },
+    lockUntil:     { type: Date,   default: null },
+    // ─────────────────────────────────────────
+
     socialLinks: {
-        twitter: { type: String, default: "" },
+        twitter:  { type: String, default: "" },
         linkedin: { type: String, default: "" },
-        github: { type: String, default: "" },
-        website: { type: String, default: "" }
+        github:   { type: String, default: "" },
+        website:  { type: String, default: "" }
     }
 }, {
     timestamps: true,
@@ -85,9 +80,7 @@ userSchema.pre('save', async function() {
     if (this.isModified('email') && !this.isNew) {
         this.isVerified = false;
     }
-    if (!this.isModified('password')) {
-        return;
-    }
+    if (!this.isModified('password')) return;
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
 });
@@ -97,15 +90,9 @@ userSchema.pre('save', async function() {
 // ============================================
 userSchema.methods.generateToken = function() {
     return jwt.sign(
-        {
-            id: this._id,
-            email: this.email,
-            role: this.role
-        },
+        { id: this._id, email: this.email, role: this.role },
         process.env.JWT_SECRET,
-        {
-            expiresIn: process.env.JWT_EXPIRE || '7d'
-        }
+        { expiresIn: process.env.JWT_EXPIRE || '7d' }
     );
 };
 
@@ -121,15 +108,41 @@ userSchema.methods.comparePassword = async function(enteredPassword) {
 };
 
 // ============================================
+// METHODS: Hesap kilitli mi?
+// ============================================
+userSchema.methods.isLocked = function() {
+    return this.lockUntil && this.lockUntil > Date.now();
+};
+
+// ============================================
+// METHODS: Başarısız giriş → sayacı artır
+// ============================================
+userSchema.methods.incrementLoginAttempts = async function() {
+    this.loginAttempts += 1;
+    // 5 yanlış denemede 15 dakika kilitle
+    if (this.loginAttempts >= 5) {
+        this.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+    }
+    return this.save({ validateBeforeSave: false });
+};
+
+// ============================================
+// METHODS: Başarılı giriş → sıfırla
+// ============================================
+userSchema.methods.resetLoginAttempts = async function() {
+    this.loginAttempts = 0;
+    this.lockUntil = null;
+    this.lastLogin = new Date();
+    return this.save({ validateBeforeSave: false });
+};
+
+// ============================================
 // METHODS: Şifre sıfırlama token'ı
 // ============================================
 userSchema.methods.getResetPasswordToken = function() {
     const resetToken = crypto.randomBytes(32).toString('hex');
-    this.resetPasswordToken = crypto
-        .createHash('sha256')
-        .update(resetToken)
-        .digest('hex');
-    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 dakika
+    this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
     return resetToken;
 };
 
@@ -138,16 +151,13 @@ userSchema.methods.getResetPasswordToken = function() {
 // ============================================
 userSchema.methods.getEmailVerificationToken = function() {
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    this.emailVerificationToken = crypto
-        .createHash('sha256')
-        .update(verificationToken)
-        .digest('hex');
-    this.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 saat
+    this.emailVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    this.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000;
     return verificationToken;
 };
 
 // ============================================
-// METHODS: Son giriş güncelle
+// METHODS: Son giriş güncelle (geriye dönük uyumluluk)
 // ============================================
 userSchema.methods.updateLastLogin = function() {
     this.lastLogin = new Date();
@@ -158,13 +168,11 @@ userSchema.methods.updateLastLogin = function() {
 // STATIC METHODS
 // ============================================
 userSchema.statics.findByEmailWithPassword = function(email) {
-    return this.findOne({ email }).select('+password');
+    return this.findOne({ email }).select('+password +loginAttempts +lockUntil');
 };
-
 userSchema.statics.findActiveUsers = function() {
     return this.find({ isActive: true, isVerified: true });
 };
-
 userSchema.statics.findAdmins = function() {
     return this.find({ role: 'admin', isActive: true });
 };
@@ -180,7 +188,7 @@ userSchema.virtual('blogCount', {
 });
 
 // ============================================
-// INDEXES - email unique zaten index yaratıyor, tekrar ekleme
+// INDEXES
 // ============================================
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1, isVerified: 1 });
