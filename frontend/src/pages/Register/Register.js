@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { register, clearError } from '../../redux/authSlice';
 import { useTheme } from '../../context/ThemeContext';
+import { toast } from 'react-toastify';
 
 // ============================================
 // ŞİFRE GÜCÜ HESAPLA
@@ -58,10 +59,17 @@ const Register = () => {
 
   // Giriş başarılıysa yönlendir
   useEffect(() => {
-    if (isAuthenticated && user) {
-      navigate('/', { replace: true });
-    }
-  }, [isAuthenticated, user, navigate]);
+  if (isAuthenticated && user) {
+    toast.success(`Kayıt başarılı! Hoş geldiniz, ${user.name}! 🎉`);
+    navigate('/', { replace: true });
+  }
+}, [isAuthenticated, user, navigate]);
+  
+  useEffect(() => {
+  if (error) {
+    toast.error(error);
+  }
+}, [error]);
 
   useEffect(() => {
     return () => dispatch(clearError());

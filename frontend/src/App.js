@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';          // ✅ YENİ
+import 'react-toastify/dist/ReactToastify.css';            // ✅ YENİ
 import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/Layout/Header';
 import Footer from './components/Layout/Footer';
@@ -26,6 +28,19 @@ function App() {
     <ThemeProvider>
       <Router>
         <ScrollToTop /> {/* ✅ BURAYA EKLENDİ - Router içinde ilk sırada */}
+
+        {/* ✅ YENİ - Toast bildirimleri, tüm uygulamada çalışır */}
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          draggable
+          theme="colored"
+        />
+
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           
           <Routes>
@@ -66,7 +81,7 @@ function App() {
               </>
             } />
 
-            {/* AnalyticaAI Sayfası - YENİ EKLENEN */}
+            {/* AnalyticaAI Sayfası */}
             <Route path="/analytica-ai" element={
               <>
                 <Header />
