@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';                    // ✅ YENİ
 import { login, clearError } from '../../redux/authSlice';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -15,10 +16,10 @@ const Login = () => {
 
   const { loading, error, isAuthenticated, user } = useSelector((state) => state.auth);
 
-  // Giriş başarılıysa yönlendir (window.location yerine useNavigate)
+  // Giriş başarılıysa yönlendir + toast göster
   useEffect(() => {
     if (isAuthenticated && user) {
-      // Login sayfasına gelmeden önceki sayfaya veya role göre yönlendir
+      toast.success(`Hoş geldiniz, ${user.name}! 👋`);   // ✅ YENİ
       const from = location.state?.from?.pathname;
       if (from && from !== '/login') {
         navigate(from, { replace: true });
@@ -29,6 +30,13 @@ const Login = () => {
       }
     }
   }, [isAuthenticated, user, navigate, location]);
+
+  // Hata gelince toast göster                             // ✅ YENİ
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   // Unmount'ta error temizle
   useEffect(() => {
@@ -45,7 +53,7 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    alert('Google ile giriş özelliği yakında eklenecek!');
+    toast.info('Google ile giriş özelliği yakında eklenecek!'); // ✅ YENİ (alert yerine)
   };
 
   // ── TEMA RENKLERİ ────────────────────────────────────────────────────────────
@@ -161,7 +169,7 @@ const Login = () => {
             </p>
           </div>
 
-          {/* Hata mesajı */}
+          {/* Hata mesajı - form içi */}
           {error && (
             <div style={{
               background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)',

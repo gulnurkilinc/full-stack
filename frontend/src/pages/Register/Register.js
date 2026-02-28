@@ -53,8 +53,8 @@ const Register = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, isAuthenticated, user } = useSelector((state) => state.auth);
 
+const { loading, error, isAuthenticated, user } = useSelector((state) => state.auth);
   const passwordStrength = getPasswordStrength(formData.password);
 
   // Giriş başarılıysa yönlendir
@@ -172,6 +172,7 @@ const Register = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  
 
     // Anlık validasyon
     if (formErrors[name] !== undefined) {
@@ -213,9 +214,10 @@ const Register = () => {
     }));
   };
 
-  const handleGoogleRegister = () => {
-    alert('Google ile kayıt özelliği yakında eklenecek!');
-  };
+  
+const handleGoogleRegister = () => {
+  toast.info('Google ile kayıt özelliği yakında eklenecek!');
+};
 
   // ── INPUT STYLE HELPER ──────────────────────────────────────────────────────
   const inputStyle = (fieldName) => ({
