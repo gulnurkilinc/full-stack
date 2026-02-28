@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';                    // ✅ YENİ
 import { logout } from '../../redux/authSlice';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -106,9 +107,12 @@ const Header = () => {
     }, 300);
   };
 
+  // ✅ YENİ - toast eklendi
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/');
+    dispatch(logout()).then(() => {
+      toast.success('Başarıyla çıkış yapıldı. Görüşürüz! 👋');
+      navigate('/');
+    });
   };
 
   const handleSearchSubmit = (e) => {
@@ -259,12 +263,12 @@ const Header = () => {
                 fontSize: '18px',
                 fontWeight: '700',
                 color: isTransparent 
-                  ? '#60a5fa'  // Ana sayfada üstteyken mavi solid renk
+                  ? '#60a5fa'
                   : themeName === 'light'
-                    ? '#3b82f6'  // Light temada mavi
+                    ? '#3b82f6'
                     : themeName === 'dark'
-                      ? '#60a5fa'  // Dark temada açık mavi
-                      : '#60a5fa',  // Black temada açık mavi
+                      ? '#60a5fa'
+                      : '#60a5fa',
                 letterSpacing: '-0.5px',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
                 textDecoration: 'none',
@@ -405,7 +409,6 @@ const Header = () => {
                 >
                   {[
                     { to: '/category/tbmm', label: 'TBMM', emoji: '🏛️' },
-                   
                   ].map((item) => (
                     <Link 
                       key={item.label}
