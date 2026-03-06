@@ -783,21 +783,29 @@ const Header = () => {
             {/* Giriş yapmış kullanıcı için */}
             {isAuthenticated ? (
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                <div style={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '8px 16px',
-                  backgroundColor: isTransparent 
-                    ? 'rgba(255, 255, 255, 0.15)' 
-                    : (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a'),
-                  borderRadius: '10px',
-                  border: '1px solid',
-                  borderColor: isTransparent 
-                    ? 'rgba(255, 255, 255, 0.3)' 
-                    : (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a'),
-                  backdropFilter: isTransparent ? 'blur(10px)' : 'none'
-                }}>
+                {/* ✅ GÜNCELLENDI - Kullanıcı adına tıklayınca profile gidiyor */}
+                <Link
+                  to="/profile"
+                  style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px 16px',
+                    backgroundColor: isTransparent 
+                      ? 'rgba(255, 255, 255, 0.15)' 
+                      : (themeName === 'light' ? '#f7f8fa' : themeName === 'dark' ? '#334155' : '#2a2a2a'),
+                    borderRadius: '10px',
+                    border: '1px solid',
+                    borderColor: isTransparent 
+                      ? 'rgba(255, 255, 255, 0.3)' 
+                      : (themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#475569' : '#3a3a3a'),
+                    backdropFilter: isTransparent ? 'blur(10px)' : 'none',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.8'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+                >
                   <div style={{
                     width: '32px',
                     height: '32px',
@@ -821,7 +829,7 @@ const Header = () => {
                   }}>
                     {user?.name}
                   </span>
-                </div>
+                </Link>
                 <button
                   onClick={handleLogout}
                   style={{

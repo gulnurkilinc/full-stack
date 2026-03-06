@@ -24,6 +24,7 @@ import BlogEdit from './pages/Admin/BlogEdit';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
 import Profile from './pages/Profile/Profile';
+import UserProfile from './pages/UserProfile/UserProfile';
 import './index.css';
 
 function App() {
@@ -142,9 +143,10 @@ function App() {
             {/* Şifre Sıfırlama */}
            <Route path="/forgot-password" element={<ForgotPassword />} />
            <Route path="/reset-password/:token" element={<ResetPassword />} />
-           
+
             {/* Profil */}
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:username" element={<UserProfile />} />
 
             {/* Login */}
             <Route path="/login" element={<Login />} />

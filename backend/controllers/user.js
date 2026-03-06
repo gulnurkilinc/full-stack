@@ -418,6 +418,27 @@ const resetPassword = async (req, res) => {
 };
 
 // ============================================
+// Kullanıcı profili (username ile - public)
+// ============================================
+const getUserByUsername = async (req, res) => {
+    try {
+        const user = await User.findOne({ name: req.params.username })
+            .select('name bio role avatar createdAt');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "Kullanıcı bulunamadı"
+            });
+        }
+
+        res.status(200).json({ success: true, user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ============================================
 // Yazar olma başvurusu
 // ============================================
 const applyForAuthor = async (req, res) => {
@@ -512,5 +533,6 @@ module.exports = {
     getAllUsers,
     getUserDetail,
     updateUserRole,
-    deleteUser
+    deleteUser,
+    getUserByUsername
 };

@@ -48,5 +48,6 @@ router.get('/admin/users', authMiddleware, isAdmin, getAllUsers);
 router.get('/admin/users/:id', authMiddleware, isAdmin, getUserDetail);
 router.put('/admin/users/:id/role', authMiddleware, isAdmin, updateUserRole);
 router.delete('/admin/users/:id', authMiddleware, isAdmin, deleteUser);
+router.get('/user/:username', authMiddleware, getUserByUsername);
 
 module.exports = router;
