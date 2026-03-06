@@ -21,6 +21,9 @@ import Dashboard from './pages/Admin/Dashboard';
 import BlogCreate from './pages/Admin/BlogCreate';
 import BlogManagement from './pages/Admin/BlogManagement';
 import BlogEdit from './pages/Admin/BlogEdit';
+import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
+import ResetPassword from './pages/ResetPassword/ResetPassword';
+import Profile from './pages/Profile/Profile';
 import './index.css';
 
 function App() {
@@ -136,10 +139,13 @@ function App() {
               </>
             } />
             
-            {/* ============================================ */}
-            {/* AUTH ROUTES - Header/Footer YOK */}
-            {/* ============================================ */}
-            
+            {/* Şifre Sıfırlama */}
+           <Route path="/forgot-password" element={<ForgotPassword />} />
+           <Route path="/reset-password/:token" element={<ResetPassword />} />
+           
+            {/* Profil */}
+            <Route path="/profile" element={<Profile />} />
+
             {/* Login */}
             <Route path="/login" element={<Login />} />
             
