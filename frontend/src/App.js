@@ -25,6 +25,7 @@ import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
 import Profile from './pages/Profile/Profile';
 import UserProfile from './pages/UserProfile/UserProfile';
+import UserManagement from './pages/Admin/UserManagement';
 import './index.css';
 
 function App() {
@@ -203,7 +204,7 @@ function App() {
               path="/dashboard/users" 
               element={
                 <AdminRoute>
-                  <Dashboard />
+                  <UserManagement />
                 </AdminRoute>
               } 
             />
