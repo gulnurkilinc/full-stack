@@ -211,6 +211,17 @@ const login = async (req, res) => {
         await user.resetLoginAttempts();
 
         const token = user.generateToken();
+        const refreshToken = user.generateRefreshToken();
+
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -246,7 +257,18 @@ const login = async (req, res) => {
 // ============================================
 const logout = async (req, res) => {
     try {
+        // Refresh token'ı veritabanından sil
+        if (req.user?.id) {
+            await User.findByIdAndUpdate(req.user.id, { refreshToken: null });
+        }
+
         res.cookie('token', '', {
+            httpOnly: true,
+            expires: new Date(0),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+        res.cookie('refreshToken', '', {
             httpOnly: true,
             expires: new Date(0),
             secure: process.env.NODE_ENV === 'production',
@@ -434,6 +456,14 @@ const resetPassword = async (req, res) => {
 
         const authToken = user.generateToken();
 
+        userSchema.methods.generateRefreshToken = function() {
+    return jwt.sign(
+        { id: this._id },
+        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        { expiresIn: '30d' }
+    );
+};
+
         res.cookie('token', authToken, {
             httpOnly: true,
             expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -557,6 +587,49 @@ const deleteUser = async (req, res) => {
 };
 
 // ============================================
+// Refresh Token
+// ============================================
+const refreshToken = async (req, res) => {
+    try {
+        const token = req.cookies.refreshToken;
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Refresh token bulunamadı"
+            });
+        }
+
+        // Token'ı doğrula
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+
+        // Kullanıcıyı bul ve token'ı kontrol et
+        const user = await User.findById(decoded.id);
+
+        if (!user || user.refreshToken !== token) {
+            return res.status(401).json({
+                success: false,
+                message: "Geçersiz refresh token"
+            });
+        }
+
+        // Yeni access token oluştur
+        const newToken = user.generateToken();
+
+        res.status(200).json({
+            success: true,
+            token: newToken
+        });
+
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            message: "Refresh token geçersiz veya süresi dolmuş"
+        });
+    }
+};
+// ============================================
 // Email doğrulama
 // ============================================
 const verifyEmail = async (req, res) => {
@@ -610,5 +683,6 @@ module.exports = {
     updateUserRole,
     deleteUser,
     getUserByUsername,
-    verifyEmail
+    verifyEmail,
+    refreshToken
 };

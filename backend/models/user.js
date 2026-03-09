@@ -56,6 +56,11 @@ const userSchema = new mongoose.Schema({
     minLength: [3, "Kullanıcı adı en az 3 karakter olmalıdır"],
     maxLength: [30, "Kullanıcı adı en fazla 30 karakter olabilir"]
 },
+
+    refreshToken: {
+    type: String,
+    default: null
+},
     isVerified: { type: Boolean, default: false },
     emailVerificationToken: String,
     emailVerificationExpire: Date,
@@ -101,6 +106,13 @@ userSchema.methods.generateToken = function() {
         { id: this._id, email: this.email, role: this.role },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRE || '7d' }
+    );
+};
+userSchema.methods.generateRefreshToken = function() {
+    return jwt.sign(
+        { id: this._id },
+        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        { expiresIn: '30d' }
     );
 };
 
