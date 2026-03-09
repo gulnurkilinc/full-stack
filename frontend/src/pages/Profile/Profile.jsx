@@ -20,6 +20,7 @@ const Profile = () => {
     name: '',
     email: '',
     bio: '',
+    username: '',
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -46,6 +47,7 @@ const Profile = () => {
         name: user.name || '',
         email: user.email || '',
         bio: user.bio || '',
+        username: user.username || '',
       });
     }
   }, [user]);
@@ -93,7 +95,8 @@ const Profile = () => {
       const response = await axiosInstance.put('/profile/update', {
         name: profileData.name.trim(),
         email: profileData.email.toLowerCase().trim(),
-        bio: profileData.bio
+        bio: profileData.bio,
+        username: profileData.username.trim()
       });
 
       if (response.data.success) {
@@ -350,6 +353,35 @@ const Profile = () => {
                 <p style={{ color: textColor, fontSize: '12px', marginTop: '4px', textAlign: 'right' }}>
                   {profileData.bio.length}/500
                 </p>
+              </div>
+
+              {/* Kullanıcı Adı */}
+              <div style={{ marginBottom: '28px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>
+                  Kullanıcı Adı <span style={{ color: textColor, fontWeight: '400' }}>(isteğe bağlı)</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: textColor, fontSize: '15px', fontWeight: '500' }}>@</span>
+                  <input
+                    type="text"
+                    value={profileData.username}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))}
+                    placeholder="kullanici_adi"
+                    disabled={profileLoading}
+                    maxLength={30}
+                    style={{ ...inputStyle, paddingLeft: '30px' }}
+                    onFocus={(e) => { e.target.style.borderColor = inputFocusBorder; e.target.style.boxShadow = inputFocusShadow; }}
+                    onBlur={(e)  => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }}
+                  />
+                </div>
+                <p style={{ color: textColor, fontSize: '12px', marginTop: '6px' }}>
+                  Sadece harf, rakam ve _ kullanabilirsiniz. Örnek: <strong style={{ color: headingColor }}>gulnur_kilinc</strong>
+                </p>
+                {profileData.username && (
+                  <p style={{ fontSize: '12px', marginTop: '4px', color: textColor }}>
+                    Profil linkin: <strong style={{ color: headingColor }}>/profile/{profileData.username}</strong>
+                  </p>
+                )}
               </div>
 
               <button

@@ -251,7 +251,7 @@ const getProfile = async (req, res) => {
 // ============================================
 const updateProfile = async (req, res) => {
     try {
-        const { name, email, bio } = req.body;
+        const { name, email, bio, username } = req.body;
         const user = await User.findById(req.user.id);
 
         if (!user) {
@@ -259,8 +259,19 @@ const updateProfile = async (req, res) => {
         }
 
         if (name) user.name = name.trim();
-        if (email) user.email = email.toLowerCase().trim();
-        if (bio !== undefined) user.bio = bio;
+if (email) user.email = email.toLowerCase().trim();
+if (bio !== undefined) user.bio = bio;
+if (username !== undefined) {
+    if (username === '') {
+        user.username = null;
+    } else {
+        const existing = await User.findOne({ username: username.toLowerCase().trim() });
+        if (existing && existing._id.toString() !== req.user.id) {
+            return res.status(400).json({ success: false, message: "Bu kullanıcı adı zaten alınmış" });
+        }
+        user.username = username.toLowerCase().trim();
+    }
+}
 
         await user.save();
 
@@ -422,7 +433,8 @@ const resetPassword = async (req, res) => {
 // ============================================
 const getUserByUsername = async (req, res) => {
     try {
-        const user = await User.findOne({ name: req.params.username })
+        const username = req.params.username.toLowerCase();
+const user = await User.findOne({ username })
             .select('name bio role avatar createdAt');
 
         if (!user) {

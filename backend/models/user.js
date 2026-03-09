@@ -48,6 +48,17 @@ const userSchema = new mongoose.Schema({
         maxLength: [500, "Bio en fazla 500 karakter olabilir"],
         default: ""
     },
+    username: {
+    type: String,
+    unique: true,
+    sparse: true,  // null olanlar unique'i bozmaz
+    trim: true,
+    lowercase: true,
+    match: [/^[a-z0-9_]+$/, "Kullanıcı adı sadece harf, rakam ve _ içerebilir"],
+    minLength: [3, "Kullanıcı adı en az 3 karakter olmalıdır"],
+    maxLength: [30, "Kullanıcı adı en fazla 30 karakter olabilir"],
+    default: null
+},
     isVerified: { type: Boolean, default: false },
     emailVerificationToken: String,
     emailVerificationExpire: Date,

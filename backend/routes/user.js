@@ -14,7 +14,8 @@ const {
     getAllUsers,
     getUserDetail,
     updateUserRole,
-    deleteUser
+    deleteUser,
+    getUserByUsername
 } = require('../controllers/user.js');
 
 // Mevcut middleware isimlerini kullan
