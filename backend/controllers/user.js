@@ -89,29 +89,53 @@ const register = async (req, res) => {
 
         // ── Kullanıcı oluştur ───────────────────────
         const user = await User.create({
-            name: name.trim(),
-            email: email.toLowerCase().trim(),
-            password,
-            avatar: {
-                public_id: "default_avatar",
-                url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name.trim())}&background=007bff&color=fff&size=200`
-            }
-        });
+    name: name.trim(),
+    email: email.toLowerCase().trim(),
+    password,
+    avatar: {
+        public_id: "default_avatar",
+        url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name.trim())}&background=007bff&color=fff&size=200`
+    }
+});
+        const verificationToken = user.getEmailVerificationToken();
+await user.save({ validateBeforeSave: false });
 
-        const token = user.generateToken();
+const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
 
-        res.status(201).json({
-            success: true,
-            message: "Kayıt başarılı",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                avatar: user.avatar
-            },
-            token
-        });
+try {
+    await sendEmail({
+        to: user.email,
+        subject: 'Email Adresinizi Doğrulayın',
+        html: `
+            <h2>Merhaba ${user.name},</h2>
+            <p>Hesabınızı doğrulamak için aşağıdaki linke tıklayın:</p>
+            <a href="${verifyUrl}" style="background:#111827;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin:16px 0;">
+                Email Adresimi Doğrula
+            </a>
+            <p>Bu link 24 saat geçerlidir.</p>
+            <p>Bu isteği siz yapmadıysanız bu emaili görmezden gelebilirsiniz.</p>
+        `
+    });
+} catch (emailError) {
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+}
+
+const token = user.generateToken();
+
+res.status(201).json({
+    success: true,
+    message: "Kayıt başarılı",
+    user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar
+    },
+    token
+});
 
     } catch (error) {
         console.error('❌ Register HATA:', error.message);
@@ -532,6 +556,45 @@ const deleteUser = async (req, res) => {
     }
 };
 
+// ============================================
+// Email doğrulama
+// ============================================
+const verifyEmail = async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        const emailVerificationToken = crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex');
+
+        const user = await User.findOne({
+            emailVerificationToken,
+            emailVerificationExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Geçersiz veya süresi dolmuş doğrulama linki"
+            });
+        }
+
+        user.isVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpire = undefined;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Email adresiniz başarıyla doğrulandı"
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -546,5 +609,6 @@ module.exports = {
     getUserDetail,
     updateUserRole,
     deleteUser,
-    getUserByUsername
+    getUserByUsername,
+    verifyEmail
 };

@@ -23,6 +23,8 @@ import BlogManagement from './pages/Admin/BlogManagement';
 import BlogEdit from './pages/Admin/BlogEdit';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
+import VerifySuccess from './pages/VerifyEmail/VerifySuccess';
 import Profile from './pages/Profile/Profile';
 import UserProfile from './pages/UserProfile/UserProfile';
 import UserManagement from './pages/Admin/UserManagement';
@@ -144,6 +146,9 @@ function App() {
             {/* Şifre Sıfırlama */}
            <Route path="/forgot-password" element={<ForgotPassword />} />
            <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+           <Route path="/verify-email" element={<VerifyEmail />} />
+           <Route path="/verify-email/:token" element={<VerifySuccess />} />
 
             {/* Profil */}
             <Route path="/profile" element={<Profile />} />

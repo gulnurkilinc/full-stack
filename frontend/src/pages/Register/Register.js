@@ -60,8 +60,8 @@ const { loading, error, isAuthenticated, user } = useSelector((state) => state.a
   // Giriş başarılıysa yönlendir
   useEffect(() => {
   if (isAuthenticated && user) {
-    toast.success(`Kayıt başarılı! Hoş geldiniz, ${user.name}! 🎉`);
-    navigate('/', { replace: true });
+    toast.success('Kayıt başarılı! Email adresinizi doğrulayın 📧');
+    navigate('/verify-email', { state: { email: user.email }, replace: true });
   }
 }, [isAuthenticated, user, navigate]);
   

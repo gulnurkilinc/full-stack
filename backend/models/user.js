@@ -50,14 +50,11 @@ const userSchema = new mongoose.Schema({
     },
     username: {
     type: String,
-    unique: true,
-    sparse: true,  // null olanlar unique'i bozmaz
     trim: true,
     lowercase: true,
     match: [/^[a-z0-9_]+$/, "Kullanıcı adı sadece harf, rakam ve _ içerebilir"],
     minLength: [3, "Kullanıcı adı en az 3 karakter olmalıdır"],
-    maxLength: [30, "Kullanıcı adı en fazla 30 karakter olabilir"],
-    default: null
+    maxLength: [30, "Kullanıcı adı en fazla 30 karakter olabilir"]
 },
     isVerified: { type: Boolean, default: false },
     emailVerificationToken: String,
@@ -204,8 +201,10 @@ userSchema.virtual('blogCount', {
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1, isVerified: 1 });
 userSchema.index({ createdAt: -1 });
+userSchema.index({ username: 1 }, { unique: true, sparse: true });
 
 // ============================================
 // EXPORT
 // ============================================
+userSchema.set('autoIndex', false);
 module.exports = mongoose.models.User || mongoose.model("User", userSchema);
