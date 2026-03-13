@@ -40,10 +40,37 @@ app.set('io', io);
 // SECURITY MIDDLEWARES
 // ============================================
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "http:"],
+      connectSrc: ["'self'", process.env.FRONTEND_URL || "http://localhost:3000"],
+    }
+  },
+  crossOriginEmbedderPolicy: false
+}));
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.CLIENT_URL,
+  'http://localhost:3000',
+  'http://localhost:5173',
+].filter(Boolean);
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Postman gibi araçlar için origin olmayabilir
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: ${origin} adresine izin verilmiyor`));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
