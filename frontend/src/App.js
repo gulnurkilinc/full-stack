@@ -28,6 +28,7 @@ import VerifySuccess from './pages/VerifyEmail/VerifySuccess';
 import Profile from './pages/Profile/Profile';
 import UserProfile from './pages/UserProfile/UserProfile';
 import UserManagement from './pages/Admin/UserManagement';
+import SessionTimeout from './components/SessionTimeout/SessionTimeout';
 import './index.css';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
     <ThemeProvider>
       <Router>
         <ScrollToTop /> {/* ✅ BURAYA EKLENDİ - Router içinde ilk sırada */}
+        <SessionTimeout />
 
         {/* ✅ YENİ - Toast bildirimleri, tüm uygulamada çalışır */}
         <ToastContainer

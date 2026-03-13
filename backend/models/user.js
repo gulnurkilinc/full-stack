@@ -101,11 +101,11 @@ userSchema.pre('save', async function() {
 // ============================================
 // METHODS: JWT Token oluştur
 // ============================================
-userSchema.methods.generateToken = function() {
+userSchema.methods.generateToken = function(rememberMe = false) {
     return jwt.sign(
         { id: this._id, email: this.email, role: this.role },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRE || '7d' }
+        { expiresIn: rememberMe ? '30d' : '1d' }
     );
 };
 userSchema.methods.generateRefreshToken = function() {

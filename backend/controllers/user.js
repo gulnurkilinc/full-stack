@@ -210,38 +210,42 @@ const login = async (req, res) => {
         // ── Başarılı giriş → sıfırla ────────────────
         await user.resetLoginAttempts();
 
-        const token = user.generateToken();
-        const refreshToken = user.generateRefreshToken();
+        const { rememberMe } = req.body;
+const tokenExpire = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
 
-        user.refreshToken = refreshToken;
-        await user.save({ validateBeforeSave: false });
+const token = user.generateToken(rememberMe);
+const refreshToken = user.generateRefreshToken();
 
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
-        });
+user.refreshToken = refreshToken;
+await user.save({ validateBeforeSave: false });
 
-        res.cookie('token', token, {
-            httpOnly: true,
-            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
-        });
+res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+});
+
+res.cookie('token', token, {
+    httpOnly: true,
+    expires: new Date(Date.now() + tokenExpire),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+});
 
         res.status(200).json({
-            success: true,
-            message: "Giriş başarılı",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                avatar: user.avatar
-            },
-            token
-        });
+    success: true,
+    message: "Giriş başarılı",
+    user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        lastLogin: user.lastLogin
+    },
+    token
+});
 
     } catch (error) {
         console.error('❌ Login HATA:', error.message);
@@ -304,20 +308,32 @@ const updateProfile = async (req, res) => {
             return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
         }
 
-        if (name) user.name = name.trim();
-if (email) user.email = email.toLowerCase().trim();
-if (bio !== undefined) user.bio = bio;
-if (username !== undefined) {
-    if (username === '') {
-        user.username = null;
-    } else {
-        const existing = await User.findOne({ username: username.toLowerCase().trim() });
-        if (existing && existing._id.toString() !== req.user.id) {
-            return res.status(400).json({ success: false, message: "Bu kullanıcı adı zaten alınmış" });
+        // Avatar yükleme ← BURAYA EKLE
+        if (req.file) {
+            if (user.avatar?.public_id && user.avatar.public_id !== 'default_avatar') {
+                const cloudinary = require('../config/cloudinary');
+                await cloudinary.uploader.destroy(user.avatar.public_id);
+            }
+            user.avatar = {
+                public_id: req.file.filename,
+                url: req.file.path
+            };
         }
-        user.username = username.toLowerCase().trim();
-    }
-}
+
+        if (name) user.name = name.trim();
+        if (email) user.email = email.toLowerCase().trim();
+        if (bio !== undefined) user.bio = bio;
+        if (username !== undefined) {
+            if (username === '') {
+                user.username = null;
+            } else {
+                const existing = await User.findOne({ username: username.toLowerCase().trim() });
+                if (existing && existing._id.toString() !== req.user.id) {
+                    return res.status(400).json({ success: false, message: "Bu kullanıcı adı zaten alınmış" });
+                }
+                user.username = username.toLowerCase().trim();
+            }
+        }
 
         await user.save();
 

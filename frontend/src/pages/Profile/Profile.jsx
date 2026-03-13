@@ -231,13 +231,21 @@ const Profile = () => {
                 </span>
               </div>
 
-              {/* Kayıt tarihi */}
+              {/* Kayıt tarihi + Son giriş */}
               <div style={{ textAlign: 'right' }}>
                 <p style={{ color: textColor, fontSize: '13px', marginBottom: '4px' }}>
                   Kayıt tarihi
                 </p>
-                <p style={{ color: headingColor, fontSize: '14px', fontWeight: '600' }}>
+                <p style={{ color: headingColor, fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
                   {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                </p>
+                <p style={{ color: textColor, fontSize: '13px', marginBottom: '4px' }}>
+                  Son giriş
+                </p>
+                <p style={{ color: headingColor, fontSize: '14px', fontWeight: '600' }}>
+                  {user?.lastLogin
+                    ? new Date(user.lastLogin).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : '-'}
                 </p>
               </div>
             </div>

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const upload = require('../middleware/upload');
 
 const {
     register,
@@ -42,7 +43,7 @@ router.post('/refresh-token', refreshToken);
 // PROTECTED ROUTES - Giriş gerektirir
 // ============================================
 router.get('/me', authMiddleware, getProfile);
-router.put('/profile/update', authMiddleware, updateProfile);
+router.put('/profile/update', authMiddleware, upload.single('avatar'), updateProfile);
 router.put('/password/change', authMiddleware, changePassword);
 router.post('/apply-author', authMiddleware, applyForAuthor);
 

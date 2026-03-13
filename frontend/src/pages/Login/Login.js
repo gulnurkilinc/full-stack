@@ -9,6 +9,7 @@ const Login = () => {
   const { themeName } = useTheme();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -49,8 +50,8 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(login(formData));
-  };
+    dispatch(login({ ...formData, rememberMe }));
+};
 
   const handleGoogleLogin = () => {
     toast.info('Google ile giriş özelliği yakında eklenecek!'); // ✅ YENİ (alert yerine)
@@ -314,7 +315,12 @@ const Login = () => {
             {/* Beni Hatırla & Şifremi Unuttum */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: textColor, fontWeight: '500', transition: 'color 0.4s ease' }}>
-                <input type="checkbox" style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: inputFocusBorder }} />
+                <input
+    type="checkbox"
+    checked={rememberMe}
+    onChange={(e) => setRememberMe(e.target.checked)}
+    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: inputFocusBorder }}
+/>
                 Beni Hatırla
               </label>
               <Link
