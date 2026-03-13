@@ -14,7 +14,7 @@ const app = express();
 const server = http.createServer(app); // ← YENİ
 
 // ============================================
-// SOCKET.IO SETUP
+// SOCKET.IO SETUPconst { apiRateLimiter } = require('./middleware/rateLimiter');
 // ============================================
 const io = new Server(server, {
   cors: {
@@ -228,15 +228,16 @@ const userRoutes = require('./routes/user.js');
 const contactRoutes = require('./routes/contact.js');
 const kanunTeklifiRoutes = require('./routes/kanunTeklifi.js');
 
-const { apiRateLimiter } = require('./middleware/rateLimiter');
+const { apiRateLimiter, registerLimiter, loginLimiter, forgotPasswordLimiter } = require('./middleware/rateLimiter');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // ============================================
 // RATE LIMITING
 // ============================================
 app.use('/api/blogs', apiRateLimiter);
-app.use('/api/login', apiRateLimiter);
-app.use('/api/register', apiRateLimiter);
+app.use('/api/login', loginLimiter);
+app.use('/api/register', registerLimiter);
+app.use('/api/forgot-password', forgotPasswordLimiter);
 app.use('/api/kanun-teklifi', apiRateLimiter);
 
 // ============================================
