@@ -77,6 +77,32 @@ const Profile = () => {
   const badgeBorder  = themeName === 'light' ? '#bbf7d0' : themeName === 'dark' ? '#166534' : '#1a3a1a';
   const badgeColor   = themeName === 'light' ? '#15803d' : '#22c55e';
 
+  // ── AVATAR YÜKLE ──────────────────────────────────────────────────────────
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Dosya boyutu 2MB\'dan küçük olmalıdır');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const response = await axiosInstance.put('/profile/update', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.data.success) {
+        dispatch(updateUser(response.data.user));
+        toast.success('Profil fotoğrafı güncellendi! ✅');
+      }
+    } catch (error) {
+      toast.error('Fotoğraf yüklenirken hata oluştu');
+    }
+  };
+  
   // ── PROFIL GÜNCELLE ────────────────────────────────────────────────────────
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -201,16 +227,44 @@ const Profile = () => {
           {/* Avatar + bilgi */}
           <div style={{ padding: '0 32px 28px', position: 'relative' }}>
             {/* Avatar */}
-            <div style={{
-              width: '80px', height: '80px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontSize: '32px', fontWeight: '700',
-              border: `4px solid ${cardBg}`,
-              marginTop: '-40px', marginBottom: '16px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-            }}>
-              {user?.name?.charAt(0).toUpperCase()}
+            {/* Avatar + yükleme butonu */}
+            <div style={{ position: 'relative', width: '80px', marginTop: '-40px', marginBottom: '16px' }}>
+              <div style={{
+                width: '80px', height: '80px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontSize: '32px', fontWeight: '700',
+                border: `4px solid ${cardBg}`,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                overflow: 'hidden'
+              }}>
+                {user?.avatar?.url && user.avatar.url.includes('cloudinary') ? (
+                  <img src={user.avatar.url} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  user?.name?.charAt(0).toUpperCase()
+                )}
+              </div>
+
+              {/* Yükleme butonu */}
+              <label style={{
+                position: 'absolute', bottom: '0', right: '0',
+                width: '26px', height: '26px', borderRadius: '50%',
+                backgroundColor: '#111827', border: `2px solid ${cardBg}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer'
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleAvatarUpload}
+                />
+              </label>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
