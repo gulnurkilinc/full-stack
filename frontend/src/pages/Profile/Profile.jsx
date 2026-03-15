@@ -12,9 +12,11 @@ const Profile = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'password'
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
+const [profileLoading, setProfileLoading] = useState(false);
+const [passwordLoading, setPasswordLoading] = useState(false);
+const [sessions, setSessions] = useState([]);
+const [sessionsLoading, setSessionsLoading] = useState(false);
 
   const [profileData, setProfileData] = useState({
     name: '',
@@ -51,6 +53,36 @@ const Profile = () => {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    if (activeTab === 'sessions') {
+        fetchSessions();
+    }
+}, [activeTab]);
+
+const fetchSessions = async () => {
+    setSessionsLoading(true);
+    try {
+        const response = await axiosInstance.get('/sessions');
+        if (response.data.success) {
+            setSessions(response.data.sessions);
+        }
+    } catch (error) {
+        toast.error('Oturumlar yüklenirken hata oluştu');
+    } finally {
+        setSessionsLoading(false);
+    }
+};
+
+const handleDeleteSession = async (sessionId) => {
+    try {
+        await axiosInstance.delete(`/sessions/${sessionId}`);
+        setSessions(prev => prev.filter(s => s.sessionId !== sessionId));
+        toast.success('Oturum kapatıldı');
+    } catch (error) {
+        toast.error('Oturum kapatılırken hata oluştu');
+    }
+};
 
   // ── TEMA RENKLERİ ─────────────────────────────────────────────────────────
   const pageBg       = themeName === 'light' ? '#f8f9fa' : themeName === 'dark' ? '#0f172a' : '#000000';
@@ -327,6 +359,11 @@ const Profile = () => {
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
+            )},
+            { key: 'sessions', label: 'Aktif Cihazlar', icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
             )}
           ].map((tab) => (
             <button
@@ -570,6 +607,60 @@ const Profile = () => {
           )}
         </div>
       </div>
+      {/* AKTİF CİHAZLAR */}
+{activeTab === 'sessions' && (
+    <div>
+        <h3 style={{ fontSize: '18px', fontWeight: '700', color: headingColor, marginBottom: '8px', letterSpacing: '-0.3px' }}>
+            Aktif Cihazlar
+        </h3>
+        <p style={{ color: textColor, fontSize: '14px', marginBottom: '24px' }}>
+            Hesabınıza giriş yapılan cihazlar.
+        </p>
+
+        {sessionsLoading ? (
+            <p style={{ color: textColor, textAlign: 'center', padding: '20px' }}>Yükleniyor...</p>
+        ) : sessions.length === 0 ? (
+            <p style={{ color: textColor, textAlign: 'center', padding: '20px' }}>Aktif oturum bulunamadı.</p>
+        ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {sessions.map((session) => (
+                    <div key={session.sessionId} style={{
+                        padding: '16px 20px', borderRadius: '12px',
+                        border: `1px solid ${dividerColor}`,
+                        backgroundColor: inputBg,
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+                    }}>
+                        <div>
+                            <p style={{ color: headingColor, fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
+                                {session.device} · {session.browser}
+                            </p>
+                            <p style={{ color: textColor, fontSize: '13px', marginBottom: '2px' }}>
+                                IP: {session.ip}
+                            </p>
+                            <p style={{ color: textColor, fontSize: '13px' }}>
+                                {new Date(session.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => handleDeleteSession(session.sessionId)}
+                            style={{
+                                padding: '8px 14px', borderRadius: '8px',
+                                fontSize: '13px', fontWeight: '500',
+                                backgroundColor: '#fef2f2', color: '#dc2626',
+                                border: '1px solid #fecaca', cursor: 'pointer',
+                                whiteSpace: 'nowrap'
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#dc2626'; e.currentTarget.style.color = 'white'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.color = '#dc2626'; }}
+                        >
+                            Kapat
+                        </button>
+                    </div>
+                ))}
+            </div>
+        )}
+    </div>
+)}
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

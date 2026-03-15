@@ -79,12 +79,25 @@ const userSchema = new mongoose.Schema({
         linkedin: { type: String, default: "" },
         github:   { type: String, default: "" },
         website:  { type: String, default: "" }
-    }
+    },
+    sessions: [
+        {
+            sessionId: { type: String },
+            device: { type: String },
+            browser: { type: String },
+            ip: { type: String },
+            createdAt: { type: Date, default: Date.now },
+            lastActive: { type: Date, default: Date.now }
+        }
+    ],
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 });
+
+// ============================================
+// MIDDLEWARE 
 
 // ============================================
 // MIDDLEWARE: Tek hook - email + şifre

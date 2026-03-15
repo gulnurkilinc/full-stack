@@ -18,7 +18,9 @@ const {
     deleteUser,
     getUserByUsername,
     verifyEmail,
-    refreshToken
+    refreshToken,
+    getSessions,
+    deleteSession
 } = require('../controllers/user.js');
 
 // Mevcut middleware isimlerini kullan
@@ -38,6 +40,8 @@ router.post('/password/forgot', forgotPassword);
 router.put('/password/reset/:token', resetPassword);
 router.post('/verify-email/:token', verifyEmail);
 router.post('/refresh-token', refreshToken);
+router.get('/sessions', authMiddleware, getSessions);
+router.delete('/sessions/:sessionId', authMiddleware, deleteSession);
 
 // ============================================
 // PROTECTED ROUTES - Giriş gerektirir

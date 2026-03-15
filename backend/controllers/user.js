@@ -217,6 +217,29 @@ const token = user.generateToken(rememberMe);
 const refreshToken = user.generateRefreshToken();
 
 user.refreshToken = refreshToken;
+
+// Cihaz bilgisi kaydet
+const sessionId = crypto.randomBytes(16).toString('hex');
+const userAgent = req.headers['user-agent'] || '';
+const ip = req.ip || req.connection.remoteAddress || '';
+
+// Basit tarayıcı/cihaz tespiti
+const browser = userAgent.includes('Chrome') ? 'Chrome'
+    : userAgent.includes('Firefox') ? 'Firefox'
+    : userAgent.includes('Safari') ? 'Safari'
+    : userAgent.includes('Edge') ? 'Edge'
+    : 'Bilinmeyen Tarayıcı';
+
+const device = userAgent.includes('Mobile') ? '📱 Mobil'
+    : userAgent.includes('Tablet') ? '📱 Tablet'
+    : '🖥️ Masaüstü';
+
+// Max 5 oturum tut
+if (user.sessions.length >= 5) {
+    user.sessions.shift();
+}
+
+user.sessions.push({ sessionId, device, browser, ip });
 await user.save({ validateBeforeSave: false });
 
 res.cookie('refreshToken', refreshToken, {
@@ -645,6 +668,32 @@ const refreshToken = async (req, res) => {
         });
     }
 };
+
+// ============================================
+// Oturumları getir
+// ============================================
+const getSessions = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        res.status(200).json({ success: true, sessions: user.sessions });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ============================================
+// Oturumu sil
+// ============================================
+const deleteSession = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        user.sessions = user.sessions.filter(s => s.sessionId !== req.params.sessionId);
+        await user.save({ validateBeforeSave: false });
+        res.status(200).json({ success: true, message: "Oturum kapatıldı" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 // ============================================
 // Email doğrulama
 // ============================================
@@ -700,5 +749,7 @@ module.exports = {
     deleteUser,
     getUserByUsername,
     verifyEmail,
-    refreshToken
+    refreshToken,
+    getSessions,
+    deleteSession
 };
