@@ -1,6 +1,8 @@
 const User = require("../models/user.js");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail.js");
+const bcrypt = require('bcryptjs');
+const { trackFailedLogin, clearFailedLogin } = require('../middleware/ipBlock');
 
 // ============================================
 // YARDIMCI: Şifre kural kontrolü
@@ -193,8 +195,8 @@ const login = async (req, res) => {
         const isPasswordMatched = await user.comparePassword(password);
 
         if (!isPasswordMatched) {
-            // Başarısız denemeyi kaydet
             await user.incrementLoginAttempts();
+            trackFailedLogin(req.ip || req.connection.remoteAddress || '');
 
             const attemptsLeft = 5 - user.loginAttempts;
             const message = attemptsLeft > 0
@@ -209,6 +211,8 @@ const login = async (req, res) => {
 
         // ── Başarılı giriş → sıfırla ────────────────
         await user.resetLoginAttempts();
+
+        clearFailedLogin(req.ip || req.connection.remoteAddress || '');
 
         const { rememberMe } = req.body;
 const tokenExpire = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
@@ -389,6 +393,20 @@ const changePassword = async (req, res) => {
             return res.status(400).json({ success: false, message: passwordError });
         }
 
+        // Şifre geçmişi kontrolü
+        for (const old of user.passwordHistory) {
+            const isSame = await user.comparePassword(newPassword);
+            if (isSame) {
+                return res.status(400).json({ success: false, message: "Son 3 şifrenizden birini kullanamazsınız" });
+            }
+        }
+
+        // Şifre geçmişine ekle (max 3 tut)
+        user.passwordHistory.push({ password: user.password });
+        if (user.passwordHistory.length > 3) {
+            user.passwordHistory.shift();
+        }
+
         user.password = newPassword;
         await user.save();
 
@@ -486,6 +504,20 @@ const resetPassword = async (req, res) => {
 
         if (!user) {
             return res.status(400).json({ success: false, message: "Geçersiz veya süresi dolmuş token" });
+        }
+
+        // Şifre geçmişi kontrolü
+        for (const old of user.passwordHistory) {
+            const isSame = await bcrypt.compare(password, old.password);
+            if (isSame) {
+                return res.status(400).json({ success: false, message: "Son 3 şifrenizden birini kullanamazsınız" });
+            }
+        }
+
+        // Şifre geçmişine ekle (max 3 tut)
+        user.passwordHistory.push({ password: user.password });
+        if (user.passwordHistory.length > 3) {
+            user.passwordHistory.shift();
         }
 
         user.password = password;

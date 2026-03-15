@@ -90,6 +90,12 @@ const userSchema = new mongoose.Schema({
             lastActive: { type: Date, default: Date.now }
         }
     ],
+    passwordHistory: [
+        {
+            password: { type: String },
+            createdAt: { type: Date, default: Date.now }
+        }
+    ],
 }, {
     timestamps: true,
     toJSON: { virtuals: true },

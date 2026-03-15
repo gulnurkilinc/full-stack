@@ -30,11 +30,14 @@ const {
     isAuthorOrAdmin 
 } = require('../middleware/authMiddleware.js');
 
+const { ipBlockMiddleware } = require('../middleware/ipBlock');
+const { registerLimiter, loginLimiter, forgotPasswordLimiter } = require('../middleware/rateLimiter');
+
 // ============================================
 // PUBLIC ROUTES - Giriş gerektirmez
 // ============================================
 router.post('/register', register);
-router.post('/login', login);
+router.post('/login', ipBlockMiddleware, loginLimiter, login);
 router.post('/logout', logout);
 router.post('/password/forgot', forgotPassword);
 router.put('/password/reset/:token', resetPassword);
