@@ -54,8 +54,8 @@ const Login = () => {
 };
 
   const handleGoogleLogin = () => {
-    toast.info('Google ile giriş özelliği yakında eklenecek!'); // ✅ YENİ (alert yerine)
-  };
+    window.location.href = 'http://localhost:4000/api/auth/google';
+};
 
   // ── TEMA RENKLERİ ────────────────────────────────────────────────────────────
   const pageBg = themeName === 'light'

@@ -29,6 +29,7 @@ import Profile from './pages/Profile/Profile';
 import UserProfile from './pages/UserProfile/UserProfile';
 import UserManagement from './pages/Admin/UserManagement';
 import SessionTimeout from './components/SessionTimeout/SessionTimeout';
+import GoogleSuccess from './pages/Auth/GoogleSuccess';
 import './index.css';
 
 function App() {
@@ -225,6 +226,8 @@ function App() {
                 </AdminRoute>
               } 
             />
+
+            <Route path="/auth/google/success" element={<GoogleSuccess />} />
             
             {/* ============================================ */}
             {/* 404 - Sayfa Bulunamadı */}

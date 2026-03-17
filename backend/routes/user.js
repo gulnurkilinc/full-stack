@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/upload');
+const passport = require('../config/passport');
 
 const {
     register,
@@ -45,6 +46,40 @@ router.post('/verify-email/:token', verifyEmail);
 router.post('/refresh-token', refreshToken);
 router.get('/sessions', authMiddleware, getSessions);
 router.delete('/sessions/:sessionId', authMiddleware, deleteSession);
+// Google OAuth
+router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/auth/google/callback',
+    passport.authenticate('google', { session: false, failureRedirect: `${process.env.FRONTEND_URL}/login?error=google_failed` }),
+    async (req, res) => {
+        try {
+            const user = req.user;
+            const token = user.generateToken();
+            const refreshToken = user.generateRefreshToken();
+
+            user.refreshToken = refreshToken;
+            await user.save({ validateBeforeSave: false });
+
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict'
+            });
+
+            // Frontend'e yönlendir
+            res.redirect(`${process.env.FRONTEND_URL}/auth/google/success?token=${token}&user=${encodeURIComponent(JSON.stringify({
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar
+            }))}`);
+        } catch (error) {
+            res.redirect(`${process.env.FRONTEND_URL}/login?error=google_failed`);
+        }
+    }
+);
 
 // ============================================
 // PROTECTED ROUTES - Giriş gerektirir

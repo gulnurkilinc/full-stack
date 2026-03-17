@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const xss = require('xss-clean');
 const mongoSanitize = require('express-mongo-sanitize');
+const passport = require('./config/passport');
 const db = require('./config/db');
 const http = require('http'); // ← YENİ
 const { Server } = require('socket.io'); // ← YENİ
@@ -81,6 +82,7 @@ app.use(bodyParser.urlencoded({ limit: '30mb', extended: true }));
 app.use(cookieParser());
 app.use(xss());
 app.use(mongoSanitize());
+app.use(passport.initialize());
 
 // ============================================
 // REQUEST LOGGING
