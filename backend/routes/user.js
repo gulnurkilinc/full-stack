@@ -21,6 +21,7 @@ const {
     verifyEmail,
     refreshToken,
     getSessions,
+    getStats,
     deleteSession,
     verifyLoginCode,
     toggle2FA
@@ -50,6 +51,7 @@ router.get('/sessions', authMiddleware, getSessions);
 router.delete('/sessions/:sessionId', authMiddleware, deleteSession);
 router.post('/2fa/verify', verifyLoginCode);
 router.post('/2fa/toggle', authMiddleware, toggle2FA);
+router.get('/admin/stats', authMiddleware, isAdmin, getStats);
 // Google OAuth
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 

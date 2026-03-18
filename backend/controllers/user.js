@@ -877,6 +877,50 @@ const toggle2FA = async (req, res) => {
     }
 };
 
+const getStats = async (req, res) => {
+    try {
+        const Blog = require('../models/blog.js');
+
+        const totalUsers = await User.countDocuments();
+        const totalBlogs = await Blog.countDocuments();
+        const publishedBlogs = await Blog.countDocuments({ status: 'published' });
+
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const newUsersThisMonth = await User.countDocuments({ createdAt: { $gte: startOfMonth } });
+
+        const userCount   = await User.countDocuments({ role: 'user' });
+        const authorCount = await User.countDocuments({ role: 'author' });
+        const adminCount  = await User.countDocuments({ role: 'admin' });
+
+        const recentUsers = await User.find()
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .select('name email role avatar createdAt');
+
+        const topBlogs = await Blog.find({ status: 'published' })
+            .sort({ views: -1 })
+            .limit(5)
+            .select('title slug views createdAt');
+
+        res.status(200).json({
+            success: true,
+            stats: {
+                totalUsers,
+                totalBlogs,
+                publishedBlogs,
+                newUsersThisMonth,
+                roles: { user: userCount, author: authorCount, admin: adminCount },
+                recentUsers,
+                topBlogs
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -897,5 +941,6 @@ module.exports = {
     getSessions,
     deleteSession,
     verifyLoginCode,
-    toggle2FA
+    toggle2FA,
+    getStats
 };
