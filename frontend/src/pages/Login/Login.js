@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';                    // ✅ YENİ
-import { login, clearError } from '../../redux/authSlice';
+import { toast } from 'react-toastify';                    
+import { login, clearError, setUser } from '../../redux/authSlice';
 import { useTheme } from '../../context/ThemeContext';
+import axiosInstance from '../../api/axiosInstance';
 
 const Login = () => {
   const { themeName } = useTheme();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [twoFactorRequired, setTwoFactorRequired] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [userId, setUserId] = useState(null);
+  const [twoFactorLoading, setTwoFactorLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
   const dispatch = useDispatch();
@@ -17,6 +22,16 @@ const Login = () => {
 
   const { loading, error, isAuthenticated, user } = useSelector((state) => state.auth);
 
+  // Google 2FA kontrolü
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('twoFactor') === 'true') {
+      setTwoFactorRequired(true);
+      setUserId(params.get('userId'));
+      toast.info('Doğrulama kodu emailinize gönderildi 📧');
+    }
+  }, []);
+  
   // Giriş başarılıysa yönlendir + toast göster
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -31,6 +46,11 @@ const Login = () => {
       }
     }
   }, [isAuthenticated, user, navigate, location]);
+
+  // 2FA gerekiyorsa
+  useEffect(() => {
+    if (error === '2FA_REQUIRED') return;
+  }, [error]);
 
   // Hata gelince toast göster                             // ✅ YENİ
   useEffect(() => {
@@ -48,10 +68,42 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(login({ ...formData, rememberMe }));
-};
+    const result = await dispatch(login({ ...formData, rememberMe }));
+    if (result.payload?.twoFactorRequired) {
+      setTwoFactorRequired(true);
+      setUserId(result.payload.userId);
+      toast.info('Doğrulama kodu emailinize gönderildi 📧');
+    }
+  };
+
+  const handleTwoFactorSubmit = async (e) => {
+    e.preventDefault();
+    if (!twoFactorCode || twoFactorCode.length !== 6) {
+      toast.error('Lütfen 6 haneli kodu girin');
+      return;
+    }
+    setTwoFactorLoading(true);
+    try {
+      const response = await axiosInstance.post('/2fa/verify', { userId, code: twoFactorCode });
+      if (response.data.success) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        dispatch(setUser(response.data.user));
+        toast.success(`Hoş geldiniz, ${response.data.user.name}! 👋`);
+        if (response.data.user.role === 'admin') {
+          navigate('/dashboard', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Geçersiz kod');
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
 
   const handleGoogleLogin = () => {
     window.location.href = 'http://localhost:4000/api/auth/google';
@@ -228,7 +280,58 @@ const Login = () => {
             <div style={{ flex: 1, height: '1px', backgroundColor: dividerColor, transition: 'background-color 0.4s ease' }} />
           </div>
 
+          {/* 2FA EKRANI */}
+          {twoFactorRequired && (
+            <form onSubmit={handleTwoFactorSubmit}>
+              <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                <div style={{ fontSize: '48px', marginBottom: '12px' }}>📧</div>
+                <h2 style={{ fontSize: '22px', fontWeight: '700', color: headingColor, marginBottom: '8px' }}>
+                  Doğrulama Kodu
+                </h2>
+                <p style={{ color: textColor, fontSize: '14px' }}>
+                  Emailinize gönderilen 6 haneli kodu girin
+                </p>
+              </div>
+              <div style={{ marginBottom: '24px' }}>
+                <input
+                  type="text"
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  maxLength={6}
+                  style={{
+                    width: '100%', padding: '16px',
+                    border: `1.5px solid ${inputBorder}`, borderRadius: '10px',
+                    fontSize: '28px', color: inputText, backgroundColor: inputBg,
+                    outline: 'none', fontFamily: 'inherit',
+                    boxSizing: 'border-box', textAlign: 'center',
+                    letterSpacing: '12px', fontWeight: '700'
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = inputFocusBorder; e.target.style.boxShadow = inputFocusShadow; }}
+                  onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }}
+                  autoFocus
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={twoFactorLoading}
+                className="emerald-btn"
+                style={{ width: '100%', padding: '14px', fontSize: '15px', opacity: twoFactorLoading ? 0.6 : 1, cursor: twoFactorLoading ? 'not-allowed' : 'pointer' }}
+              >
+                {twoFactorLoading ? 'Doğrulanıyor...' : 'Doğrula'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setTwoFactorRequired(false); setTwoFactorCode(''); }}
+                style={{ width: '100%', padding: '12px', marginTop: '12px', background: 'none', border: 'none', color: textColor, cursor: 'pointer', fontSize: '14px' }}
+              >
+                ← Geri Dön
+              </button>
+            </form>
+          )}
+
           {/* Form */}
+          {!twoFactorRequired && (
           <form onSubmit={handleSubmit}>
 
             {/* Email */}
@@ -353,6 +456,7 @@ const Login = () => {
               ) : 'Giriş Yap'}
             </button>
           </form>
+          )}
 
           {/* Kayıt linki */}
           <div style={{

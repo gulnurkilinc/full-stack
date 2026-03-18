@@ -164,7 +164,7 @@ const login = async (req, res) => {
 
         // loginAttempts ve lockUntil'i de getir
         const user = await User.findOne({ email })
-            .select('+password +loginAttempts +lockUntil');
+    .select('+password +loginAttempts +lockUntil +twoFactorEnabled +twoFactorCode +twoFactorExpire');
 
         if (!user) {
             return res.status(401).json({
@@ -211,6 +211,9 @@ const login = async (req, res) => {
 
         // ── Başarılı giriş → sıfırla ────────────────
         await user.resetLoginAttempts();
+
+        await user.resetLoginAttempts();
+console.log('2FA enabled:', user.twoFactorEnabled);
 
         clearFailedLogin(req.ip || req.connection.remoteAddress || '');
 
@@ -260,19 +263,47 @@ res.cookie('token', token, {
     sameSite: 'strict'
 });
 
+       // 2FA kontrolü
+        if (user.twoFactorEnabled) {
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            user.twoFactorCode = code;
+            user.twoFactorExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 dakika
+            await user.save({ validateBeforeSave: false });
+
+            await sendEmail({
+                to: user.email,
+                subject: 'Giriş Doğrulama Kodu',
+                html: `
+                    <h2>Merhaba ${user.name},</h2>
+                    <p>Giriş doğrulama kodunuz:</p>
+                    <h1 style="letter-spacing: 8px; color: #111827;">${code}</h1>
+                    <p>Bu kod <strong>10 dakika</strong> geçerlidir.</p>
+                    <p>Bu isteği siz yapmadıysanız şifrenizi hemen değiştirin.</p>
+                `
+            });
+
+            return res.status(200).json({
+                success: true,
+                twoFactorRequired: true,
+                message: "Doğrulama kodu emailinize gönderildi",
+                userId: user._id
+            });
+        }
+
         res.status(200).json({
-    success: true,
-    message: "Giriş başarılı",
-    user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
-        lastLogin: user.lastLogin
-    },
-    token
-});
+            success: true,
+            message: "Giriş başarılı",
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar,
+                lastLogin: user.lastLogin,
+                twoFactorEnabled: user.twoFactorEnabled
+            },
+            token
+        });
 
     } catch (error) {
         console.error('❌ Login HATA:', error.message);
@@ -765,6 +796,87 @@ const verifyEmail = async (req, res) => {
     }
 };
 
+// ============================================
+// 2FA Kodu Doğrula
+// ============================================
+const verifyLoginCode = async (req, res) => {
+    try {
+        const { userId, code } = req.body;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
+        }
+
+        if (!user.twoFactorCode || user.twoFactorExpire < Date.now()) {
+            return res.status(400).json({ success: false, message: "Kod süresi dolmuş. Tekrar giriş yapın." });
+        }
+
+        if (user.twoFactorCode !== code) {
+            return res.status(400).json({ success: false, message: "Geçersiz kod" });
+        }
+
+        // Kodu temizle
+        user.twoFactorCode = null;
+        user.twoFactorExpire = null;
+
+        const token = user.generateToken();
+        const refreshToken = user.generateRefreshToken();
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Giriş başarılı",
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar,
+                lastLogin: user.lastLogin
+            },
+            token
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ============================================
+// 2FA Aç/Kapat
+// ============================================
+const toggle2FA = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Kullanıcı bulunamadı" });
+        }
+
+        user.twoFactorEnabled = !user.twoFactorEnabled;
+        await user.save({ validateBeforeSave: false });
+
+        res.status(200).json({
+            success: true,
+            message: user.twoFactorEnabled ? "2FA aktif edildi" : "2FA devre dışı bırakıldı",
+            twoFactorEnabled: user.twoFactorEnabled
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -783,5 +895,7 @@ module.exports = {
     verifyEmail,
     refreshToken,
     getSessions,
-    deleteSession
+    deleteSession,
+    verifyLoginCode,
+    toggle2FA
 };

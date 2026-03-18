@@ -96,6 +96,10 @@ const userSchema = new mongoose.Schema({
             createdAt: { type: Date, default: Date.now }
         }
     ],
+
+    twoFactorEnabled: { type: Boolean, default: false },
+twoFactorCode: { type: String, default: null },
+twoFactorExpire: { type: Date, default: null },
 }, {
     timestamps: true,
     toJSON: { virtuals: true },

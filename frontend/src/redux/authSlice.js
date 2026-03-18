@@ -11,6 +11,12 @@ export const login = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post('/login', credentials);
+      
+      // 2FA gerekiyorsa token kaydetme
+      if (response.data.twoFactorRequired) {
+        return response.data;
+      }
+
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       return response.data;
@@ -141,11 +147,16 @@ updateUser: (state, action) => {
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
+        state.error = null;
+
+        // 2FA gerekiyorsa authenticated yapma
+        if (action.payload.twoFactorRequired) {
+          return;
+        }
+
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        state.error = null;
-        // ✅ Yönlendirme Redux'ta değil, component'te yapılır (Login.jsx'te useEffect ile)
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;

@@ -13,10 +13,12 @@ const Profile = () => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const [activeTab, setActiveTab] = useState('profile');
-const [profileLoading, setProfileLoading] = useState(false);
-const [passwordLoading, setPasswordLoading] = useState(false);
-const [sessions, setSessions] = useState([]);
-const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(user?.twoFactorEnabled || false);
+  const [twoFactorLoading, setTwoFactorLoading] = useState(false);
 
   const [profileData, setProfileData] = useState({
     name: '',
@@ -35,14 +37,12 @@ const [sessionsLoading, setSessionsLoading] = useState(false);
     old: false, new: false, confirm: false
   });
 
-  // Giriş yapılmamışsa login'e yönlendir
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
     }
   }, [isAuthenticated, navigate]);
 
-  // Kullanıcı bilgilerini forma doldur
   useEffect(() => {
     if (user) {
       setProfileData({
@@ -51,38 +51,55 @@ const [sessionsLoading, setSessionsLoading] = useState(false);
         bio: user.bio || '',
         username: user.username || '',
       });
+      setTwoFactorEnabled(user.twoFactorEnabled || false);
     }
   }, [user]);
 
   useEffect(() => {
     if (activeTab === 'sessions') {
-        fetchSessions();
+      fetchSessions();
     }
-}, [activeTab]);
+  }, [activeTab]);
 
-const fetchSessions = async () => {
+  const fetchSessions = async () => {
     setSessionsLoading(true);
     try {
-        const response = await axiosInstance.get('/sessions');
-        if (response.data.success) {
-            setSessions(response.data.sessions);
-        }
+      const response = await axiosInstance.get('/sessions');
+      if (response.data.success) {
+        setSessions(response.data.sessions);
+      }
     } catch (error) {
-        toast.error('Oturumlar yüklenirken hata oluştu');
+      toast.error('Oturumlar yüklenirken hata oluştu');
     } finally {
-        setSessionsLoading(false);
+      setSessionsLoading(false);
     }
-};
+  };
 
-const handleDeleteSession = async (sessionId) => {
+  const handleDeleteSession = async (sessionId) => {
     try {
-        await axiosInstance.delete(`/sessions/${sessionId}`);
-        setSessions(prev => prev.filter(s => s.sessionId !== sessionId));
-        toast.success('Oturum kapatıldı');
+      await axiosInstance.delete(`/sessions/${sessionId}`);
+      setSessions(prev => prev.filter(s => s.sessionId !== sessionId));
+      toast.success('Oturum kapatıldı');
     } catch (error) {
-        toast.error('Oturum kapatılırken hata oluştu');
+      toast.error('Oturum kapatılırken hata oluştu');
     }
-};
+  };
+
+  const handleToggle2FA = async () => {
+    setTwoFactorLoading(true);
+    try {
+      const response = await axiosInstance.post('/2fa/toggle');
+      if (response.data.success) {
+        setTwoFactorEnabled(response.data.twoFactorEnabled);
+        dispatch(updateUser({ twoFactorEnabled: response.data.twoFactorEnabled }));
+        toast.success(response.data.message);
+      }
+    } catch (error) {
+      toast.error('2FA güncellenirken hata oluştu');
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
 
   // ── TEMA RENKLERİ ─────────────────────────────────────────────────────────
   const pageBg       = themeName === 'light' ? '#f8f9fa' : themeName === 'dark' ? '#0f172a' : '#000000';
@@ -105,23 +122,16 @@ const handleDeleteSession = async (sessionId) => {
   const tabInactiveBg= themeName === 'light' ? '#f1f5f9' : themeName === 'dark' ? '#0f172a' : '#0a0a0a';
   const tabBorder    = themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#334155' : '#2a2a2a';
   const dividerColor = themeName === 'light' ? '#e2e8f0' : themeName === 'dark' ? '#334155' : '#2a2a2a';
-  const badgeBg      = themeName === 'light' ? '#f0fdf4' : themeName === 'dark' ? '#052e16' : '#0a1a0a';
-  const badgeBorder  = themeName === 'light' ? '#bbf7d0' : themeName === 'dark' ? '#166534' : '#1a3a1a';
-  const badgeColor   = themeName === 'light' ? '#15803d' : '#22c55e';
 
-  // ── AVATAR YÜKLE ──────────────────────────────────────────────────────────
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (file.size > 2 * 1024 * 1024) {
       toast.error('Dosya boyutu 2MB\'dan küçük olmalıdır');
       return;
     }
-
     const formData = new FormData();
     formData.append('avatar', file);
-
     try {
       const response = await axiosInstance.put('/profile/update', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -134,20 +144,11 @@ const handleDeleteSession = async (sessionId) => {
       toast.error('Fotoğraf yüklenirken hata oluştu');
     }
   };
-  
-  // ── PROFIL GÜNCELLE ────────────────────────────────────────────────────────
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-
-    if (!profileData.name.trim()) {
-      toast.error('İsim alanı boş bırakılamaz');
-      return;
-    }
-    if (!profileData.email.trim()) {
-      toast.error('Email alanı boş bırakılamaz');
-      return;
-    }
-
+    if (!profileData.name.trim()) { toast.error('İsim alanı boş bırakılamaz'); return; }
+    if (!profileData.email.trim()) { toast.error('Email alanı boş bırakılamaz'); return; }
     setProfileLoading(true);
     try {
       const response = await axiosInstance.put('/profile/update', {
@@ -156,54 +157,43 @@ const handleDeleteSession = async (sessionId) => {
         bio: profileData.bio,
         username: profileData.username.trim()
       });
-
       if (response.data.success) {
         dispatch(updateUser(response.data.user));
         toast.success('Profil bilgileriniz güncellendi! ✅');
       }
     } catch (error) {
-      const message = error.response?.data?.message || 'Profil güncellenirken hata oluştu';
-      toast.error(message);
+      toast.error(error.response?.data?.message || 'Profil güncellenirken hata oluştu');
     } finally {
       setProfileLoading(false);
     }
   };
 
-  // ── ŞİFRE DEĞİŞTİR ────────────────────────────────────────────────────────
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-
     if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      toast.error('Lütfen tüm alanları doldurun');
-      return;
+      toast.error('Lütfen tüm alanları doldurun'); return;
     }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('Yeni şifreler eşleşmiyor');
-      return;
+      toast.error('Yeni şifreler eşleşmiyor'); return;
     }
     if (passwordData.newPassword.length < 8) {
-      toast.error('Yeni şifre en az 8 karakter olmalıdır');
-      return;
+      toast.error('Yeni şifre en az 8 karakter olmalıdır'); return;
     }
     if (passwordData.oldPassword === passwordData.newPassword) {
-      toast.error('Yeni şifre eski şifreyle aynı olamaz');
-      return;
+      toast.error('Yeni şifre eski şifreyle aynı olamaz'); return;
     }
-
     setPasswordLoading(true);
     try {
       const response = await axiosInstance.put('/password/change', {
         oldPassword: passwordData.oldPassword,
         newPassword: passwordData.newPassword
       });
-
       if (response.data.success) {
         toast.success('Şifreniz başarıyla değiştirildi! 🔐');
         setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
       }
     } catch (error) {
-      const message = error.response?.data?.message || 'Şifre değiştirilirken hata oluştu';
-      toast.error(message);
+      toast.error(error.response?.data?.message || 'Şifre değiştirilirken hata oluştu');
     } finally {
       setPasswordLoading(false);
     }
@@ -245,8 +235,6 @@ const handleDeleteSession = async (sessionId) => {
 
         {/* ── Profil Kartı ── */}
         <div style={{ backgroundColor: cardBg, borderRadius: '20px', border: `1px solid ${cardBorder}`, overflow: 'hidden', marginBottom: '24px', boxShadow: themeName === 'light' ? '0 4px 24px rgba(0,0,0,0.06)' : '0 4px 24px rgba(0,0,0,0.3)' }}>
-
-          {/* Üst banner */}
           <div style={{
             height: '100px',
             background: themeName === 'light'
@@ -256,87 +244,45 @@ const handleDeleteSession = async (sessionId) => {
                 : 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)'
           }} />
 
-          {/* Avatar + bilgi */}
           <div style={{ padding: '0 32px 28px', position: 'relative' }}>
-            {/* Avatar */}
-            {/* Avatar + yükleme butonu */}
             <div style={{ position: 'relative', width: '80px', marginTop: '-40px', marginBottom: '16px' }}>
-              <div style={{
-                width: '80px', height: '80px', borderRadius: '50%',
-                background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'white', fontSize: '32px', fontWeight: '700',
-                border: `4px solid ${cardBg}`,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                overflow: 'hidden'
-              }}>
+              <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '32px', fontWeight: '700', border: `4px solid ${cardBg}`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
                 {user?.avatar?.url && user.avatar.url.includes('cloudinary') ? (
                   <img src={user.avatar.url} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   user?.name?.charAt(0).toUpperCase()
                 )}
               </div>
-
-              {/* Yükleme butonu */}
-              <label style={{
-                position: 'absolute', bottom: '0', right: '0',
-                width: '26px', height: '26px', borderRadius: '50%',
-                backgroundColor: '#111827', border: `2px solid ${cardBg}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer'
-              }}>
+              <label style={{ position: 'absolute', bottom: '0', right: '0', width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#111827', border: `2px solid ${cardBg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="17 8 12 3 7 8"/>
                   <line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
-                <input
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={handleAvatarUpload}
-                />
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
               </label>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h2 style={{ fontSize: '22px', fontWeight: '700', color: headingColor, marginBottom: '4px', letterSpacing: '-0.4px' }}>
-                  {user?.name}
-                </h2>
-                <p style={{ color: textColor, fontSize: '14px', marginBottom: '10px' }}>
-                  {user?.email}
-                </p>
-                {/* Rol badge */}
-                <span style={{
-                  display: 'inline-block', padding: '4px 12px',
-                  backgroundColor: roleStyle.bg, border: `1px solid ${roleStyle.border}`,
-                  borderRadius: '20px', fontSize: '13px', fontWeight: '600', color: roleStyle.color
-                }}>
+                <h2 style={{ fontSize: '22px', fontWeight: '700', color: headingColor, marginBottom: '4px', letterSpacing: '-0.4px' }}>{user?.name}</h2>
+                <p style={{ color: textColor, fontSize: '14px', marginBottom: '10px' }}>{user?.email}</p>
+                <span style={{ display: 'inline-block', padding: '4px 12px', backgroundColor: roleStyle.bg, border: `1px solid ${roleStyle.border}`, borderRadius: '20px', fontSize: '13px', fontWeight: '600', color: roleStyle.color }}>
                   {roleLabels[role]}
                 </span>
               </div>
-
-              {/* Kayıt tarihi + Son giriş */}
               <div style={{ textAlign: 'right' }}>
-                <p style={{ color: textColor, fontSize: '13px', marginBottom: '4px' }}>
-                  Kayıt tarihi
-                </p>
+                <p style={{ color: textColor, fontSize: '13px', marginBottom: '4px' }}>Kayıt tarihi</p>
                 <p style={{ color: headingColor, fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>
                   {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
                 </p>
-                <p style={{ color: textColor, fontSize: '13px', marginBottom: '4px' }}>
-                  Son giriş
-                </p>
+                <p style={{ color: textColor, fontSize: '13px', marginBottom: '4px' }}>Son giriş</p>
                 <p style={{ color: headingColor, fontSize: '14px', fontWeight: '600' }}>
-                  {user?.lastLogin
-                    ? new Date(user.lastLogin).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                    : '-'}
+                  {user?.lastLogin ? new Date(user.lastLogin).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                 </p>
               </div>
             </div>
 
-            {/* Bio */}
             {user?.bio && (
               <p style={{ color: textColor, fontSize: '14px', marginTop: '16px', paddingTop: '16px', borderTop: `1px solid ${dividerColor}`, lineHeight: '1.6' }}>
                 {user.bio}
@@ -348,41 +294,13 @@ const handleDeleteSession = async (sessionId) => {
         {/* ── Tab Menü ── */}
         <div style={{ display: 'flex', backgroundColor: tabInactiveBg, borderRadius: '12px', padding: '4px', marginBottom: '24px', border: `1px solid ${tabBorder}` }}>
           {[
-            { key: 'profile', label: 'Profil Bilgileri', icon: (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-            )},
-            { key: 'password', label: 'Şifre Değiştir', icon: (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-            )},
-            { key: 'sessions', label: 'Aktif Cihazlar', icon: (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-              </svg>
-            )}
+            { key: 'profile', label: 'Profil Bilgileri', icon: (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>) },
+            { key: 'password', label: 'Şifre Değiştir', icon: (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>) },
+            { key: 'sessions', label: 'Aktif Cihazlar', icon: (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>) },
+            { key: 'security', label: 'Güvenlik', icon: (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>) }
           ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              style={{
-                flex: 1, padding: '10px 16px',
-                backgroundColor: activeTab === tab.key ? tabActiveBg : 'transparent',
-                color: activeTab === tab.key ? headingColor : textColor,
-                border: activeTab === tab.key ? `1px solid ${tabBorder}` : '1px solid transparent',
-                borderRadius: '10px', cursor: 'pointer',
-                fontSize: '14px', fontWeight: activeTab === tab.key ? '600' : '500',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                transition: 'all 0.2s ease',
-                boxShadow: activeTab === tab.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'
-              }}
-            >
-              {tab.icon}
-              {tab.label}
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{ flex: 1, padding: '10px 16px', backgroundColor: activeTab === tab.key ? tabActiveBg : 'transparent', color: activeTab === tab.key ? headingColor : textColor, border: activeTab === tab.key ? `1px solid ${tabBorder}` : '1px solid transparent', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: activeTab === tab.key ? '600' : '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s ease', boxShadow: activeTab === tab.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
+              {tab.icon}{tab.label}
             </button>
           ))}
         </div>
@@ -390,88 +308,46 @@ const handleDeleteSession = async (sessionId) => {
         {/* ── Form Kartı ── */}
         <div style={{ backgroundColor: cardBg, borderRadius: '20px', border: `1px solid ${cardBorder}`, padding: '32px', boxShadow: themeName === 'light' ? '0 4px 24px rgba(0,0,0,0.06)' : '0 4px 24px rgba(0,0,0,0.3)' }}>
 
-          {/* PROFİL BİLGİLERİ FORMU */}
+          {/* PROFİL BİLGİLERİ */}
           {activeTab === 'profile' && (
             <form onSubmit={handleProfileSubmit}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: headingColor, marginBottom: '24px', letterSpacing: '-0.3px' }}>
-                Profil Bilgileri
-              </h3>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: headingColor, marginBottom: '24px', letterSpacing: '-0.3px' }}>Profil Bilgileri</h3>
 
-              {/* Ad Soyad */}
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>
-                  Ad Soyad
-                </label>
-                <input
-                  type="text"
-                  value={profileData.name}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Adınız ve soyadınız"
-                  disabled={profileLoading}
-                  autoComplete="name"
-                  style={inputStyle}
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>Ad Soyad</label>
+                <input type="text" value={profileData.name} onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))} placeholder="Adınız ve soyadınız" disabled={profileLoading} autoComplete="name" style={inputStyle}
                   onFocus={(e) => { e.target.style.borderColor = inputFocusBorder; e.target.style.boxShadow = inputFocusShadow; }}
-                  onBlur={(e)  => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }}
-                />
+                  onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }} />
               </div>
 
-              {/* Email */}
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>
-                  E-posta
-                </label>
-                <input
-                  type="email"
-                  value={profileData.email}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="ornek@email.com"
-                  disabled={profileLoading}
-                  autoComplete="email"
-                  style={inputStyle}
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>E-posta</label>
+                <input type="email" value={profileData.email} onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))} placeholder="ornek@email.com" disabled={profileLoading} autoComplete="email" style={inputStyle}
                   onFocus={(e) => { e.target.style.borderColor = inputFocusBorder; e.target.style.boxShadow = inputFocusShadow; }}
-                  onBlur={(e)  => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }}
-                />
+                  onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }} />
               </div>
 
-              {/* Bio */}
               <div style={{ marginBottom: '28px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>
                   Hakkımda <span style={{ color: textColor, fontWeight: '400' }}>(isteğe bağlı)</span>
                 </label>
-                <textarea
-                  value={profileData.bio}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                  placeholder="Kendinizden kısaca bahsedin..."
-                  disabled={profileLoading}
-                  maxLength={500}
-                  rows={4}
+                <textarea value={profileData.bio} onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))} placeholder="Kendinizden kısaca bahsedin..." disabled={profileLoading} maxLength={500} rows={4}
                   style={{ ...inputStyle, resize: 'vertical', minHeight: '100px' }}
                   onFocus={(e) => { e.target.style.borderColor = inputFocusBorder; e.target.style.boxShadow = inputFocusShadow; }}
-                  onBlur={(e)  => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }}
-                />
-                <p style={{ color: textColor, fontSize: '12px', marginTop: '4px', textAlign: 'right' }}>
-                  {profileData.bio.length}/500
-                </p>
+                  onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }} />
+                <p style={{ color: textColor, fontSize: '12px', marginTop: '4px', textAlign: 'right' }}>{profileData.bio.length}/500</p>
               </div>
 
-              {/* Kullanıcı Adı */}
               <div style={{ marginBottom: '28px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>
                   Kullanıcı Adı <span style={{ color: textColor, fontWeight: '400' }}>(isteğe bağlı)</span>
                 </label>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: textColor, fontSize: '15px', fontWeight: '500' }}>@</span>
-                  <input
-                    type="text"
-                    value={profileData.username}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))}
-                    placeholder="kullanici_adi"
-                    disabled={profileLoading}
-                    maxLength={30}
+                  <input type="text" value={profileData.username} onChange={(e) => setProfileData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))} placeholder="kullanici_adi" disabled={profileLoading} maxLength={30}
                     style={{ ...inputStyle, paddingLeft: '30px' }}
                     onFocus={(e) => { e.target.style.borderColor = inputFocusBorder; e.target.style.boxShadow = inputFocusShadow; }}
-                    onBlur={(e)  => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }}
-                  />
+                    onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }} />
                 </div>
                 <p style={{ color: textColor, fontSize: '12px', marginTop: '6px' }}>
                   Sadece harf, rakam ve _ kullanabilirsiniz. Örnek: <strong style={{ color: headingColor }}>gulnur_kilinc</strong>
@@ -483,12 +359,7 @@ const handleDeleteSession = async (sessionId) => {
                 )}
               </div>
 
-              <button
-                type="submit"
-                disabled={profileLoading}
-                className="emerald-btn"
-                style={{ padding: '12px 32px', fontSize: '15px', opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? 'not-allowed' : 'pointer' }}
-              >
+              <button type="submit" disabled={profileLoading} className="emerald-btn" style={{ padding: '12px 32px', fontSize: '15px', opacity: profileLoading ? 0.6 : 1, cursor: profileLoading ? 'not-allowed' : 'pointer' }}>
                 {profileLoading ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ animation: 'spin 1s linear infinite' }}>
@@ -501,83 +372,43 @@ const handleDeleteSession = async (sessionId) => {
             </form>
           )}
 
-          {/* ŞİFRE DEĞİŞTİR FORMU */}
+          {/* ŞİFRE DEĞİŞTİR */}
           {activeTab === 'password' && (
             <form onSubmit={handlePasswordSubmit}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: headingColor, marginBottom: '8px', letterSpacing: '-0.3px' }}>
-                Şifre Değiştir
-              </h3>
-              <p style={{ color: textColor, fontSize: '14px', marginBottom: '24px' }}>
-                Güvenliğiniz için güçlü bir şifre kullanın.
-              </p>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: headingColor, marginBottom: '8px', letterSpacing: '-0.3px' }}>Şifre Değiştir</h3>
+              <p style={{ color: textColor, fontSize: '14px', marginBottom: '24px' }}>Güvenliğiniz için güçlü bir şifre kullanın.</p>
 
-              {/* Mevcut Şifre */}
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>
-                  Mevcut Şifre
-                </label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>Mevcut Şifre</label>
                 <div style={{ position: 'relative' }}>
-                  <input
-                    type={showPasswords.old ? 'text' : 'password'}
-                    value={passwordData.oldPassword}
-                    onChange={(e) => setPasswordData(prev => ({ ...prev, oldPassword: e.target.value }))}
-                    placeholder="Mevcut şifreniz"
-                    disabled={passwordLoading}
-                    autoComplete="current-password"
-                    style={{ ...inputStyle, paddingRight: '48px' }}
+                  <input type={showPasswords.old ? 'text' : 'password'} value={passwordData.oldPassword} onChange={(e) => setPasswordData(prev => ({ ...prev, oldPassword: e.target.value }))} placeholder="Mevcut şifreniz" disabled={passwordLoading} autoComplete="current-password" style={{ ...inputStyle, paddingRight: '48px' }}
                     onFocus={(e) => { e.target.style.borderColor = inputFocusBorder; e.target.style.boxShadow = inputFocusShadow; }}
-                    onBlur={(e)  => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }}
-                  />
-                  <button type="button" onClick={() => setShowPasswords(p => ({ ...p, old: !p.old }))}
-                    style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: iconColor, display: 'flex', alignItems: 'center', padding: '4px' }}>
+                    onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }} />
+                  <button type="button" onClick={() => setShowPasswords(p => ({ ...p, old: !p.old }))} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: iconColor, display: 'flex', alignItems: 'center', padding: '4px' }}>
                     <EyeIcon show={showPasswords.old} />
                   </button>
                 </div>
               </div>
 
-              {/* Yeni Şifre */}
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>
-                  Yeni Şifre
-                </label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>Yeni Şifre</label>
                 <div style={{ position: 'relative' }}>
-                  <input
-                    type={showPasswords.new ? 'text' : 'password'}
-                    value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                    placeholder="En az 8 karakter"
-                    disabled={passwordLoading}
-                    autoComplete="new-password"
-                    style={{ ...inputStyle, paddingRight: '48px' }}
+                  <input type={showPasswords.new ? 'text' : 'password'} value={passwordData.newPassword} onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))} placeholder="En az 8 karakter" disabled={passwordLoading} autoComplete="new-password" style={{ ...inputStyle, paddingRight: '48px' }}
                     onFocus={(e) => { e.target.style.borderColor = inputFocusBorder; e.target.style.boxShadow = inputFocusShadow; }}
-                    onBlur={(e)  => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }}
-                  />
-                  <button type="button" onClick={() => setShowPasswords(p => ({ ...p, new: !p.new }))}
-                    style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: iconColor, display: 'flex', alignItems: 'center', padding: '4px' }}>
+                    onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }} />
+                  <button type="button" onClick={() => setShowPasswords(p => ({ ...p, new: !p.new }))} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: iconColor, display: 'flex', alignItems: 'center', padding: '4px' }}>
                     <EyeIcon show={showPasswords.new} />
                   </button>
                 </div>
               </div>
 
-              {/* Şifre Tekrar */}
               <div style={{ marginBottom: '28px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>
-                  Yeni Şifre Tekrar
-                </label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', color: labelColor }}>Yeni Şifre Tekrar</label>
                 <div style={{ position: 'relative' }}>
-                  <input
-                    type={showPasswords.confirm ? 'text' : 'password'}
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    placeholder="Yeni şifrenizi tekrar girin"
-                    disabled={passwordLoading}
-                    autoComplete="new-password"
-                    style={{ ...inputStyle, paddingRight: '48px' }}
+                  <input type={showPasswords.confirm ? 'text' : 'password'} value={passwordData.confirmPassword} onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))} placeholder="Yeni şifrenizi tekrar girin" disabled={passwordLoading} autoComplete="new-password" style={{ ...inputStyle, paddingRight: '48px' }}
                     onFocus={(e) => { e.target.style.borderColor = inputFocusBorder; e.target.style.boxShadow = inputFocusShadow; }}
-                    onBlur={(e)  => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }}
-                  />
-                  <button type="button" onClick={() => setShowPasswords(p => ({ ...p, confirm: !p.confirm }))}
-                    style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: iconColor, display: 'flex', alignItems: 'center', padding: '4px' }}>
+                    onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none'; }} />
+                  <button type="button" onClick={() => setShowPasswords(p => ({ ...p, confirm: !p.confirm }))} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: iconColor, display: 'flex', alignItems: 'center', padding: '4px' }}>
                     <EyeIcon show={showPasswords.confirm} />
                   </button>
                 </div>
@@ -588,12 +419,7 @@ const handleDeleteSession = async (sessionId) => {
                 )}
               </div>
 
-              <button
-                type="submit"
-                disabled={passwordLoading}
-                className="emerald-btn"
-                style={{ padding: '12px 32px', fontSize: '15px', opacity: passwordLoading ? 0.6 : 1, cursor: passwordLoading ? 'not-allowed' : 'pointer' }}
-              >
+              <button type="submit" disabled={passwordLoading} className="emerald-btn" style={{ padding: '12px 32px', fontSize: '15px', opacity: passwordLoading ? 0.6 : 1, cursor: passwordLoading ? 'not-allowed' : 'pointer' }}>
                 {passwordLoading ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ animation: 'spin 1s linear infinite' }}>
@@ -605,62 +431,62 @@ const handleDeleteSession = async (sessionId) => {
               </button>
             </form>
           )}
+
+          {/* AKTİF CİHAZLAR */}
+          {activeTab === 'sessions' && (
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: headingColor, marginBottom: '8px', letterSpacing: '-0.3px' }}>Aktif Cihazlar</h3>
+              <p style={{ color: textColor, fontSize: '14px', marginBottom: '24px' }}>Hesabınıza giriş yapılan cihazlar.</p>
+              {sessionsLoading ? (
+                <p style={{ color: textColor, textAlign: 'center', padding: '20px' }}>Yükleniyor...</p>
+              ) : sessions.length === 0 ? (
+                <p style={{ color: textColor, textAlign: 'center', padding: '20px' }}>Aktif oturum bulunamadı.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {sessions.map((session) => (
+                    <div key={session.sessionId} style={{ padding: '16px 20px', borderRadius: '12px', border: `1px solid ${dividerColor}`, backgroundColor: inputBg, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                      <div>
+                        <p style={{ color: headingColor, fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>{session.device} · {session.browser}</p>
+                        <p style={{ color: textColor, fontSize: '13px', marginBottom: '2px' }}>IP: {session.ip}</p>
+                        <p style={{ color: textColor, fontSize: '13px' }}>
+                          {new Date(session.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <button onClick={() => handleDeleteSession(session.sessionId)}
+                        style={{ padding: '8px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#dc2626'; e.currentTarget.style.color = 'white'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.color = '#dc2626'; }}>
+                        Kapat
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* GÜVENLİK */}
+          {activeTab === 'security' && (
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: headingColor, marginBottom: '8px', letterSpacing: '-0.3px' }}>Güvenlik</h3>
+              <p style={{ color: textColor, fontSize: '14px', marginBottom: '24px' }}>Hesabınızın güvenlik ayarlarını yönetin.</p>
+              <div style={{ padding: '20px', borderRadius: '12px', border: `1px solid ${dividerColor}`, backgroundColor: inputBg, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                <div>
+                  <p style={{ color: headingColor, fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>İki Faktörlü Doğrulama (2FA)</p>
+                  <p style={{ color: textColor, fontSize: '13px' }}>
+                    {twoFactorEnabled ? '✅ Aktif — Giriş yaparken emailinize kod gönderilir' : '❌ Pasif — Hesabınız daha güvenli olabilir'}
+                  </p>
+                </div>
+                <button onClick={handleToggle2FA} disabled={twoFactorLoading}
+                  style={{ padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', backgroundColor: twoFactorEnabled ? '#fef2f2' : '#f0fdf4', color: twoFactorEnabled ? '#dc2626' : '#16a34a', border: `1px solid ${twoFactorEnabled ? '#fecaca' : '#bbf7d0'}`, cursor: twoFactorLoading ? 'not-allowed' : 'pointer', opacity: twoFactorLoading ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+                  {twoFactorLoading ? 'Güncelleniyor...' : twoFactorEnabled ? '2FA Kapat' : '2FA Aç'}
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
-      {/* AKTİF CİHAZLAR */}
-{activeTab === 'sessions' && (
-    <div>
-        <h3 style={{ fontSize: '18px', fontWeight: '700', color: headingColor, marginBottom: '8px', letterSpacing: '-0.3px' }}>
-            Aktif Cihazlar
-        </h3>
-        <p style={{ color: textColor, fontSize: '14px', marginBottom: '24px' }}>
-            Hesabınıza giriş yapılan cihazlar.
-        </p>
-
-        {sessionsLoading ? (
-            <p style={{ color: textColor, textAlign: 'center', padding: '20px' }}>Yükleniyor...</p>
-        ) : sessions.length === 0 ? (
-            <p style={{ color: textColor, textAlign: 'center', padding: '20px' }}>Aktif oturum bulunamadı.</p>
-        ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {sessions.map((session) => (
-                    <div key={session.sessionId} style={{
-                        padding: '16px 20px', borderRadius: '12px',
-                        border: `1px solid ${dividerColor}`,
-                        backgroundColor: inputBg,
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
-                    }}>
-                        <div>
-                            <p style={{ color: headingColor, fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>
-                                {session.device} · {session.browser}
-                            </p>
-                            <p style={{ color: textColor, fontSize: '13px', marginBottom: '2px' }}>
-                                IP: {session.ip}
-                            </p>
-                            <p style={{ color: textColor, fontSize: '13px' }}>
-                                {new Date(session.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => handleDeleteSession(session.sessionId)}
-                            style={{
-                                padding: '8px 14px', borderRadius: '8px',
-                                fontSize: '13px', fontWeight: '500',
-                                backgroundColor: '#fef2f2', color: '#dc2626',
-                                border: '1px solid #fecaca', cursor: 'pointer',
-                                whiteSpace: 'nowrap'
-                            }}
-                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#dc2626'; e.currentTarget.style.color = 'white'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.color = '#dc2626'; }}
-                        >
-                            Kapat
-                        </button>
-                    </div>
-                ))}
-            </div>
-        )}
-    </div>
-)}
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

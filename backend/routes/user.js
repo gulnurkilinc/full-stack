@@ -21,7 +21,9 @@ const {
     verifyEmail,
     refreshToken,
     getSessions,
-    deleteSession
+    deleteSession,
+    verifyLoginCode,
+    toggle2FA
 } = require('../controllers/user.js');
 
 // Mevcut middleware isimlerini kullan
@@ -46,6 +48,8 @@ router.post('/verify-email/:token', verifyEmail);
 router.post('/refresh-token', refreshToken);
 router.get('/sessions', authMiddleware, getSessions);
 router.delete('/sessions/:sessionId', authMiddleware, deleteSession);
+router.post('/2fa/verify', verifyLoginCode);
+router.post('/2fa/toggle', authMiddleware, toggle2FA);
 // Google OAuth
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
@@ -54,6 +58,24 @@ router.get('/auth/google/callback',
     async (req, res) => {
         try {
             const user = req.user;
+
+            // 2FA kontrolü
+            if (user.twoFactorEnabled) {
+                const code = Math.floor(100000 + Math.random() * 900000).toString();
+                user.twoFactorCode = code;
+                user.twoFactorExpire = new Date(Date.now() + 10 * 60 * 1000);
+                await user.save({ validateBeforeSave: false });
+
+                const sendEmail = require('../utils/sendEmail');
+                await sendEmail({
+                    to: user.email,
+                    subject: 'Giriş Doğrulama Kodu',
+                    html: `<h2>Merhaba ${user.name},</h2><p>Giriş doğrulama kodunuz:</p><h1 style="letter-spacing:8px;color:#111827;">${code}</h1><p>Bu kod <strong>10 dakika</strong> geçerlidir.</p>`
+                });
+
+                return res.redirect(`${process.env.FRONTEND_URL}/login?twoFactor=true&userId=${user._id}`);
+            }
+
             const token = user.generateToken();
             const refreshToken = user.generateRefreshToken();
 
