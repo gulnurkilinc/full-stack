@@ -21,6 +21,7 @@ const {
     verifyEmail,
     refreshToken,
     getSessions,
+    getActivityLogs,
     getStats,
     deleteSession,
     verifyLoginCode,
@@ -121,5 +122,6 @@ router.get('/admin/users/:id', authMiddleware, isAdmin, getUserDetail);
 router.put('/admin/users/:id/role', authMiddleware, isAdmin, updateUserRole);
 router.delete('/admin/users/:id', authMiddleware, isAdmin, deleteUser);
 router.get('/user/:username', authMiddleware, getUserByUsername);
+router.get('/admin/activity-logs', authMiddleware, isAdmin, getActivityLogs);
 
 module.exports = router;

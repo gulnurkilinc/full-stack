@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';          // ✅ YENİ
-import 'react-toastify/dist/ReactToastify.css';            // ✅ YENİ
+import { ToastContainer } from 'react-toastify';          
+import 'react-toastify/dist/ReactToastify.css';            
 import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/Layout/Header';
 import Footer from './components/Layout/Footer';
@@ -30,6 +30,7 @@ import UserProfile from './pages/UserProfile/UserProfile';
 import UserManagement from './pages/Admin/UserManagement';
 import SessionTimeout from './components/SessionTimeout/SessionTimeout';
 import GoogleSuccess from './pages/Auth/GoogleSuccess';
+import ActivityLogs from './pages/Admin/ActivityLogs';
 import './index.css';
 
 function App() {
@@ -228,6 +229,15 @@ function App() {
             />
 
             <Route path="/auth/google/success" element={<GoogleSuccess />} />
+
+            <Route 
+  path="/dashboard/activity-logs" 
+  element={
+    <AdminRoute>
+      <ActivityLogs />
+    </AdminRoute>
+  } 
+/>
             
             {/* ============================================ */}
             {/* 404 - Sayfa Bulunamadı */}

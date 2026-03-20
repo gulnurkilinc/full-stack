@@ -10,6 +10,7 @@ const Sidebar = () => {
     { path: '/dashboard/blogs', label: 'Bloglar', icon: '📝' },
     { path: '/dashboard/blogs/create', label: 'Yeni Blog', icon: '➕' },
     { path: '/dashboard/users', label: 'Kullanıcılar', icon: '👥' },
+    { path: '/dashboard/activity-logs', label: 'Aktivite Logları', icon: '📋' },
     { path: '/dashboard/settings', label: 'Ayarlar', icon: '⚙️' }
   ];
 

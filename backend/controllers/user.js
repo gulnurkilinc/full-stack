@@ -1,6 +1,7 @@
 const User = require("../models/user.js");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail.js");
+const ActivityLog = require('../models/activityLog.js');
 const bcrypt = require('bcryptjs');
 const { trackFailedLogin, clearFailedLogin } = require('../middleware/ipBlock');
 
@@ -211,11 +212,16 @@ const login = async (req, res) => {
 
         // ── Başarılı giriş → sıfırla ────────────────
         await user.resetLoginAttempts();
-
-        await user.resetLoginAttempts();
-console.log('2FA enabled:', user.twoFactorEnabled);
-
         clearFailedLogin(req.ip || req.connection.remoteAddress || '');
+
+        // Aktivite logu
+        await ActivityLog.create({
+            user: user._id,
+            userName: user.name,
+            userEmail: user.email,
+            action: 'Giriş yapıldı',
+            ip: req.ip || req.connection.remoteAddress || ''
+        });
 
         const { rememberMe } = req.body;
 const tokenExpire = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
@@ -558,13 +564,7 @@ const resetPassword = async (req, res) => {
 
         const authToken = user.generateToken();
 
-        userSchema.methods.generateRefreshToken = function() {
-    return jwt.sign(
-        { id: this._id },
-        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-        { expiresIn: '30d' }
-    );
-};
+        
 
         res.cookie('token', authToken, {
             httpOnly: true,
@@ -877,6 +877,35 @@ const toggle2FA = async (req, res) => {
     }
 };
 
+
+// ============================================
+// ADMIN: Aktivite Logları
+// ============================================
+const getActivityLogs = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+
+        const logs = await ActivityLog.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const total = await ActivityLog.countDocuments();
+
+        res.status(200).json({
+            success: true,
+            logs,
+            total,
+            page,
+            pages: Math.ceil(total / limit)
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 const getStats = async (req, res) => {
     try {
         const Blog = require('../models/blog.js');
@@ -942,5 +971,6 @@ module.exports = {
     deleteSession,
     verifyLoginCode,
     toggle2FA,
-    getStats
+    getStats,
+    getActivityLogs
 };
