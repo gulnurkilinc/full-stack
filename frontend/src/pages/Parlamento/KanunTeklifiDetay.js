@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { kanunTeklifiAPI } from '../../services/kanunTeklifiAPI';
 import io from 'socket.io-client'; // ← YENİ
+import { toast } from 'react-toastify';
 
 const KanunTeklifiDetay = () => {
   const { id } = useParams();
@@ -89,7 +90,7 @@ const KanunTeklifiDetay = () => {
 
   // Kullanıcının oy durumunu kontrol et
   const checkVoteStatus = async () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (!token) {
       console.log('Kullanıcı giriş yapmamış, oy durumu kontrol edilemiyor');
       return;
@@ -109,16 +110,16 @@ const KanunTeklifiDetay = () => {
 
   // Oy kullan
   const handleVote = async (oyTipi) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (!token) {
-      alert('Oy kullanmak için giriş yapmalısınız!');
-      navigate('/login');
+      toast.error('Oy kullanmak için giriş yapmalısınız!');
+navigate('/login');
       return;
     }
 
     if (hasVoted) {
-      alert('Bu teklife zaten oy kullandınız!');
-      return;
+      toast.warning('Bu teklife zaten oy kullandınız!');
+return;
     }
     
     try {
@@ -132,19 +133,19 @@ const KanunTeklifiDetay = () => {
       setToplumOylari(result.toplumOylari);
       setToplamToplumOyu(result.toplamToplumOyu);
       
-      alert('✅ Oyunuz başarıyla kaydedildi!');
+      toast.success('Oyunuz başarıyla kaydedildi! ✅');
       
     } catch (err) {
       console.error('Oy kaydetme hatası:', err);
       
       if (err.message?.includes('giriş') || err.message?.includes('token')) {
-        alert('Oy kullanmak için giriş yapmalısınız!');
-        navigate('/login');
+        toast.error('Oy kullanmak için giriş yapmalısınız!');
+navigate('/login');
       } else if (err.message?.includes('zaten')) {
-        alert('Bu teklife zaten oy kullandınız!');
+        toast.warning('Bu teklife zaten oy kullandınız!');
         setHasVoted(true);
       } else {
-        alert('❌ Oy kaydedilirken bir hata oluştu: ' + (err.message || 'Bilinmeyen hata'));
+        toast.error('Oy kaydedilirken bir hata oluştu: ' + (err.message || 'Bilinmeyen hata'));
       }
     } finally {
       setVotingLoading(false);
