@@ -31,6 +31,8 @@ import UserManagement from './pages/Admin/UserManagement';
 import SessionTimeout from './components/SessionTimeout/SessionTimeout';
 import GoogleSuccess from './pages/Auth/GoogleSuccess';
 import ActivityLogs from './pages/Admin/ActivityLogs';
+import KanunTeklifleri from './pages/Admin/KanunTeklifleri';
+import KanunTeklifiForm from './pages/Admin/KanunTeklifiForm';
 import './index.css';
 
 function App() {
@@ -238,6 +240,10 @@ function App() {
     </AdminRoute>
   } 
 />
+
+<Route path="/dashboard/kanun-teklifleri" element={<AdminRoute><KanunTeklifleri /></AdminRoute>} />
+<Route path="/dashboard/kanun-teklifleri/ekle" element={<AdminRoute><KanunTeklifiForm /></AdminRoute>} />
+<Route path="/dashboard/kanun-teklifleri/duzenle/:id" element={<AdminRoute><KanunTeklifiForm /></AdminRoute>} />
             
             {/* ============================================ */}
             {/* 404 - Sayfa Bulunamadı */}

@@ -10,6 +10,7 @@ const Sidebar = () => {
     { path: '/dashboard/blogs', label: 'Bloglar', icon: '📝' },
     { path: '/dashboard/blogs/create', label: 'Yeni Blog', icon: '➕' },
     { path: '/dashboard/users', label: 'Kullanıcılar', icon: '👥' },
+    { path: '/dashboard/kanun-teklifleri', label: 'Kanun Teklifleri', icon: '⚖️' },
     { path: '/dashboard/activity-logs', label: 'Aktivite Logları', icon: '📋' },
     { path: '/dashboard/settings', label: 'Ayarlar', icon: '⚙️' }
   ];
@@ -66,6 +67,8 @@ const Sidebar = () => {
             <span style={{ fontSize: '20px' }}>{item.icon}</span>
             <span style={{ fontSize: '15px' }}>{item.label}</span>
           </Link>
+
+          
         ))}
       </nav>
 
