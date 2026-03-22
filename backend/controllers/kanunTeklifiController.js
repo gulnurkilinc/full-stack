@@ -483,6 +483,132 @@ const deleteProposal = async (req, res) => {
     }
 };
 
+// ============================================
+// Milletvekili oylarını Excel/CSV ile içe aktar
+// ============================================
+const importMilletvekilOylari = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Lütfen bir Excel veya CSV dosyası yükleyin'
+            });
+        }
+
+        const XLSX = require('xlsx');
+        
+        // Dosyayı oku
+        const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet);
+
+        if (rows.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Dosya boş veya okunamıyor'
+            });
+        }
+
+        // Teklif var mı kontrol et
+        const teklif = await KanunTeklifi.findById(id);
+        if (!teklif) {
+            return res.status(404).json({
+                success: false,
+                message: 'Kanun teklifi bulunamadı'
+            });
+        }
+
+        // Eski milletvekili oylarını ve milletvekillerini temizle
+        await MvOy.deleteMany({ teklif: id });
+        await Milletvekili.deleteMany({});
+
+        let basarili = 0;
+        let hatali = 0;
+        const hatalar = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+
+            try {
+                // Kolon isimlerini normalize et
+                const adSoyad = row['Ad Soyad'] || row['adSoyad'] || row['ad_soyad'] || row['İsim'] || '';
+                const partiKod = row['Parti'] || row['parti'] || row['Parti Kodu'] || '';
+                const il = row['İl'] || row['il'] || row['Şehir'] || '';
+                const oyTipi = (row['Oy'] || row['oy'] || row['Oy Tipi'] || 'katilmayan').toLowerCase().trim();
+
+                if (!adSoyad) {
+                    hatali++;
+                    hatalar.push(`Satır ${i + 2}: Ad Soyad boş`);
+                    continue;
+                }
+
+                // Oy tipini doğrula
+                const gecerliOylar = ['kabul', 'ret', 'cekimser', 'katilmayan'];
+                const normalizedOy = gecerliOylar.includes(oyTipi) ? oyTipi : 'katilmayan';
+
+                // Parti bul veya oluştur
+                let parti = await Parti.findOne({ 
+                    $or: [
+                        { kod: partiKod.toUpperCase() },
+                        { ad: partiKod }
+                    ]
+                });
+
+                if (!parti && partiKod) {
+                    parti = await Parti.create({
+                        kod: partiKod.toUpperCase().slice(0, 10),
+                        ad: partiKod,
+                        renk: '#95A5A6',
+                        toplamMV: 1
+                    });
+                }
+
+                // Milletvekili oluştur
+                const mv = await Milletvekili.create({
+                    adSoyad: adSoyad.trim(),
+                    parti: parti?._id || null,
+                    il: il.trim() || 'Bilinmeyen',
+                    koltukIndex: i
+                });
+
+                // Oy oluştur
+                await MvOy.create({
+                    teklif: id,
+                    milletvekili: mv._id,
+                    oyTipi: normalizedOy,
+                    oyZamani: teklif.gorusulmeTarihi || new Date()
+                });
+
+                basarili++;
+            } catch (rowError) {
+                hatali++;
+                hatalar.push(`Satır ${i + 2}: ${rowError.message}`);
+            }
+        }
+
+        // Teklif oy sayılarını güncelle
+        await teklif.updateVoteCount();
+
+        res.status(200).json({
+            success: true,
+            message: `${basarili} milletvekili oyu başarıyla içe aktarıldı`,
+            basarili,
+            hatali,
+            hatalar: hatalar.slice(0, 10) // İlk 10 hatayı göster
+        });
+
+    } catch (error) {
+        console.error('❌ importMilletvekilOylari hatası:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 module.exports = {
     // Genel
     getAllProposals,
@@ -499,5 +625,6 @@ module.exports = {
     // Admin
     createProposal,
     updateProposal,
-    deleteProposal
+    deleteProposal,
+    importMilletvekilOylari
 };

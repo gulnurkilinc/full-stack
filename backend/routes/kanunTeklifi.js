@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const uploadExcel = require('../middleware/uploadExcel');
 
 console.log('🚀 kanunTeklifi.js routes dosyası yüklendi!');
 
@@ -15,7 +16,8 @@ const {
     getUserVotingHistory,
     createProposal,
     updateProposal,
-    deleteProposal
+    deleteProposal,
+    importMilletvekilOylari
 } = require('../controllers/kanunTeklifiController');
 
 // Middleware
@@ -77,5 +79,7 @@ router.put('/admin/kanun-teklifi/:id', authMiddleware, isAdmin, updateProposal);
 // Kanun teklifini sil
 // DELETE /api/admin/kanun-teklifi/:id
 router.delete('/admin/kanun-teklifi/:id', authMiddleware, isAdmin, deleteProposal);
+
+router.post('/admin/kanun-teklifi/:id/import-oylar', authMiddleware, isAdmin, uploadExcel.single('file'), importMilletvekilOylari);
 
 module.exports = router;

@@ -35,6 +35,9 @@ const KanunTeklifiForm = () => {
     }
   });
 
+  const [uploadLoading, setUploadLoading] = useState(false);
+const [uploadResult, setUploadResult] = useState(null);
+
   // Düzenleme modunda mevcut veriyi çek
   useEffect(() => {
     if (isEdit) {
@@ -80,6 +83,37 @@ const KanunTeklifiForm = () => {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
+
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploadLoading(true);
+    setUploadResult(null);
+
+    try {
+        const response = await axiosInstance.post(
+            `/admin/kanun-teklifi/${id}/import-oylar`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+        setUploadResult({ success: true, message: response.data.message, hatali: response.data.hatali });
+        toast.success(response.data.message);
+    } catch (error) {
+        const msg = error.response?.data?.message || 'Yükleme başarısız';
+        setUploadResult({ success: false, message: msg, hatali: 0 });
+        toast.error(msg);
+    } finally {
+        setUploadLoading(false);
+    }
+};
+
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -239,6 +273,48 @@ const KanunTeklifiForm = () => {
                 Toplam: {Object.values(formData.oySayilari).reduce((a, b) => a + b, 0)} oy
               </p>
             </div>
+
+
+
+
+
+            {/* CSV/Excel Yükleme - Sadece düzenleme modunda */}
+            {isEdit && (
+              <div style={{ marginBottom: '28px', padding: '24px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <label style={{ ...labelStyle, marginBottom: '8px' }}>
+                  Milletvekili Oylarını İçe Aktar (Excel/CSV)
+                </label>
+                <p style={{ color: '#64748b', fontSize: '13px', marginBottom: '16px' }}>
+                  Excel dosyasında şu kolonlar olmalı: <strong>Ad Soyad, Parti, İl, Oy</strong> (kabul/ret/cekimser/katilmayan)
+                </p>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    type="file"
+                    accept=".xlsx,.csv"
+                    onChange={handleFileUpload}
+                    style={{ fontSize: '14px', color: '#64748b' }}
+                  />
+                  {uploadLoading && (
+                    <p style={{ color: '#64748b', fontSize: '13px' }}>Yükleniyor...</p>
+                  )}
+                </div>
+                {uploadResult && (
+                  <div style={{ marginTop: '12px', padding: '12px', backgroundColor: uploadResult.success ? '#f0fdf4' : '#fef2f2', borderRadius: '8px', border: `1px solid ${uploadResult.success ? '#bbf7d0' : '#fecaca'}` }}>
+                    <p style={{ color: uploadResult.success ? '#16a34a' : '#dc2626', fontSize: '13px', fontWeight: '600' }}>
+                      {uploadResult.message}
+                    </p>
+                    {uploadResult.hatali > 0 && (
+                      <p style={{ color: '#64748b', fontSize: '12px', marginTop: '4px' }}>
+                        {uploadResult.hatali} satırda hata oluştu
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+
+
 
             {/* Butonlar */}
             <div style={{ display: 'flex', gap: '12px' }}>
