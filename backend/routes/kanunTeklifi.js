@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const uploadExcel = require('../middleware/uploadExcel');
+const { oyLimiter } = require('../middleware/rateLimiter');
 
 console.log('🚀 kanunTeklifi.js routes dosyası yüklendi!');
 
@@ -58,7 +59,7 @@ router.get('/kanun-teklifi/:id/oy-durumu', authMiddleware, checkUserVoteStatus);
 // Kullanıcı oyu kaydet
 // POST /api/kanun-teklifi/:id/oy
 // Body: { oyTipi: "kabul" | "ret" | "cekimser" }
-router.post('/kanun-teklifi/:id/oy', authMiddleware, submitUserVote);
+router.post('/kanun-teklifi/:id/oy', authMiddleware, oyLimiter, submitUserVote);
 
 // Kullanıcının oy geçmişini getir
 // GET /api/kullanici/oy-gecmisi

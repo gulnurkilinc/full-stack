@@ -59,3 +59,16 @@ exports.forgotPasswordLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 });
+
+
+// Oy kullanma için rate limiter
+exports.oyLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 dakika
+  max: 3, // Maksimum 3 istek
+  message: {
+    success: false,
+    message: 'Çok fazla oy isteği. Lütfen 1 dakika sonra tekrar deneyin.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
