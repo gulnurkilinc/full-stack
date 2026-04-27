@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchBlogs, fetchFeaturedBlogs } from '../../redux/blogSlice';
 import Pagination from '../../components/Pagination';
 import { useTheme } from '../../context/ThemeContext';
+import { Helmet } from 'react-helmet-async';
 
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -568,8 +569,19 @@ const Home = () => {
           border-radius: 10px;
         }
       `}</style>
+
+      <Helmet>
+  <title>Ana Sayfa | Blog</title>
+  <meta name="description" content="Güncel haberler, analizler ve TBMM kanun teklifleri. Türkiye'nin nabzını takip edin." />
+  <meta property="og:title" content="Ana Sayfa | Blog" />
+  <meta property="og:description" content="Güncel haberler, analizler ve TBMM kanun teklifleri." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={window.location.href} />
+</Helmet> 
+
     </div>
   );
+
 };
 
 export default Home;

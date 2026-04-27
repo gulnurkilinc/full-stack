@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { kanunTeklifiAPI } from '../../services/kanunTeklifiAPI';
-import io from 'socket.io-client'; // ← YENİ
+import io from 'socket.io-client'; 
 import { toast } from 'react-toastify';
+import { Helmet } from 'react-helmet-async';
 
 const KanunTeklifiDetay = () => {
   const { id } = useParams();
@@ -337,6 +338,21 @@ navigate('/login');
     }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 32px' }}>
         
+
+
+    <Helmet>
+  <title>{teklifDetay ? `${teklifDetay.baslik} | TBMM` : 'Kanun Teklifi | TBMM'}</title>
+  <meta name="description" content={teklifDetay?.aciklama?.slice(0, 160) || 'TBMM kanun teklifi detayları'} />
+  <meta property="og:title" content={teklifDetay ? `${teklifDetay.baslik} | TBMM` : 'Kanun Teklifi'} />
+  <meta property="og:description" content={teklifDetay?.aciklama?.slice(0, 160) || ''} />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content={window.location.href} />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={teklifDetay?.baslik || 'Kanun Teklifi'} />
+  <meta name="twitter:description" content={teklifDetay?.aciklama?.slice(0, 160) || ''} />
+</Helmet>
+
+
         {/* ✅ YENİ: Canlı Badge */}
         {isLive && (
           <div style={{

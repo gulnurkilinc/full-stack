@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { kanunTeklifiAPI } from '../../services/kanunTeklifiAPI';
+import { Helmet } from 'react-helmet-async';
 
 const TBMM = () => {
   const navigate = useNavigate();
@@ -135,6 +136,8 @@ const TBMM = () => {
   // Loading
   if (loading && proposals.length === 0) {
     return (
+
+      
       <div style={{
         display: 'flex',
         justifyContent: 'center',
@@ -159,6 +162,18 @@ const TBMM = () => {
       paddingTop: '80px',
       paddingBottom: '60px'
     }}>
+      <Helmet>
+        <title>TBMM Kanun Teklifleri | Meclis Oylama Takibi</title>
+        <meta name="description" content="TBMM'de görüşülen kanun tekliflerini inceleyin, milletvekillerinin oylarını görün ve kendi görüşünüzü paylaşın." />
+        <meta property="og:title" content="TBMM Kanun Teklifleri | Meclis Oylama Takibi" />
+        <meta property="og:description" content="TBMM'de görüşülen kanun tekliflerini inceleyin, milletvekillerinin oylarını görün ve kendi görüşünüzü paylaşın." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={window.location.href} />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="TBMM Kanun Teklifleri" />
+        <meta name="twitter:description" content="Meclis oylama sonuçlarını takip edin." />
+      </Helmet>
+
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 32px' }}>
 
         {/* Header */}
